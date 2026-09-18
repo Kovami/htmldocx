@@ -44,7 +44,7 @@ final class TableBuilder
         $groups = ['thead' => [], 'tbody' => [], 'tfoot' => []];
         $columnStyles = [];
 
-        foreach ($table->children as $child) {
+        foreach (HtmlDocument::elementChildren($table) as $child) {
             $tag = $child->localName;
             $childStyle = $this->resolver->resolve($child, $style);
 
@@ -57,7 +57,7 @@ final class TableBuilder
             } elseif ($tag === 'col') {
                 $this->addColumn($child, $childStyle, $columnStyles);
             } elseif (isset($groups[$tag]) && $childStyle->display !== 'none') {
-                foreach ($child->children as $row) {
+                foreach (HtmlDocument::elementChildren($child) as $row) {
                     if ($row->localName === 'tr') {
                         $groups[$tag][] = $this->row($row, $childStyle, $tag === 'thead');
                     }
@@ -180,7 +180,7 @@ final class TableBuilder
     {
         $hasColumns = false;
 
-        foreach ($group->children as $column) {
+        foreach (HtmlDocument::elementChildren($group) as $column) {
             if ($column->localName === 'col') {
                 $hasColumns = true;
                 $this->addColumn($column, $this->resolver->resolve($column, $groupStyle), $columnStyles);
@@ -218,7 +218,7 @@ final class TableBuilder
         foreach ($rows as $r => $row) {
             $c = 0;
 
-            foreach ($row['element']->children as $cellElement) {
+            foreach (HtmlDocument::elementChildren($row['element']) as $cellElement) {
                 if ($cellElement->localName !== 'td' && $cellElement->localName !== 'th') {
                     continue;
                 }

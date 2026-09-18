@@ -38,7 +38,7 @@ final class ListCounter
 
         if ($start === null && $reversed) {
             $start = count(array_filter(
-                iterator_to_array($list->children),
+                HtmlDocument::elementChildren($list),
                 static fn(Element $child): bool => $child->localName === 'li',
             ));
         }

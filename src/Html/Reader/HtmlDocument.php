@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kovami\HtmlDocx\Html\Reader;
 
+use Dom\Element;
 use Dom\HTMLDocument as NativeHtmlDocument;
 use Dom\HTMLElement;
 
@@ -26,6 +27,23 @@ final readonly class HtmlDocument
         }
 
         return new self($document);
+    }
+
+    /**
+     * The element children of an element. `Dom\Element::$children` would say
+     * the same, but it only exists from PHP 8.5.
+     *
+     * @return list<Element>
+     */
+    public static function elementChildren(Element $element): array
+    {
+        $children = [];
+
+        for ($child = $element->firstElementChild; $child !== null; $child = $child->nextElementSibling) {
+            $children[] = $child;
+        }
+
+        return $children;
     }
 
     public function body(): HTMLElement

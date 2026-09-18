@@ -41,7 +41,7 @@ final class StyleCatalog
             new StyleDefinition('Normal', 'Normal', new ParagraphProperties(), $this->mapper->run($root), basedOn: null, isDefault: true),
         ];
 
-        foreach ($html->body()->children as $element) {
+        foreach (HtmlDocument::elementChildren($html->body()) as $element) {
             $style = $this->resolver->resolve($element, $bodyStyle);
             $tag = $element->localName;
 

@@ -617,7 +617,7 @@ final class DocumentBuilder
 
                 $number = 1;
 
-                foreach ($list->children as $item) {
+                foreach (HtmlDocument::elementChildren($list) as $item) {
                     if ($item->localName !== 'li') {
                         continue;
                     }
@@ -660,7 +660,7 @@ final class DocumentBuilder
     /** Turns one note section back into notes; their bodies start at the page's own text column. */
     private function renderNotes(Element $list, string $type, ComputedStyle $style, BlockContext $context): void
     {
-        foreach ($list->children as $item) {
+        foreach (HtmlDocument::elementChildren($list) as $item) {
             $body = $this->noteBodies[spl_object_id($item)] ?? null;
 
             if ($body === null) {
@@ -713,7 +713,7 @@ final class DocumentBuilder
         foreach ($html->body()->querySelectorAll('ol.se-comments') as $list) {
             $this->commentLists[spl_object_id($list)] = $list;
 
-            foreach ($list->children as $item) {
+            foreach (HtmlDocument::elementChildren($list) as $item) {
                 $id = $item->localName === 'li' ? (self::commentIds($item)[0] ?? null) : null;
 
                 if ($id !== null) {
@@ -754,7 +754,7 @@ final class DocumentBuilder
             $seen[$comment->id] = true;
         }
 
-        foreach ($list->children as $item) {
+        foreach (HtmlDocument::elementChildren($list) as $item) {
             $entry = $this->commentItems[spl_object_id($item)] ?? null;
 
             if ($entry === null || isset($seen[$entry['id']])) {
