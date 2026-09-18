@@ -1,0 +1,203 @@
+<?php
+
+declare(strict_types=1);
+
+use Kovami\HtmlDocx\HtmlDocx;
+use Kovami\HtmlDocx\Image\CallbackImageHandler;
+use Kovami\HtmlDocx\Model\ImageData;
+use Kovami\HtmlDocx\Tests\Support\TestImage;
+
+it('writes paragraphs and headings', function () {
+    expect(html('<h1>Title</h1><p>Body</p>'))
+        ->toBe("<h1>Title</h1>\n<p style=\"margin-top: 19.67px;\">Body</p>");
+});
+
+it('adds the previous spacing to the next paragraph, so collapsing margins keep Word spacing', function () {
+    // Word adds the two paragraphs' spacing (20px after + 10px before);
+    // CSS takes the larger margin, so the second one carries the sum.
+    expect(html('<p style="margin-bottom: 20px">a</p><p style="margin-top: 30px">b</p>'))
+        ->toContain('<p style="margin-bottom: 20px;">a</p>')
+        ->toContain('<p style="margin-top: 30px;">b</p>');
+});
+
+it('writes nothing the editor stylesheet already says', function () {
+    expect(html('<p style="margin: 0 0 10px; line-height: 1.5">plain</p>'))
+        ->toBe('<p>plain</p>');
+});
+
+it('keeps an empty paragraph visible and as tall as its paragraph mark', function () {
+    expect(html('<p>a</p><p><br></p>'))
+        ->toContain('<p style="margin-top: 10px;"><br></p>');
+});
+
+it('doubles a trailing line break, which HTML would otherwise drop', function () {
+    expect(html('<p>line<br><br></p>'))->toBe('<p>line<br><br></p>');
+});
+
+it('preserves tabs and runs of spaces', function () {
+    expect(html("<pre>a\tb  c</pre>"))
+        ->toContain('white-space: pre-wrap;')
+        ->toContain("a\tb  c");
+});
+
+it('does not preserve whitespace around inline content', function () {
+    expect(html('<p>before <img src="'.TestImage::pngDataUri(20, 10).'" alt=""> after</p>'))
+        ->not->toContain('pre-wrap');
+});
+
+it('writes inline formatting the way the editor produces it', function () {
+    expect(html('<p><strong>b</strong><em>i</em><u>u</u><del>s</del><sup>up</sup><sub>down</sub></p>'))
+        ->toBe('<p><strong>b</strong><em>i</em><u>u</u><del>s</del><sup>up</sup><sub>down</sub></p>');
+});
+
+it('writes character formatting as one span per run', function () {
+    expect(html('<p><span style="color: #ff0000; background-color: #ffff00; font-size: 20px">x</span></p>'))
+        ->toBe('<p><span style="font-size: 20px; color: #ff0000; background-color: #ffff00;">x</span></p>');
+});
+
+it('breaks a page before the paragraph that starts one', function () {
+    expect(html('<p>a</p><p style="page-break-before: always">b</p>'))
+        ->toContain('page-break-before: always;');
+});
+
+it('writes lists as nested ul and ol elements', function () {
+    expect(html('<ul><li>outer<ul><li>inner</li></ul></li></ul>'))
+        ->toBe('<ul style="margin-bottom: 0;"><li>outer<ul><li style="margin-bottom: 10px;">inner</li></ul></li></ul>');
+});
+
+it('keeps the numbering an ordered list starts and continues at', function () {
+    expect(html('<ol start="5"><li>five</li><li value="9">nine</li><li>ten</li></ol>'))
+        ->toContain('<ol start="5"')
+        ->toContain('<li value="9">nine</li>')
+        ->toContain('<li style="margin-bottom: 10px;">ten</li>');
+});
+
+it('spells out markers CSS has no counter style for', function () {
+    expect(html('<ol style="list-style-type: lower-greek"><li>alpha</li><li>beta</li></ol>'))
+        ->toContain('list-style-type: &quot;α. &quot;')
+        ->toContain('list-style-type: &quot;β. &quot;');
+});
+
+it('reads its own literal markers back unchanged', function () {
+    $once = html('<ol style="list-style-type: lower-greek"><li>alpha</li><li>beta</li></ol>');
+
+    expect(html($once))->toBe($once)
+        ->and(roundTrip($once))->toBe($once);
+});
+
+it('writes formulas as the KaTeX spans the editor renders', function () {
+    $source = '<p>f: <span class="__se__katex katex" contenteditable="false" data-exp="\sum_{i=1}^n i" data-font-size="1em">∑</span></p>';
+
+    expect(html($source))
+        ->toContain('class="__se__katex katex"')
+        ->toContain('data-exp="\sum_{i=1}^n i"');
+});
+
+it('keeps a formula through Word as an equation, not as its source text', function () {
+    $source = '<p>f: <span class="__se__katex katex" data-exp="\frac{a+b}{2}">x</span>'
+        .'<span class="__se__katex katex" data-exp="\sqrt[3]{x}">y</span></p>';
+
+    // The package carries equations, not the text they are written with.
+    expect(docx($source)->count('//m:oMath'))->toBe(2)
+        ->and(docx($source)->paragraphTexts())->toBe(['f: '])
+        ->and(roundTrip($source))
+        ->toContain('data-exp="\frac{a+b}{2}"')
+        ->toContain('data-exp="\sqrt[3]{x}"');
+});
+
+it('keeps a second paragraph of a list item inside the item', function () {
+    expect(html('<ol><li>first<p>second</p></li></ol>'))
+        ->toContain('<li>first<p>second</p></li>');
+});
+
+it('indents a list whose items sit further in than the editor indents them', function () {
+    expect(html('<ul style="padding-left: 80px"><li>far</li></ul>'))
+        ->toContain('padding-left: 80px;');
+});
+
+it('writes tables in the shape SunEditor expects', function () {
+    $html = html('<table><thead><tr><th>head</th></tr></thead><tbody><tr><td>body</td></tr></tbody></table>');
+
+    expect($html)
+        ->toContain('<table class="se-table-size-100"')
+        ->toContain('<colgroup><col style="width: 100%;"></colgroup>')
+        ->toContain('<thead><tr><th><div>head</div></th></tr></thead>')
+        ->toContain('<tbody><tr><td><div>body</div></td></tr></tbody>');
+});
+
+it('writes merged cells as colspan and rowspan', function () {
+    $html = html('<table><tr><td rowspan="2">tall</td><td colspan="2">wide</td></tr><tr><td>a</td><td>b</td></tr></table>');
+
+    expect($html)->toContain('<td rowspan="2">')->toContain('<td colspan="2">');
+});
+
+it('writes a picture-only paragraph as an image component', function () {
+    $html = html('<div class="se-component se-image-container __se__float-right"><figure><img src="'.TestImage::pngDataUri(40, 20).'" alt="chart" style="width: 40px; height: 20px"></figure></div>');
+
+    expect($html)
+        ->toContain('<div class="se-component se-image-container __se__float-right" contenteditable="false">')
+        ->toContain('<figure style="margin: auto; width: 40px;">')
+        ->toContain('data-size="40px,20px"')
+        ->toContain('alt="chart"');
+});
+
+it('embeds pictures as data URIs and lets a handler place them elsewhere', function () {
+    $source = '<p><img src="'.TestImage::pngDataUri(40, 20).'" alt="" style="width: 40px; height: 20px"></p>';
+    $converter = new HtmlDocx(testOptions());
+    $handler = new CallbackImageHandler(fn (ImageData $image, string $description): string => '/media/'.$image->hash().'.'.$image->extension);
+
+    expect($converter->writeHtml($converter->readHtml($source)))->toContain('src="data:image/png;base64,')
+        ->and($converter->withImageHandler($handler)->writeHtml($converter->readHtml($source)))->toMatch('~src="/media/[0-9a-f]{40}\.png"~');
+});
+
+it('leaves out pictures the handler declines', function () {
+    $source = '<p><img src="'.TestImage::pngDataUri(40, 20).'" alt="" style="width: 40px; height: 20px"></p>';
+    $converter = (new HtmlDocx(testOptions()))->withImageHandler(new CallbackImageHandler(static fn (): ?string => null));
+
+    expect($converter->writeHtml($converter->readHtml($source)))->not->toContain('<img');
+});
+
+it('links to bookmarks and to the web', function () {
+    expect(html('<p><a href="#target">go</a></p><p id="target">here</p>'))
+        ->toContain('<a href="#target">go</a>')
+        ->toContain('<a id="target"></a>here');
+
+    expect(html('<p><a href="https://example.com/a?b=1">site</a></p>'))
+        ->toContain('href="https://example.com/a?b=1"');
+});
+
+it('prefixes generated ids so several documents can share a page', function () {
+    expect(html('<p><a href="#target">go</a></p><p id="target">here</p>', testOptions(['idPrefix' => 'doc1-'])))
+        ->toContain('href="#doc1-target"')
+        ->toContain('id="doc1-target"');
+});
+
+it('writes lengths in the configured unit', function () {
+    expect(html('<p style="margin-top: 30px">x</p>', testOptions(['cssUnit' => 'pt'])))
+        ->toContain('margin-top: 22.5pt;');
+});
+
+it('wraps the content in a full document when asked', function () {
+    $html = html('<p>x</p>', testOptions(['fullHtmlDocument' => true, 'language' => 'ru-RU']));
+
+    expect($html)
+        ->toStartWith("<!DOCTYPE html>\n<html lang=\"ru-RU\">")
+        ->toContain('<meta charset="utf-8">')
+        ->toContain('<body class="sun-editor-editable">')
+        ->toContain('<style>')
+        ->toEndWith("</body>\n</html>\n");
+});
+
+it('converts a whole editor document back and forth', function () {
+    $once = roundTrip(sunEditorFixture());
+
+    expect($once)
+        ->toContain('<h1>Квартальный отчёт</h1>')
+        ->toContain('<table class="se-table-size-100"')
+        ->toContain('se-image-container')
+        ->toContain('<li')
+        ->toContain('href="#table"');
+
+    // A second pass changes nothing: what the writer emits is what the reader reads.
+    expect(roundTrip($once))->toBe($once);
+});

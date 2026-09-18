@@ -1,0 +1,50 @@
+{
+    "name": "kovami/htmldocx",
+    "description": "Dependency-free PHP library that converts HTML to DOCX (Office Open XML) and DOCX back to HTML. Framework-agnostic, with no runtime dependencies.",
+    "type": "library",
+    "version": "2.0.0",
+    "license": "MIT",
+    "keywords": [
+        "html",
+        "docx",
+        "word",
+        "ooxml",
+        "converter",
+        "html-to-docx",
+        "docx-to-html"
+    ],
+    "require": {
+        "php": "^8.4",
+        "ext-dom": "*",
+        "ext-mbstring": "*",
+        "ext-xmlwriter": "*",
+        "ext-zlib": "*"
+    },
+    "require-dev": {
+        "ext-zip": "*",
+        "pestphp/pest": "^3.0 || ^4.0 || ^5.0"
+    },
+    "suggest": {
+        "ext-gd": "Converts WebP images (unsupported by Word) to PNG before embedding."
+    },
+    "autoload": {
+        "psr-4": {
+            "Kovami\\HtmlDocx\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Kovami\\HtmlDocx\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}
