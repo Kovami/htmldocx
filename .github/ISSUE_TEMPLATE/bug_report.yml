@@ -1,0 +1,50 @@
+name: Bug report
+description: A conversion that is wrong, loses content, or fails.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. The smallest input that shows the problem is the most useful thing you can give.
+        Security problems do not belong here — see SECURITY.md.
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Direction
+      options:
+        - HTML → DOCX
+        - DOCX → HTML
+        - Both, or a round trip
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Input
+      description: |
+        The HTML, or attach the .docx (strip anything private — a document rebuilt from scratch is ideal).
+        Include the Options you pass, if any.
+      render: html
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens
+      description: The HTML you get, what Word shows (a screenshot helps), or the exception and its message.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Library, PHP, and the Word or editor version if it matters.
+      placeholder: kovami/htmldocx 1.0.0, PHP 8.4.13, Word 16.101 for Mac
+    validations:
+      required: true

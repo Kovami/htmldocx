@@ -1,0 +1,21 @@
+name: Feature request
+description: Content or formatting the library does not convert yet.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should be converted
+      description: The HTML or Word feature, and which direction you need.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: A snippet of HTML or a small .docx that has it.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: What you are building and what breaks without it.
