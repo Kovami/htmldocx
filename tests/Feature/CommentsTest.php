@@ -155,7 +155,7 @@ it('leaves comments out on request', function () {
 });
 
 it('writes comment ranges, the comments part and the threads', function () {
-    $docx = Docx::fromBytes((new HtmlDocx(testOptions()))->writeDocx(reviewedDocument()));
+    $docx = Docx::fromBytes(converter()->fromDocument(reviewedDocument())->toDocx());
 
     expect(DocxIntegrity::violations($docx))->toBe([])
         ->and($docx->count('//w:commentRangeStart'))->toBe(3)
@@ -172,7 +172,7 @@ it('writes comment ranges, the comments part and the threads', function () {
 });
 
 it('marks commented text with spans and lists the comments after the body', function () {
-    $html = (new HtmlDocx(testOptions()))->writeHtml(reviewedDocument());
+    $html = converter()->fromDocument(reviewedDocument())->toHtml();
 
     expect($html)
         ->toContain('<p style="margin-bottom: 0;">Plain <span class="se-comment" data-comment="1 3">first </span><span class="se-comment" data-comment="1 3 2">word</span></p>')
@@ -183,8 +183,8 @@ it('marks commented text with spans and lists the comments after the body', func
 });
 
 it('reads its own comment markup back', function () {
-    $converter = new HtmlDocx(testOptions());
-    $read = $converter->readHtml($converter->writeHtml(reviewedDocument()));
+    $converter = converter();
+    $read = $converter->fromHtml($converter->fromDocument(reviewedDocument())->toHtml())->document();
 
     expect(commentedParagraphs($read))->toBe(['Plain [1[3first [2word2]', 'second1]3] after'])
         ->and(commentTexts($read))->toBe(['Rephrase this.', 'Typo?', 'Done.'])
@@ -194,23 +194,23 @@ it('reads its own comment markup back', function () {
 });
 
 it('keeps comments through DOCX to HTML and back', function () {
-    $converter = new HtmlDocx(testOptions());
-    $html = $converter->docxToHtml($converter->writeDocx(reviewedDocument()));
-    $bytes = $converter->htmlToDocx($html);
+    $converter = converter();
+    $html = $converter->fromDocx($converter->fromDocument(reviewedDocument())->toDocx())->toHtml();
+    $bytes = $converter->fromHtml($html)->toDocx();
 
     expect(DocxIntegrity::violations(Docx::fromBytes($bytes)))->toBe([])
-        ->and($converter->docxToHtml($bytes))->toBe($html);
+        ->and($converter->fromDocx($bytes)->toHtml())->toBe($html);
 });
 
 it('reads comment markup an editor has reshaped', function () {
-    $document = (new HtmlDocx(testOptions()))->readHtml(<<<'HTML'
+    $document = converter()->fromHtml(<<<'HTML'
         <p>Go <a href="https://example.com">to <span class="se-comment" data-comment="1">the</span> site</a> now</p>
         <p>Lost <span class="se-comment" data-comment="9">anchor</span></p>
         <ol class="se-comments">
           <li data-comment="1" data-author="A"><p>On the link</p></li>
           <li data-comment="2"><p>Its text was deleted</p></li>
         </ol>
-        HTML);
+        HTML)->document();
 
     // An unknown id marks nothing; a comment whose text is gone opens the document.
     expect(commentedParagraphs($document))->toBe(['[22]Go <to >[1<the>1]< site> now', 'Lost anchor'])
@@ -232,7 +232,7 @@ it('numbers comments in the order of their anchors, whatever order the part list
 });
 
 it('keeps a thread in one state and breaks loops of replies', function () {
-    $document = (new HtmlDocx(testOptions()))->readHtml(<<<'HTML'
+    $document = converter()->fromHtml(<<<'HTML'
         <p><span class="se-comment" data-comment="1 2 3 4">text</span></p>
         <ol class="se-comments">
           <li data-comment="1" data-resolved="true"><p>Root</p></li>
@@ -240,7 +240,7 @@ it('keeps a thread in one state and breaks loops of replies', function () {
           <li data-comment="3" data-parent="4" data-resolved="true"><p>Loop A</p></li>
           <li data-comment="4" data-parent="3"><p>Loop B</p></li>
         </ol>
-        HTML);
+        HTML)->document();
 
     $threads = array_map(static fn(Comment $comment): array => [$comment->parentId, $comment->resolved], $document->comments);
 
@@ -248,9 +248,9 @@ it('keeps a thread in one state and breaks loops of replies', function () {
 });
 
 it('keeps white space collapsing across comment boundaries', function () {
-    $document = (new HtmlDocx(testOptions()))->readHtml(
+    $document = converter()->fromHtml(
         '<p>a <span class="se-comment" data-comment="1"> b </span> c</p><ol class="se-comments"><li data-comment="1"><p>x</p></li></ol>',
-    );
+    )->document();
 
     expect(commentedParagraphs($document))->toBe(['a [1b 1]c']);
 });

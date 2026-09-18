@@ -143,18 +143,18 @@ it('writes a picture-only paragraph as an image component', function () {
 
 it('embeds pictures as data URIs and lets a handler place them elsewhere', function () {
     $source = '<p><img src="' . TestImage::pngDataUri(40, 20) . '" alt="" style="width: 40px; height: 20px"></p>';
-    $converter = new HtmlDocx(testOptions());
+    $converter = converter();
     $handler = new CallbackImageHandler(fn(ImageData $image, string $description): string => '/media/' . $image->hash() . '.' . $image->extension);
 
-    expect($converter->writeHtml($converter->readHtml($source)))->toContain('src="data:image/png;base64,')
-        ->and($converter->withImageHandler($handler)->writeHtml($converter->readHtml($source)))->toMatch('~src="/media/[0-9a-f]{40}\.png"~');
+    expect($converter->fromHtml($source)->toHtml())->toContain('src="data:image/png;base64,')
+        ->and($converter->withImageHandler($handler)->fromDocument($converter->fromHtml($source)->document())->toHtml())->toMatch('~src="/media/[0-9a-f]{40}\.png"~');
 });
 
 it('leaves out pictures the handler declines', function () {
     $source = '<p><img src="' . TestImage::pngDataUri(40, 20) . '" alt="" style="width: 40px; height: 20px"></p>';
-    $converter = (new HtmlDocx(testOptions()))->withImageHandler(new CallbackImageHandler(static fn(): ?string => null));
+    $converter = converter()->withImageHandler(new CallbackImageHandler(static fn(): ?string => null));
 
-    expect($converter->writeHtml($converter->readHtml($source)))->not->toContain('<img');
+    expect($converter->fromHtml($source)->toHtml())->not->toContain('<img');
 });
 
 it('links to bookmarks and to the web', function () {

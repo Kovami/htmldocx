@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Model\CellProperties;
 use Kovami\HtmlDocx\Model\Hyperlink;
@@ -192,11 +193,11 @@ it('leaves out a picture whose part is missing, and says so', function () {
             . '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r><w:r><w:t>text</w:t></w:r></w:p>')
         ->toBytes();
 
-    $document = (new HtmlDocx())
+    $document = HtmlDocx::for(Editor::SunEditor)
         ->withWarningHandler(function (string $message) use (&$warnings): void {
             $warnings[] = $message;
         })
-        ->readDocx($bytes);
+        ->fromDocx($bytes)->document();
 
     expect(blockTexts($document->blocks))->toBe(['text'])
         ->and($warnings)->not->toBeEmpty();

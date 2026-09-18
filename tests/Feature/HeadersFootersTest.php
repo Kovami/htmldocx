@@ -172,7 +172,7 @@ it('leaves headers and footers out on request', function () {
 });
 
 it('writes header and footer parts and points the section at them', function () {
-    $docx = Docx::fromBytes((new HtmlDocx(testOptions()))->writeDocx(furnishedDocument()));
+    $docx = Docx::fromBytes(converter()->fromDocument(furnishedDocument())->toDocx());
 
     expect(DocxIntegrity::violations($docx))->toBe([])
         ->and($docx->count('//w:sectPr/w:headerReference'))->toBe(2)
@@ -193,7 +193,7 @@ it('writes header and footer parts and points the section at them', function () 
 });
 
 it('writes headers first and footers last in the HTML', function () {
-    $html = (new HtmlDocx(testOptions()))->writeHtml(furnishedDocument());
+    $html = converter()->fromDocument(furnishedDocument())->toHtml();
 
     $p = '<p style="margin-bottom: 0;">';
 
@@ -204,8 +204,8 @@ it('writes headers first and footers last in the HTML', function () {
 });
 
 it('reads its own header and footer sections back', function () {
-    $converter = new HtmlDocx(testOptions());
-    $read = $converter->readHtml($converter->writeHtml(furnishedDocument()));
+    $converter = converter();
+    $read = $converter->fromHtml($converter->fromDocument(furnishedDocument())->toHtml())->document();
 
     expect(furniture($read))->toBe([
         'header/default' => 'Running head',
@@ -217,18 +217,18 @@ it('reads its own header and footer sections back', function () {
 });
 
 it('keeps headers and footers through DOCX to HTML and back', function () {
-    $converter = new HtmlDocx(testOptions());
-    $html = $converter->docxToHtml($converter->writeDocx(furnishedDocument()));
-    $bytes = $converter->htmlToDocx($html);
+    $converter = converter();
+    $html = $converter->fromDocx($converter->fromDocument(furnishedDocument())->toDocx())->toHtml();
+    $bytes = $converter->fromHtml($html)->toDocx();
 
     expect(DocxIntegrity::violations(Docx::fromBytes($bytes)))->toBe([])
-        ->and($converter->docxToHtml($bytes))->toBe($html);
+        ->and($converter->fromDocx($bytes)->toHtml())->toBe($html);
 });
 
 it('reads a second header of one type as ordinary content', function () {
-    $document = (new HtmlDocx(testOptions()))->readHtml(
+    $document = converter()->fromHtml(
         '<div class="se-header"><p>One</p></div><div class="se-header"><p>Two</p></div><p>Body</p>',
-    );
+    )->document();
 
     expect(furniture($document))->toBe(['header/default' => 'One'])
         ->and(furnitureText($document->blocks))->toBe("Two\nBody");

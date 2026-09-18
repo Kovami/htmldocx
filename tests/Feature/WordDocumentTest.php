@@ -12,7 +12,7 @@ use Kovami\HtmlDocx\Tests\Support\WordDocument;
  */
 function wordHtml(): string
 {
-    return (new HtmlDocx(testOptions()))->docxToHtml(WordDocument::bytes());
+    return converter()->fromDocx(WordDocument::bytes())->toHtml();
 }
 
 it('reads a document written the way Word writes one, losing nothing', function () {
@@ -62,13 +62,13 @@ it('reads the text of a text box, whichever vocabulary Word used', function () {
 });
 
 it('writes a package Word can open back', function () {
-    $converter = new HtmlDocx(testOptions());
-    $again = $converter->readDocx($converter->writeDocx($converter->readDocx(WordDocument::bytes())));
+    $converter = converter();
+    $again = $converter->fromDocx($converter->fromDocx(WordDocument::bytes())->toDocx())->document();
 
     // Everything that survives a second package survives Word too: the notes,
     // the table and the text the formula became.
     expect($again->notes)->toHaveCount(2)
-        ->and($converter->writeHtml($again))
+        ->and($converter->fromDocument($again)->toHtml())
         ->toContain('Показатель')
         ->toContain('<li id="footnote-1">')
         ->toContain('a^{2}+b^{2}=c^{2}');

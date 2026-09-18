@@ -6,76 +6,87 @@ namespace Kovami\HtmlDocx;
 
 use Closure;
 use Kovami\HtmlDocx\Config\PageLayout;
-use Kovami\HtmlDocx\Css\StyleResolver;
-use Kovami\HtmlDocx\Docx\Reader\DocxReader;
-use Kovami\HtmlDocx\Docx\Writer\DocxWriter;
-use Kovami\HtmlDocx\Exceptions\HtmlDocxException;
-use Kovami\HtmlDocx\Html\Reader\DocumentBuilder;
-use Kovami\HtmlDocx\Html\Reader\HtmlDocument;
-use Kovami\HtmlDocx\Html\Reader\ImageFactory;
-use Kovami\HtmlDocx\Html\Reader\PropertyMapper;
-use Kovami\HtmlDocx\Html\Writer\HtmlWriter;
 use Kovami\HtmlDocx\Image\DataUriImageHandler;
 use Kovami\HtmlDocx\Image\DefaultImageSourceResolver;
 use Kovami\HtmlDocx\Image\ImageHandler;
-use Kovami\HtmlDocx\Image\ImageInspector;
 use Kovami\HtmlDocx\Image\ImageSourceResolver;
 use Kovami\HtmlDocx\Model\Document;
 
 /**
- * Converts rich-text editor HTML into DOCX and DOCX back into HTML.
+ * Converts HTML into DOCX and DOCX back into HTML.
  *
- *     $converter = new HtmlDocx(new Options(language: 'ru-RU'));
- *     $converter->htmlToDocxFile($html, storage_path('app/report.docx'));
- *     $html = $converter->docxFileToHtml(storage_path('app/report.docx'));
+ *     // Plain HTML that looks the same in any browser
+ *     $html = HtmlDocx::plain()->fromDocxFile('report.docx')->toHtml();
  *
- * Both directions meet in one document model: HTML → CSS cascade → model →
- * OOXML, and OOXML → model → HTML. Instances are immutable and safe to
- * reuse for any number of conversions.
+ *     // HTML tailored to an editor, and back to Word
+ *     $html = HtmlDocx::for(Editor::SunEditor)->fromDocxFile('report.docx')->toHtml();
+ *     HtmlDocx::for('tinymce')->fromHtml($html)->saveDocx('report.docx');
+ *
+ * Pick the flavour of HTML with {@see self::plain()} or {@see self::for()},
+ * adjust it with the `with…()` methods, then start a conversion with one of
+ * the `from…()` methods. Instances are immutable and safe to reuse.
  */
 final readonly class HtmlDocx
 {
-    private ImageSourceResolver $imageResolver;
+    /**
+     * @param  Closure(string): void|null  $warningHandler
+     */
+    private function __construct(
+        private ?Editor $editor,
+        private Options $options,
+        private ImageSourceResolver $imageResolver,
+        private ImageHandler $imageHandler,
+        private ?Closure $warningHandler,
+    ) {}
 
-    private ImageHandler $imageHandler;
+    /** Plain HTML, tied to no editor, that looks the same wherever it is shown. */
+    public static function plain(?Options $options = null): self
+    {
+        return self::create(null, $options);
+    }
 
     /**
-     * @param  ImageSourceResolver|null  $imageResolver  where `<img src>` is read from, converting to DOCX
-     * @param  ImageHandler|null  $imageHandler  where pictures go, converting to HTML
-     * @param  Closure(string): void|null  $warningHandler  receives a message for every piece of content that could not be converted
+     * HTML tailored to a rich-text editor: its conventions for pictures,
+     * formulas and the parts of a document plain HTML has no element for.
+     *
+     * @param  Editor|string  $editor  an {@see Editor}, or its name in any case ("SunEditor", "tinymce")
      */
-    public function __construct(
-        private Options $options = new Options(),
-        ?ImageSourceResolver $imageResolver = null,
-        ?ImageHandler $imageHandler = null,
-        private ?Closure $warningHandler = null,
-    ) {
-        $this->imageResolver = $imageResolver ?? new DefaultImageSourceResolver();
-        $this->imageHandler = $imageHandler ?? new DataUriImageHandler();
+    public static function for(Editor|string $editor, ?Options $options = null): self
+    {
+        return self::create($editor instanceof Editor ? $editor : Editor::fromName($editor), $options);
+    }
+
+    /** The editor the HTML is written for; null for plain HTML. */
+    public function editor(): ?Editor
+    {
+        return $this->editor;
     }
 
     public function withOptions(Options $options): self
     {
-        return new self($options, $this->imageResolver, $this->imageHandler, $this->warningHandler);
+        return new self($this->editor, $options, $this->imageResolver, $this->imageHandler, $this->warningHandler);
     }
 
+    /** Where `<img src>` is read from, converting to DOCX. */
     public function withImageResolver(ImageSourceResolver $imageResolver): self
     {
-        return new self($this->options, $imageResolver, $this->imageHandler, $this->warningHandler);
+        return new self($this->editor, $this->options, $imageResolver, $this->imageHandler, $this->warningHandler);
     }
 
     /** Where the pictures of a DOCX document end up in the HTML; data URIs by default. */
     public function withImageHandler(ImageHandler $imageHandler): self
     {
-        return new self($this->options, $this->imageResolver, $imageHandler, $this->warningHandler);
+        return new self($this->editor, $this->options, $this->imageResolver, $imageHandler, $this->warningHandler);
     }
 
     /**
+     * Receives a message for every piece of content that could not be converted.
+     *
      * @param  Closure(string): void|null  $warningHandler
      */
     public function withWarningHandler(?Closure $warningHandler): self
     {
-        return new self($this->options, $this->imageResolver, $this->imageHandler, $warningHandler);
+        return new self($this->editor, $this->options, $this->imageResolver, $this->imageHandler, $warningHandler);
     }
 
     /**
@@ -99,175 +110,56 @@ final readonly class HtmlDocx
         return $this->withImageResolver(new DefaultImageSourceResolver($current->remoteFetcher, $directory));
     }
 
-    /** Builds the document model from HTML without serializing it. */
-    public function readHtml(string $html, ?PageLayout $pageLayout = null): Document
+    /** Reads a .docx package from its bytes. */
+    public function fromDocx(string $bytes): Conversion
     {
-        $document = HtmlDocument::fromString($html);
+        $engine = $this->engine();
 
-        $resolver = StyleResolver::fromStylesheets(
-            $this->options->defaultStylesheet,
-            $this->options->extraStylesheet,
-            $document->stylesheets(),
-        );
-
-        $builder = new DocumentBuilder(
-            $resolver,
-            new PropertyMapper(),
-            new ImageFactory($this->imageResolver, new ImageInspector()),
-            $this->options,
-        );
-
-        return $builder->build($document, $pageLayout ?? $this->options->page());
+        return new Conversion($engine->readDocx($bytes), $engine);
     }
 
-    /** Builds the document model from the bytes of a .docx package. */
-    public function readDocx(string $bytes): Document
+    public function fromDocxFile(string $path): Conversion
     {
-        return (new DocxReader(
-            $this->options->includeHiddenText,
-            $this->options->maxDocxEntryBytes,
-            $this->options->maxDocxTotalBytes,
-            $this->warningHandler,
-            $this->options->includeHeadersFooters,
-            $this->options->includeComments,
-        ))->read($bytes);
-    }
-
-    public function writeDocx(Document $document): string
-    {
-        $stream = self::memoryStream();
-
-        try {
-            $this->writeDocxToStream($document, $stream);
-            rewind($stream);
-
-            return (string) stream_get_contents($stream);
-        } finally {
-            fclose($stream);
-        }
+        return $this->fromDocx(Files::read($path));
     }
 
     /**
      * @param  resource  $stream
      */
-    public function writeDocxToStream(Document $document, mixed $stream): void
+    public function fromDocxStream(mixed $stream): Conversion
     {
-        if (! is_resource($stream)) {
-            throw HtmlDocxException::writerFailure('the output is not a writable stream');
-        }
-
-        (new DocxWriter())->write($document, $stream);
-    }
-
-    public function writeHtml(Document $document): string
-    {
-        return (new HtmlWriter($document, $this->options, $this->imageHandler, $this->warningHandler))->toHtml();
-    }
-
-    public function htmlToDocx(string $html, ?PageLayout $pageLayout = null): string
-    {
-        return $this->writeDocx($this->readHtml($html, $pageLayout));
+        return $this->fromDocx(Files::readStream($stream));
     }
 
     /**
-     * @param  resource  $stream
+     * Reads HTML — a fragment or a whole document — laid out on the given
+     * page, or on the one the options name.
      */
-    public function htmlToDocxStream(string $html, mixed $stream, ?PageLayout $pageLayout = null): void
+    public function fromHtml(string $html, ?PageLayout $pageLayout = null): Conversion
     {
-        $this->writeDocxToStream($this->readHtml($html, $pageLayout), $stream);
+        $engine = $this->engine();
+
+        return new Conversion($engine->readHtml($html, $pageLayout), $engine);
     }
 
-    /** @return string the path written to */
-    public function htmlToDocxFile(string $html, string $path, ?PageLayout $pageLayout = null): string
+    public function fromHtmlFile(string $path, ?PageLayout $pageLayout = null): Conversion
     {
-        $document = $this->readHtml($html, $pageLayout);
-        $error = null;
-        set_error_handler(static function (int $level, string $message) use (&$error): bool {
-            $error = $message;
-
-            return true;
-        });
-
-        try {
-            $stream = fopen($path, 'wb');
-        } finally {
-            restore_error_handler();
-        }
-
-        if ($stream === false) {
-            throw HtmlDocxException::writerFailure($error ?? "could not open {$path} for writing");
-        }
-
-        try {
-            $this->writeDocxToStream($document, $stream);
-        } finally {
-            fclose($stream);
-        }
-
-        return $path;
+        return $this->fromHtml(Files::read($path), $pageLayout);
     }
 
-    public function docxToHtml(string $bytes): string
+    /** Starts from a document model built or changed by hand. */
+    public function fromDocument(Document $document): Conversion
     {
-        return $this->writeHtml($this->readDocx($bytes));
+        return new Conversion($document, $this->engine());
     }
 
-    public function docxFileToHtml(string $path): string
+    private static function create(?Editor $editor, ?Options $options): self
     {
-        return $this->docxToHtml(self::contents($path));
+        return new self($editor, $options ?? new Options(), new DefaultImageSourceResolver(), new DataUriImageHandler(), null);
     }
 
-    /**
-     * @param  resource  $stream
-     */
-    public function docxStreamToHtml(mixed $stream): string
+    private function engine(): Engine
     {
-        if (! is_resource($stream)) {
-            throw HtmlDocxException::unreadableFile('the input is not a readable stream');
-        }
-
-        $bytes = stream_get_contents($stream);
-
-        if ($bytes === false) {
-            throw HtmlDocxException::unreadableFile('the input stream could not be read');
-        }
-
-        return $this->docxToHtml($bytes);
-    }
-
-    private static function contents(string $path): string
-    {
-        $error = null;
-        set_error_handler(static function (int $level, string $message) use (&$error): bool {
-            $error = $message;
-
-            return true;
-        });
-
-        try {
-            $bytes = file_get_contents($path);
-        } finally {
-            restore_error_handler();
-        }
-
-        if ($bytes === false) {
-            throw HtmlDocxException::unreadableFile($error ?? "could not open {$path} for reading");
-        }
-
-        return $bytes;
-    }
-
-    /**
-     * @return resource
-     */
-    private static function memoryStream(): mixed
-    {
-        $stream = fopen('php://memory', 'w+b');
-
-        if ($stream === false) {
-            throw HtmlDocxException::writerFailure('could not open an in-memory stream');
-        }
-
-        return $stream;
+        return new Engine($this->editor, $this->options, $this->imageResolver, $this->imageHandler, $this->warningHandler);
     }
 }

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** a new entry point replaces the 1.x methods. Choose the HTML
+  with `HtmlDocx::plain()` or `HtmlDocx::for(Editor::SunEditor)` (an `Editor`
+  case or its name, e.g. `'tinymce'`), start from `fromDocxFile()`,
+  `fromDocx()`, `fromDocxStream()`, `fromHtml()`, `fromHtmlFile()` or
+  `fromDocument()`, and finish with `toHtml()`, `saveHtml()`, `toDocx()`,
+  `saveDocx()` or `streamDocx()`; `document()` returns the model.
+  `new HtmlDocx`, `htmlToDocx()`, `docxToHtml()`, `readHtml()`, `writeDocx()`
+  and the rest of the 1.x methods are gone.
+
 ## [1.0.0] - 2026-09-18
 
 The first public release.

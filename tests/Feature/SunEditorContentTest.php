@@ -32,7 +32,7 @@ it('is readable by an independent DOCX consumer', function () {
     $path = $placeholder . '.docx';
 
     try {
-        (new HtmlDocx(testOptions()))->htmlToDocxFile(sunEditorFixture(), $path);
+        converter()->fromHtml(sunEditorFixture())->saveDocx($path);
         exec('textutil -convert txt -stdout ' . escapeshellarg($path) . ' 2>&1', $output, $exitCode);
         $text = implode("\n", $output);
 

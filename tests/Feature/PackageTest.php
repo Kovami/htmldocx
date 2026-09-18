@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\Config\PageLayout;
 use Kovami\HtmlDocx\Exceptions\HtmlDocxException;
 use Kovami\HtmlDocx\HtmlDocx;
@@ -24,25 +25,25 @@ it('writes only the parts it needs', function () {
 });
 
 it('is deterministic for a fixed creation time', function () {
-    $converter = new HtmlDocx(testOptions());
+    $converter = converter();
     $html = '<h1>Title</h1><p>Body <img src="' . TestImage::pngDataUri(4, 4) . '"></p><ol><li>x</li></ol>';
 
-    expect($converter->htmlToDocx($html))->toBe($converter->htmlToDocx($html));
+    expect($converter->fromHtml($html)->toDocx())->toBe($converter->fromHtml($html)->toDocx());
 });
 
 it('writes the same bytes to a string, a file and a stream', function () {
-    $converter = new HtmlDocx(testOptions());
+    $converter = converter();
     $html = '<p>Same everywhere</p>';
     $path = tempnam(sys_get_temp_dir(), 'kovami');
     $stream = fopen('php://temp', 'w+b');
 
     try {
-        expect($converter->htmlToDocxFile($html, $path))->toBe($path);
-        $converter->htmlToDocxStream($html, $stream);
+        expect($converter->fromHtml($html)->saveDocx($path))->toBe($path);
+        $converter->fromHtml($html)->streamDocx($stream);
         rewind($stream);
 
         expect(file_get_contents($path))
-            ->toBe($converter->htmlToDocx($html))
+            ->toBe($converter->fromHtml($html)->toDocx())
             ->toBe(stream_get_contents($stream));
     } finally {
         @unlink($path);
@@ -51,18 +52,18 @@ it('writes the same bytes to a string, a file and a stream', function () {
 });
 
 it('reports an unwritable destination', function () {
-    (new HtmlDocx())->htmlToDocxFile('<p>x</p>', '/nonexistent-dir/out.docx');
+    HtmlDocx::for(Editor::SunEditor)->fromHtml('<p>x</p>')->saveDocx('/nonexistent-dir/out.docx');
 })->throws(HtmlDocxException::class);
 
 it('writes document metadata', function () {
-    $docx = docx('<title>From HTML</title><p>x</p>', new HtmlDocx(testOptions(['author' => 'Jane', 'language' => 'ru-RU'])));
+    $docx = docx('<title>From HTML</title><p>x</p>', converter(['author' => 'Jane', 'language' => 'ru-RU']));
 
     expect($docx->first('//dc:title', null, 'docProps/core.xml')->textContent)->toBe('From HTML')
         ->and($docx->first('//dc:creator', null, 'docProps/core.xml')->textContent)->toBe('Jane')
         ->and($docx->first('//dcterms:created', null, 'docProps/core.xml')->textContent)->toBe('2026-01-02T03:04:05Z')
         ->and($docx->val('//w:docDefaults//w:lang', null, 'word/styles.xml'))->toBe('ru-RU');
 
-    $titled = docx('<title>From HTML</title><p>x</p>', new HtmlDocx(testOptions(['title' => 'Explicit'])));
+    $titled = docx('<title>From HTML</title><p>x</p>', converter(['title' => 'Explicit']));
     expect($titled->first('//dc:title', null, 'docProps/core.xml')->textContent)->toBe('Explicit');
 });
 
@@ -81,7 +82,7 @@ it('applies the page layout to the section', function () {
 });
 
 it('uses default typography from the options', function () {
-    $docx = docx('<p>x</p>', new HtmlDocx(testOptions(['fontFamily' => 'Arial', 'fontSizePt' => 12.5, 'textColor' => '#333333'])));
+    $docx = docx('<p>x</p>', converter(['fontFamily' => 'Arial', 'fontSizePt' => 12.5, 'textColor' => '#333333']));
 
     expect(Docx::attr($docx->first('//w:docDefaults//w:rFonts', null, 'word/styles.xml'), 'ascii'))->toBe('Arial')
         ->and($docx->val('//w:docDefaults//w:sz', null, 'word/styles.xml'))->toBe('25')
@@ -90,7 +91,7 @@ it('uses default typography from the options', function () {
 });
 
 it('keeps a converter reusable without leaking state between documents', function () {
-    $converter = new HtmlDocx(testOptions());
+    $converter = converter();
 
     docx('<ol><li>a</li></ol><p id="x"><a href="#x">self</a></p>', $converter);
     $second = docx('<ol><li>b</li></ol>', $converter);

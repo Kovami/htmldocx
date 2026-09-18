@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\Exceptions\HtmlDocxException;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Model\Block;
@@ -366,7 +367,7 @@ it('refuses a package that is not a Word document', function () {
         . '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
     $rels = '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
         . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
-    $read = static fn(string $bytes): Closure => static fn() => (new HtmlDocx())->readDocx($bytes);
+    $read = static fn(string $bytes): Closure => static fn() => HtmlDocx::for(Editor::SunEditor)->fromDocx($bytes)->document();
 
     expect($read('this is not a package'))->toThrow(HtmlDocxException::class)
         ->and($read(zipBytes(['word/document.xml' => ['<w:document/>', true]])))->toThrow(HtmlDocxException::class)
@@ -393,7 +394,7 @@ it('does not resolve entities a document declares', function () {
     ]);
 
     $texts = static function () use ($bytes): array {
-        return blockTexts((new HtmlDocx())->readDocx($bytes)->blocks);
+        return blockTexts(HtmlDocx::for(Editor::SunEditor)->fromDocx($bytes)->document()->blocks);
     };
 
     // Either the parser refuses the doctype or it leaves the entity unresolved;
@@ -408,6 +409,6 @@ it('does not resolve entities a document declares', function () {
 it('keeps the decompression limits it is given', function () {
     $bytes = DocxBuilder::make()->body('<w:p><w:r><w:t>' . str_repeat('a', 5000) . '</w:t></w:r></w:p>')->toBytes();
 
-    expect(fn() => (new HtmlDocx(new Options(maxDocxTotalBytes: 1024)))->readDocx($bytes))
+    expect(fn() => HtmlDocx::for(Editor::SunEditor, new Options(maxDocxTotalBytes: 1024))->fromDocx($bytes)->document())
         ->toThrow(HtmlDocxException::class);
 });

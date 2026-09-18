@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Kovami\HtmlDocx\Config\PageLayout;
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Options;
 use Kovami\HtmlDocx\Package\ZipWriter;
@@ -15,12 +16,18 @@ use Kovami\HtmlDocx\Tests\Support\DocxIntegrity;
  */
 function docx(string $html, ?HtmlDocx $converter = null, ?PageLayout $pageLayout = null): Docx
 {
-    $converter ??= new HtmlDocx(testOptions());
-    $docx = Docx::fromBytes($converter->htmlToDocx($html, $pageLayout));
+    $converter ??= converter();
+    $docx = Docx::fromBytes($converter->fromHtml($html, $pageLayout)->toDocx());
 
     expect(DocxIntegrity::violations($docx))->toBe([]);
 
     return $docx;
+}
+
+/** The converter the tests use: HTML for SunEditor, fixed timestamp. */
+function converter(array $overrides = []): HtmlDocx
+{
+    return HtmlDocx::for(Editor::SunEditor, testOptions($overrides));
 }
 
 function testOptions(array $overrides = []): Options
@@ -31,17 +38,17 @@ function testOptions(array $overrides = []): Options
 /** HTML → model → HTML: what the HTML writer makes of editor content. */
 function html(string $source, ?Options $options = null): string
 {
-    $converter = new HtmlDocx($options ?? testOptions());
+    $converter = HtmlDocx::for(Editor::SunEditor, $options ?? testOptions());
 
-    return $converter->writeHtml($converter->readHtml($source));
+    return $converter->fromHtml($source)->toHtml();
 }
 
 /** HTML → DOCX → HTML: everything both directions do, through a real package. */
 function roundTrip(string $source, ?Options $options = null): string
 {
-    $converter = new HtmlDocx($options ?? testOptions());
+    $converter = HtmlDocx::for(Editor::SunEditor, $options ?? testOptions());
 
-    return $converter->docxToHtml($converter->htmlToDocx($source));
+    return $converter->fromDocx($converter->fromHtml($source)->toDocx())->toHtml();
 }
 
 /**

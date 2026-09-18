@@ -43,7 +43,7 @@ function annotatedDocument(): Document
 }
 
 it('writes the note parts a document with notes needs', function () {
-    $bytes = (new HtmlDocx(testOptions()))->writeDocx(annotatedDocument());
+    $bytes = converter()->fromDocument(annotatedDocument())->toDocx();
     $docx = Docx::fromBytes($bytes);
 
     expect(DocxIntegrity::violations($docx))->toBe([])
@@ -59,14 +59,14 @@ it('writes the note parts a document with notes needs', function () {
 });
 
 it('reads its own notes back and links them from the HTML', function () {
-    $converter = new HtmlDocx(testOptions());
-    $read = $converter->readDocx($converter->writeDocx(annotatedDocument()));
+    $converter = converter();
+    $read = $converter->fromDocx($converter->fromDocument(annotatedDocument())->toDocx())->document();
 
     expect($read->notes)->toHaveCount(2)
         ->and($read->notes[0]->type)->toBe(Note::FOOTNOTE)
         ->and($read->notes[1]->type)->toBe(Note::ENDNOTE);
 
-    $html = $converter->writeHtml($read);
+    $html = $converter->fromDocument($read)->toHtml();
 
     expect($html)
         ->toContain('<sup><a href="#footnote-1" id="footnote-ref-1">1</a></sup>')
@@ -78,11 +78,11 @@ it('reads its own notes back and links them from the HTML', function () {
 });
 
 it('keeps notes through a second package', function () {
-    $converter = new HtmlDocx(testOptions());
-    $once = $converter->readDocx($converter->writeDocx(annotatedDocument()));
-    $twice = $converter->readDocx($converter->writeDocx($once));
+    $converter = converter();
+    $once = $converter->fromDocx($converter->fromDocument(annotatedDocument())->toDocx())->document();
+    $twice = $converter->fromDocx($converter->fromDocument($once)->toDocx())->document();
 
-    expect($converter->writeHtml($twice))->toBe($converter->writeHtml($once));
+    expect($converter->fromDocument($twice)->toHtml())->toBe($converter->fromDocument($once)->toHtml());
 });
 
 /**
@@ -108,8 +108,8 @@ function noteText(array $blocks): string
 }
 
 it('reads its own notes section back as notes', function () {
-    $converter = new HtmlDocx(testOptions());
-    $read = $converter->readHtml($converter->writeHtml(annotatedDocument()));
+    $converter = converter();
+    $read = $converter->fromHtml($converter->fromDocument(annotatedDocument())->toHtml())->document();
 
     expect($read->notes)->toHaveCount(2)
         ->and($read->notes[0]->type)->toBe(Note::FOOTNOTE)
@@ -129,9 +129,9 @@ it('reads its own notes section back as notes', function () {
 });
 
 it('keeps notes as notes through DOCX to HTML and back', function () {
-    $converter = new HtmlDocx(testOptions());
-    $html = $converter->docxToHtml($converter->writeDocx(annotatedDocument()));
-    $bytes = $converter->htmlToDocx($html);
+    $converter = converter();
+    $html = $converter->fromDocx($converter->fromDocument(annotatedDocument())->toDocx())->toHtml();
+    $bytes = $converter->fromHtml($html)->toDocx();
     $docx = Docx::fromBytes($bytes);
 
     expect(DocxIntegrity::violations($docx))->toBe([])
@@ -139,15 +139,15 @@ it('keeps notes as notes through DOCX to HTML and back', function () {
         ->and($docx->count('//w:endnoteReference'))->toBe(1)
         ->and($docx->first('//w:footnote[@w:id="1"]//w:t', null, 'word/footnotes.xml')?->textContent)->toBe('The footnote body.')
         ->and($docx->first('//w:endnote[@w:id="1"]//w:t', null, 'word/endnotes.xml')?->textContent)->toBe('The endnote body.')
-        ->and($converter->docxToHtml($bytes))->toBe($html);
+        ->and($converter->fromDocx($bytes)->toHtml())->toBe($html);
 });
 
 it('numbers note bodies by their list value and drops what frames them', function () {
-    $document = (new HtmlDocx(testOptions()))->readHtml(<<<'HTML'
+    $document = converter()->fromHtml(<<<'HTML'
         <p>Text<sup><a href="#fn-4" id="ref-4">4</a></sup></p>
         <hr>
         <ol class="se-footnotes"><li id="fn-4" value="4"><p>Fourth.<a href="#ref-4"> ↩</a></p></li></ol>
-        HTML);
+        HTML)->document();
 
     expect($document->notes)->toHaveCount(1)
         ->and($document->notes[0]->number)->toBe(4)

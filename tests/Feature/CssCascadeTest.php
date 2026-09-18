@@ -77,8 +77,8 @@ it('lets display change how elements flow', function () {
 });
 
 it('applies extra and replacement default stylesheets from the options', function () {
-    $extra = new HtmlDocx(testOptions(['extraStylesheet' => 'p { color: #0f0f0f }']));
-    $replaced = new HtmlDocx(testOptions(['defaultStylesheet' => 'h1 { font-size: 30pt; font-weight: bold; }']));
+    $extra = converter(['extraStylesheet' => 'p { color: #0f0f0f }']);
+    $replaced = converter(['defaultStylesheet' => 'h1 { font-size: 30pt; font-weight: bold; }']);
 
     expect(docx('<p>extra</p>', $extra)->val('//w:r/w:rPr/w:color'))->toBe('0F0F0F')
         ->and(docx('<h1>x</h1>', $replaced)->val("//w:style[@w:styleId='Heading1']/w:rPr/w:sz", null, 'word/styles.xml'))->toBe('60')
@@ -86,7 +86,7 @@ it('applies extra and replacement default stylesheets from the options', functio
 });
 
 it('lets document styles override the extra stylesheet', function () {
-    $converter = new HtmlDocx(testOptions(['extraStylesheet' => 'p { color: #0f0f0f }']));
+    $converter = converter(['extraStylesheet' => 'p { color: #0f0f0f }']);
 
     expect(docx('<style>p { color: #f0f0f0 }</style><p>doc</p>', $converter)->val('//w:r/w:rPr/w:color'))->toBe('F0F0F0');
 });

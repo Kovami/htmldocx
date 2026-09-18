@@ -5,24 +5,28 @@ declare(strict_types=1);
 // Converts one .docx with the library under test and prints JSON: the full
 // HTML document and the page geometry the document asks for, in points.
 
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Options;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-$bytes = (string) file_get_contents($argv[1]);
-$converter = new HtmlDocx(new Options(fullHtmlDocument: true));
+// argv[2]: an editor name, or "plain"; SunEditor until plain HTML is the measured target.
+$profile = $argv[2] ?? 'suneditor';
+$options = new Options(fullHtmlDocument: true);
+$converter = $profile === 'plain' ? HtmlDocx::plain($options) : HtmlDocx::for(Editor::fromName($profile), $options);
 $warnings = [];
 $converter = $converter->withWarningHandler(static function (string $message) use (&$warnings): void {
     $warnings[] = $message;
 });
 
-$document = $converter->readDocx($bytes);
+$conversion = $converter->fromDocxFile($argv[1]);
+$document = $conversion->document();
 $page = $document->pageLayout;
 $points = static fn(int $twips): float => $twips / 20;
 
 echo json_encode([
-    'html' => $converter->writeHtml($document),
+    'html' => $conversion->toHtml(),
     'page' => [
         'width' => $points($page->widthTwips),
         'height' => $points($page->heightTwips),

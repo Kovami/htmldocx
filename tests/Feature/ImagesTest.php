@@ -106,7 +106,7 @@ it('falls back to alt text for images it cannot embed', function (string $src) {
 
 it('fetches remote images only through the application callback', function () {
     $requested = [];
-    $converter = (new HtmlDocx(testOptions()))->withRemoteImages(function (string $url) use (&$requested): ?string {
+    $converter = converter()->withRemoteImages(function (string $url) use (&$requested): ?string {
         $requested[] = $url;
 
         return str_contains($url, 'allowed') ? TestImage::png(5, 5) : null;
@@ -126,7 +126,7 @@ it('reads local images only inside the configured directory', function () {
     file_put_contents(dirname($directory) . '/kovami-outside.png', TestImage::png(3, 3));
 
     try {
-        $converter = (new HtmlDocx(testOptions()))->withLocalImageBaseDir($directory);
+        $converter = converter()->withLocalImageBaseDir($directory);
         $docx = docx('<p><img src="/nested/pic.png?v=2"><img src="nested/pic.png"><img src="../kovami-outside.png" alt="blocked"></p>', $converter);
 
         expect($docx->count('//w:drawing'))->toBe(2)
@@ -147,7 +147,7 @@ it('accepts a custom image resolver', function () {
         }
     };
 
-    $docx = docx('<p><img src="storage://avatar"></p>', (new HtmlDocx(testOptions()))->withImageResolver($resolver));
+    $docx = docx('<p><img src="storage://avatar"></p>', converter()->withImageResolver($resolver));
 
     expect(imageSizePx($docx))->toBe([7, 7]);
 });

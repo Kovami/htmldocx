@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kovami\HtmlDocx\Tests\Support;
 
 use DateTimeImmutable;
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Model\Document;
 use Kovami\HtmlDocx\Options;
@@ -162,7 +163,7 @@ final class DocxBuilder
     /** Reads the package back through the reader under test. */
     public function read(?Options $options = null): Document
     {
-        return (new HtmlDocx($options ?? new Options()))->readDocx($this->toBytes());
+        return HtmlDocx::for(Editor::SunEditor, $options ?? new Options())->fromDocx($this->toBytes())->document();
     }
 
     private function related(string $target, string $type, string $contentType, string $contents): self
