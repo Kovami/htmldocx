@@ -32,7 +32,9 @@
     },
     "require-dev": {
         "ext-zip": "*",
-        "pestphp/pest": "^3.0 || ^4.0 || ^5.0"
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "pestphp/pest": "^3.0 || ^4.0 || ^5.0",
+        "phpstan/phpstan": "^2.2"
     },
     "suggest": {
         "ext-gd": "Converts WebP images (unsupported by Word) to PNG before embedding."
@@ -48,7 +50,10 @@
         }
     },
     "scripts": {
-        "test": "pest"
+        "test": "pest",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "lint": "php-cs-fixer fix --dry-run --diff",
+        "format": "php-cs-fixer fix"
     },
     "config": {
         "allow-plugins": {

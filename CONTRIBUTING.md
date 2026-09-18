@@ -27,14 +27,15 @@ the tests, `zip`.
 git clone https://github.com/kovami/htmldocx.git
 cd htmldocx
 composer install
-vendor/bin/pest
+composer test
 ```
 
 ## Before you open a pull request
 
-- **Tests pass:** `vendor/bin/pest`.
-- **Static analysis is clean:** PHPStan level 7 reports no errors on `src/`.
-- **Code style is clean:** Laravel Pint with the `laravel` preset.
+- **Tests pass:** `composer test`.
+- **Static analysis is clean:** `composer analyse` (PHPStan, level 7).
+- **Code style is clean:** `composer lint` checks [PER Coding Style 3.0](https://www.php-fig.org/per/coding-style/)
+  with PHP CS Fixer; `composer format` fixes what it reports.
 - **New behaviour has a test**, and a fix comes with a test that failed before it.
 - **Both READMEs are updated** (`README.md` and `README.ru.md`) when you change
   what is converted, how it looks in HTML, or an option.
