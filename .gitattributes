@@ -12,3 +12,4 @@
 /phpstan.neon export-ignore
 /phpunit.xml export-ignore
 /CONTRIBUTING.md export-ignore
+/bench export-ignore
