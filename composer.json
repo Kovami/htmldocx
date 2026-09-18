@@ -55,6 +55,11 @@
         "lint": "php-cs-fixer fix --dry-run --diff",
         "format": "php-cs-fixer fix"
     },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
+    },
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true

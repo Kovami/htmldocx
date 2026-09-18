@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-18
+
 The first public release.
 
 ### Added
@@ -35,4 +37,5 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/commits/main
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/kovami/htmldocx/releases/tag/v1.0.0
