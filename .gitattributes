@@ -1,0 +1,14 @@
+# Normalize line endings; git detects binary files (DOCX, images) on its own.
+* text=auto eol=lf
+
+# Kept out of the archive Composer installs: only src/, composer.json and
+# the documents a user of the library needs are shipped.
+/.github export-ignore
+/tests export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.git-blame-ignore-revs export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/phpstan.neon export-ignore
+/phpunit.xml export-ignore
+/CONTRIBUTING.md export-ignore
