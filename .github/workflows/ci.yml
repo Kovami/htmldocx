@@ -25,7 +25,7 @@ jobs:
           - php: '8.4'
             dependencies: lowest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -34,7 +34,7 @@ jobs:
           extensions: dom, mbstring, xmlwriter, zlib, zip, gd
           coverage: none
 
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@4.0.0
         with:
           dependency-versions: ${{ matrix.dependencies }}
 
@@ -44,7 +44,7 @@ jobs:
     name: Static analysis and code style
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -52,7 +52,7 @@ jobs:
           extensions: dom, mbstring, xmlwriter, zlib, zip
           coverage: none
 
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@4.0.0
 
       - run: composer validate --strict
       - run: composer analyse
