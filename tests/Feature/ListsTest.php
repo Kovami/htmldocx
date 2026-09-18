@@ -43,7 +43,7 @@ it('nests lists one level deeper per nesting depth', function () {
         ->and(numberingLevel($docx, 'back to L0')['numId'])->toBe(numberingLevel($docx, 'L0')['numId']);
 
     $indents = array_map(
-        static fn (string $text): int => (int) Docx::attr($docx->first('w:pPr/w:ind', $docx->paragraph($text)), 'left'),
+        static fn(string $text): int => (int) Docx::attr($docx->first('w:pPr/w:ind', $docx->paragraph($text)), 'left'),
         ['L0', 'L1', 'L2'],
     );
 
@@ -160,7 +160,7 @@ it('keeps one definition while items follow the sequence', function () {
 it('counts down in reversed lists', function (string $html, array $expected) {
     $docx = docx($html);
 
-    expect(array_map(static fn (string $text): ?string => numberingLevel($docx, $text)['start'], array_keys($expected)))
+    expect(array_map(static fn(string $text): ?string => numberingLevel($docx, $text)['start'], array_keys($expected)))
         ->toBe(array_values($expected));
 })->with([
     'from the item count' => ['<ol reversed><li>a</li><li>b</li><li>c</li></ol>', ['a' => '3', 'b' => '2', 'c' => '1']],
@@ -169,7 +169,7 @@ it('counts down in reversed lists', function (string $html, array $expected) {
 ]);
 
 it('writes lower-greek markers Word cannot count as literal text', function () {
-    $items = implode('', array_map(static fn (int $i): string => "<li>[{$i}]</li>", range(1, 25)));
+    $items = implode('', array_map(static fn(int $i): string => "<li>[{$i}]</li>", range(1, 25)));
     $docx = docx("<ol style=\"list-style-type: lower-greek\">{$items}</ol>");
 
     expect(numberingLevel($docx, '[1]'))->toMatchArray(['format' => 'none', 'text' => 'α.'])

@@ -32,7 +32,7 @@ final class Xml
 
         $xml = strtr($xml, Namespaces::STRICT_TO_TRANSITIONAL);
 
-        set_error_handler(static fn (): bool => true);
+        set_error_handler(static fn(): bool => true);
 
         try {
             return XMLDocument::createFromString($xml, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);

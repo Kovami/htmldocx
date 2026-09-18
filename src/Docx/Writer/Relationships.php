@@ -45,7 +45,7 @@ final class Relationships
             }
         }
 
-        $id = 'rId'.(count($this->relationships) + 1);
+        $id = 'rId' . (count($this->relationships) + 1);
         $this->relationships[] = ['id' => $id, 'type' => $type, 'target' => $target, 'external' => $external];
 
         return $id;
@@ -58,7 +58,7 @@ final class Relationships
 
     public function toXml(): string
     {
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('Relationships', ['xmlns' => 'http://schemas.openxmlformats.org/package/2006/relationships']);
 
         foreach ($this->relationships as $relationship) {

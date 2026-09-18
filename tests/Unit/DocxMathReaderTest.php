@@ -70,7 +70,7 @@ it('reads Office Math as the LaTeX KaTeX renders', function (string $name, strin
 it('marks a formula on its own line as displayed', function () {
     $document = DocxBuilder::make()->body(
         '<w:p><m:oMathPara><m:oMath><m:r><m:t>x=1</m:t></m:r></m:oMath></m:oMathPara></w:p>'
-        .'<w:p><w:r><w:t xml:space="preserve">inline </w:t></w:r><m:oMath><m:r><m:t>y=2</m:t></m:r></m:oMath></w:p>'
+        . '<w:p><w:r><w:t xml:space="preserve">inline </w:t></w:r><m:oMath><m:r><m:t>y=2</m:t></m:r></m:oMath></w:p>',
     )->read();
 
     $formulas = [];
@@ -91,7 +91,7 @@ it('marks a formula on its own line as displayed', function () {
 
 it('keeps the formatting of the run a formula sits in', function () {
     $document = DocxBuilder::make()->body(
-        '<w:p><m:oMath><m:r><m:rPr><m:sty m:val="p"/></m:rPr><w:rPr><w:sz w:val="32"/><w:color w:val="FF0000"/></w:rPr><m:t>x</m:t></m:r></m:oMath></w:p>'
+        '<w:p><m:oMath><m:r><m:rPr><m:sty m:val="p"/></m:rPr><w:rPr><w:sz w:val="32"/><w:color w:val="FF0000"/></w:rPr><m:t>x</m:t></m:r></m:oMath></w:p>',
     )->read();
 
     $paragraph = $document->blocks[0];

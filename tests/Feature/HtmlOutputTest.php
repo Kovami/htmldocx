@@ -41,7 +41,7 @@ it('preserves tabs and runs of spaces', function () {
 });
 
 it('does not preserve whitespace around inline content', function () {
-    expect(html('<p>before <img src="'.TestImage::pngDataUri(20, 10).'" alt=""> after</p>'))
+    expect(html('<p>before <img src="' . TestImage::pngDataUri(20, 10) . '" alt=""> after</p>'))
         ->not->toContain('pre-wrap');
 });
 
@@ -95,7 +95,7 @@ it('writes formulas as the KaTeX spans the editor renders', function () {
 
 it('keeps a formula through Word as an equation, not as its source text', function () {
     $source = '<p>f: <span class="__se__katex katex" data-exp="\frac{a+b}{2}">x</span>'
-        .'<span class="__se__katex katex" data-exp="\sqrt[3]{x}">y</span></p>';
+        . '<span class="__se__katex katex" data-exp="\sqrt[3]{x}">y</span></p>';
 
     // The package carries equations, not the text they are written with.
     expect(docx($source)->count('//m:oMath'))->toBe(2)
@@ -132,7 +132,7 @@ it('writes merged cells as colspan and rowspan', function () {
 });
 
 it('writes a picture-only paragraph as an image component', function () {
-    $html = html('<div class="se-component se-image-container __se__float-right"><figure><img src="'.TestImage::pngDataUri(40, 20).'" alt="chart" style="width: 40px; height: 20px"></figure></div>');
+    $html = html('<div class="se-component se-image-container __se__float-right"><figure><img src="' . TestImage::pngDataUri(40, 20) . '" alt="chart" style="width: 40px; height: 20px"></figure></div>');
 
     expect($html)
         ->toContain('<div class="se-component se-image-container __se__float-right" contenteditable="false">')
@@ -142,17 +142,17 @@ it('writes a picture-only paragraph as an image component', function () {
 });
 
 it('embeds pictures as data URIs and lets a handler place them elsewhere', function () {
-    $source = '<p><img src="'.TestImage::pngDataUri(40, 20).'" alt="" style="width: 40px; height: 20px"></p>';
+    $source = '<p><img src="' . TestImage::pngDataUri(40, 20) . '" alt="" style="width: 40px; height: 20px"></p>';
     $converter = new HtmlDocx(testOptions());
-    $handler = new CallbackImageHandler(fn (ImageData $image, string $description): string => '/media/'.$image->hash().'.'.$image->extension);
+    $handler = new CallbackImageHandler(fn(ImageData $image, string $description): string => '/media/' . $image->hash() . '.' . $image->extension);
 
     expect($converter->writeHtml($converter->readHtml($source)))->toContain('src="data:image/png;base64,')
         ->and($converter->withImageHandler($handler)->writeHtml($converter->readHtml($source)))->toMatch('~src="/media/[0-9a-f]{40}\.png"~');
 });
 
 it('leaves out pictures the handler declines', function () {
-    $source = '<p><img src="'.TestImage::pngDataUri(40, 20).'" alt="" style="width: 40px; height: 20px"></p>';
-    $converter = (new HtmlDocx(testOptions()))->withImageHandler(new CallbackImageHandler(static fn (): ?string => null));
+    $source = '<p><img src="' . TestImage::pngDataUri(40, 20) . '" alt="" style="width: 40px; height: 20px"></p>';
+    $converter = (new HtmlDocx(testOptions()))->withImageHandler(new CallbackImageHandler(static fn(): ?string => null));
 
     expect($converter->writeHtml($converter->readHtml($source)))->not->toContain('<img');
 });

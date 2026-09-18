@@ -35,7 +35,7 @@ final class StyleResolver
      */
     public function __construct(array $rules)
     {
-        usort($rules, static fn (CssRule $a, CssRule $b): int => $a->comparePrecedence($b));
+        usort($rules, static fn(CssRule $a, CssRule $b): int => $a->comparePrecedence($b));
         $this->rules = $rules;
     }
 
@@ -65,7 +65,7 @@ final class StyleResolver
     {
         return new self(array_values(array_filter(
             $this->rules,
-            static fn (CssRule $rule): bool => $rule->origin !== Origin::Author,
+            static fn(CssRule $rule): bool => $rule->origin !== Origin::Author,
         )));
     }
 

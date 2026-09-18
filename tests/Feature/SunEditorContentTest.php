@@ -8,7 +8,7 @@ use Kovami\HtmlDocx\Tests\Support\TestImage;
 
 function sunEditorFixture(): string
 {
-    return str_replace('{{IMAGE}}', TestImage::pngDataUri(240, 120), (string) file_get_contents(__DIR__.'/../Fixtures/suneditor.html'));
+    return str_replace('{{IMAGE}}', TestImage::pngDataUri(240, 120), (string) file_get_contents(__DIR__ . '/../Fixtures/suneditor.html'));
 }
 
 it('converts a full SunEditor document into a sound package', function () {
@@ -29,11 +29,11 @@ it('converts a full SunEditor document into a sound package', function () {
 
 it('is readable by an independent DOCX consumer', function () {
     $placeholder = tempnam(sys_get_temp_dir(), 'kovami');
-    $path = $placeholder.'.docx';
+    $path = $placeholder . '.docx';
 
     try {
         (new HtmlDocx(testOptions()))->htmlToDocxFile(sunEditorFixture(), $path);
-        exec('textutil -convert txt -stdout '.escapeshellarg($path).' 2>&1', $output, $exitCode);
+        exec('textutil -convert txt -stdout ' . escapeshellarg($path) . ' 2>&1', $output, $exitCode);
         $text = implode("\n", $output);
 
         expect($exitCode)->toBe(0);
@@ -61,7 +61,7 @@ it('renders SunEditor paragraph and text classes', function () {
 
 it('lays out the SunEditor table with its colgroup widths and merged cells', function () {
     $docx = docx(sunEditorFixture());
-    $widths = array_map(static fn (DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
+    $widths = array_map(static fn(DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
 
     expect(array_sum($widths))->toBe(9638)
         ->and(abs($widths[0] - 3855))->toBeLessThanOrEqual(2)

@@ -33,10 +33,10 @@ final readonly class Theme
             $font = Xml::child(Xml::child($elements, 'fontScheme', Namespaces::A), $name, Namespaces::A);
             $latin = self::typeface(Xml::child($font, 'latin', Namespaces::A));
 
-            $fonts[$role.'HAnsi'] = $latin;
-            $fonts[$role.'Ascii'] = $latin;
-            $fonts[$role.'EastAsia'] = self::typeface(Xml::child($font, 'ea', Namespaces::A)) ?: $latin;
-            $fonts[$role.'Bidi'] = self::typeface(Xml::child($font, 'cs', Namespaces::A)) ?: $latin;
+            $fonts[$role . 'HAnsi'] = $latin;
+            $fonts[$role . 'Ascii'] = $latin;
+            $fonts[$role . 'EastAsia'] = self::typeface(Xml::child($font, 'ea', Namespaces::A)) ?: $latin;
+            $fonts[$role . 'Bidi'] = self::typeface(Xml::child($font, 'cs', Namespaces::A)) ?: $latin;
         }
 
         foreach (Xml::children(Xml::child($elements, 'clrScheme', Namespaces::A), null) as $slot) {
@@ -88,12 +88,12 @@ final readonly class Theme
 
         if ($tint !== null && preg_match('/^[0-9a-f]{2}$/i', $tint) === 1) {
             $factor = hexdec($tint) / 255;
-            [$r, $g, $b] = array_map(static fn (int|float $c): float => $c * $factor + 255 * (1 - $factor), [$r, $g, $b]);
+            [$r, $g, $b] = array_map(static fn(int|float $c): float => $c * $factor + 255 * (1 - $factor), [$r, $g, $b]);
         }
 
         if ($shade !== null && preg_match('/^[0-9a-f]{2}$/i', $shade) === 1) {
             $factor = hexdec($shade) / 255;
-            [$r, $g, $b] = array_map(static fn (int|float $c): float => $c * $factor, [$r, $g, $b]);
+            [$r, $g, $b] = array_map(static fn(int|float $c): float => $c * $factor, [$r, $g, $b]);
         }
 
         return sprintf('%02X%02X%02X', (int) round($r), (int) round($g), (int) round($b));

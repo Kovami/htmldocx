@@ -31,7 +31,7 @@ final class PackageParts
      */
     public static function contentTypes(array $mediaTypes, array $parts): string
     {
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('Types', ['xmlns' => 'http://schemas.openxmlformats.org/package/2006/content-types'])
             ->leaf('Default', ['Extension' => 'rels', 'ContentType' => 'application/vnd.openxmlformats-package.relationships+xml'])
             ->leaf('Default', ['Extension' => 'xml', 'ContentType' => 'application/xml']);
@@ -47,7 +47,7 @@ final class PackageParts
                     : null);
 
             if ($contentType !== null) {
-                $xml->leaf('Override', ['PartName' => '/'.$part, 'ContentType' => $contentType]);
+                $xml->leaf('Override', ['PartName' => '/' . $part, 'ContentType' => $contentType]);
             }
         }
 
@@ -56,7 +56,7 @@ final class PackageParts
 
     public static function rootRelationships(): string
     {
-        $relationships = new Relationships;
+        $relationships = new Relationships();
         $relationships->add(Relationships::OFFICE_DOCUMENT, 'word/document.xml');
         $relationships->add(Relationships::CORE_PROPERTIES, 'docProps/core.xml');
         $relationships->add(Relationships::EXTENDED_PROPERTIES, 'docProps/app.xml');
@@ -68,7 +68,7 @@ final class PackageParts
     {
         $timestamp = $metadata->createdAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
 
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('cp:coreProperties', [
             'xmlns:cp' => 'http://schemas.openxmlformats.org/package/2006/metadata/core-properties',
             'xmlns:dc' => 'http://purl.org/dc/elements/1.1/',
@@ -98,7 +98,7 @@ final class PackageParts
 
     public static function appProperties(): string
     {
-        return (new XmlBuilder)
+        return (new XmlBuilder())
             ->open('Properties', ['xmlns' => 'http://schemas.openxmlformats.org/officeDocument/2006/extended-properties'])
             ->text('Application', 'kovami/htmldocx')
             ->close()
@@ -111,7 +111,7 @@ final class PackageParts
      */
     public static function settings(array $notes = [], bool $evenAndOddHeaders = false): string
     {
-        $xml = (new XmlBuilder)
+        $xml = (new XmlBuilder())
             ->open('w:settings', ['xmlns:w' => Namespaces::W])
             ->leaf('w:zoom', ['w:percent' => 100])
             ->leaf('w:defaultTabStop', ['w:val' => 708]);

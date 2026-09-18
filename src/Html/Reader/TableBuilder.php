@@ -69,7 +69,7 @@ final class TableBuilder
 
         $rows = array_values(array_filter(
             [...$groups['thead'], ...$groups['tbody'], ...$groups['tfoot']],
-            static fn (array $row): bool => $row['style']->display !== 'none',
+            static fn(array $row): bool => $row['style']->display !== 'none',
         ));
 
         [$cells, $slots, $columnCount] = $this->allocateSlots($rows);
@@ -78,7 +78,7 @@ final class TableBuilder
             return $blocks;
         }
 
-        $margin = static fn (string $property): int => Length::pointsToTwips(max(0, $style->lengthPt($property, $context->availableWidth / Length::TWIPS_PER_POINT) ?? 0));
+        $margin = static fn(string $property): int => Length::pointsToTwips(max(0, $style->lengthPt($property, $context->availableWidth / Length::TWIPS_PER_POINT) ?? 0));
         $marginTop = $margin('margin-top');
         $captionFirst = ($blocks[0] ?? null) instanceof Paragraph;
 
@@ -99,7 +99,7 @@ final class TableBuilder
                 $cell = $index === null ? null : $cells[$index];
 
                 if ($cell === null || $cell['col'] !== $c) {
-                    $tableCells[] = new TableCell(new CellProperties($widths[$c]), [new Paragraph]);
+                    $tableCells[] = new TableCell(new CellProperties($widths[$c]), [new Paragraph()]);
                     $c++;
 
                     continue;
@@ -116,7 +116,7 @@ final class TableBuilder
 
                 $tableCells[] = new TableCell(
                     $this->cellProperties($cell, $row, $width, $span, $isOrigin),
-                    $isOrigin ? $this->cellContent($cell, $width, $renderContent) : [new Paragraph],
+                    $isOrigin ? $this->cellContent($cell, $width, $renderContent) : [new Paragraph()],
                 );
 
                 $c += $span;
@@ -290,11 +290,11 @@ final class TableBuilder
             }
         }
 
-        $unknown = count(array_filter($widths, static fn (?int $w): bool => $w === null));
+        $unknown = count(array_filter($widths, static fn(?int $w): bool => $w === null));
         $share = $unknown > 0
             ? max(self::MIN_COLUMN_TWIPS, intdiv(max(0, $tableWidth - array_sum(array_filter($widths))), $unknown))
             : 0;
-        $widths = array_map(static fn (?int $w): int => $w ?? $share, $widths);
+        $widths = array_map(static fn(?int $w): int => $w ?? $share, $widths);
         $total = array_sum($widths);
 
         // Scale to the table width; the last column absorbs the rounding.
@@ -324,7 +324,7 @@ final class TableBuilder
     {
         $style = $cell['style'];
         $widthPt = $width / Length::TWIPS_PER_POINT;
-        $padding = fn (string $side): int => Length::pointsToTwips(max(0, $style->lengthPt("padding-{$side}", $widthPt) ?? 0));
+        $padding = fn(string $side): int => Length::pointsToTwips(max(0, $style->lengthPt("padding-{$side}", $widthPt) ?? 0));
 
         return new CellProperties(
             width: $width,

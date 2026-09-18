@@ -55,7 +55,7 @@ final readonly class DocxReader
         }
 
         $theme = $this->relatedXml($package, $mainPart, 'theme');
-        $parser = new FormatParser($theme === null ? new Theme : Theme::fromXml($theme));
+        $parser = new FormatParser($theme === null ? new Theme() : Theme::fromXml($theme));
         $styles = new StyleSheet($parser, $this->relatedXml($package, $mainPart, 'styles'));
         $numbering = new Numbering($parser, $styles, $this->relatedXml($package, $mainPart, 'numbering'));
         $pageLayout = self::pageLayout(Xml::child($body, 'sectPr'));
@@ -94,7 +94,7 @@ final readonly class DocxReader
             parser: $parser,
             styles: $styles,
             numbering: $numbering,
-            images: new ImageInspector,
+            images: new ImageInspector(),
             contentWidth: $pageLayout->contentWidthTwips(),
             includeHiddenText: $this->includeHiddenText,
             linkedBookmarks: self::linkedBookmarks($bookmarkSources),
@@ -108,13 +108,13 @@ final readonly class DocxReader
         $blocks = (new BodyReader($context, $mainPart))->blocks($body);
         $headersFooters = $this->includeHeadersFooters ? $this->headersFooters($package, $mainPart, $body, $context) : [];
         $comments = $this->comments($package, $mainPart, $commentsPart, $commentElements, $context);
-        $comments = CommentRanges::balance([$blocks, ...array_map(static fn (Note $note): array => $note->blocks, $context->notes)], $comments);
+        $comments = CommentRanges::balance([$blocks, ...array_map(static fn(Note $note): array => $note->blocks, $context->notes)], $comments);
         $normalId = $styles->defaultStyleId('paragraph');
         $normal = $styles->defaultParagraph->over($styles->paragraphStyle($normalId));
 
         return new Document(
             blocks: $blocks,
-            defaultRunProperties: self::withFont(RunFormat::resolve($styles->defaultRun, [$styles->runStyle($normalId, 'paragraph')], new RunFormat)->toProperties()),
+            defaultRunProperties: self::withFont(RunFormat::resolve($styles->defaultRun, [$styles->runStyle($normalId, 'paragraph')], new RunFormat())->toProperties()),
             styles: [],
             lists: $numbering->definitions(),
             pageLayout: $pageLayout,
@@ -273,7 +273,7 @@ final readonly class DocxReader
 
         // Comments anchored nowhere keep their place in the part, after the rest.
         $order = array_flip(array_map('strval', array_keys($elements)));
-        uksort($elements, static fn (int|string $a, int|string $b): int => [$positions[(string) $a] ?? PHP_INT_MAX, $order[(string) $a]]
+        uksort($elements, static fn(int|string $a, int|string $b): int => [$positions[(string) $a] ?? PHP_INT_MAX, $order[(string) $a]]
             <=> [$positions[(string) $b] ?? PHP_INT_MAX, $order[(string) $b]]);
 
         return [$relationship->target, $elements, $ranged];
@@ -465,7 +465,7 @@ final readonly class DocxReader
             }
 
             $instructions = array_map(
-                static fn (Element $paragraph): string => implode('', array_map(static fn (Element $text): string => $text->textContent, Xml::descendants($paragraph, 'instrText'))),
+                static fn(Element $paragraph): string => implode('', array_map(static fn(Element $text): string => $text->textContent, Xml::descendants($paragraph, 'instrText'))),
                 Xml::descendants($document->documentElement, 'p'),
             );
 

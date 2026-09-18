@@ -309,10 +309,10 @@ final class LatexToOmml
         }
 
         $rows[count($rows) - 1] = $cells;
-        $rows = array_values(array_filter($rows, static fn (array $row): bool => $row !== []));
+        $rows = array_values(array_filter($rows, static fn(array $row): bool => $row !== []));
 
         if ($name === 'aligned' || $name === 'align' || $name === 'cases') {
-            return ['type' => 'eqArr', 'rows' => array_map(static fn (array $row): array => array_merge(...$row), $rows)];
+            return ['type' => 'eqArr', 'rows' => array_map(static fn(array $row): array => array_merge(...$row), $rows)];
         }
 
         $matrix = ['type' => 'matrix', 'rows' => $rows];
@@ -639,7 +639,7 @@ final class LatexToOmml
     private function wrapWith(string $element, string $property, string $value, array $children): void
     {
         $this->xml->open($element)
-            ->open($element.'Pr')->leaf($property, ['m:val' => $value])->close();
+            ->open($element . 'Pr')->leaf($property, ['m:val' => $value])->close();
 
         $this->part('m:e', $children);
         $this->xml->close();

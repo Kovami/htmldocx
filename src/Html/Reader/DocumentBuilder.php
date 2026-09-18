@@ -122,8 +122,8 @@ final class DocumentBuilder
         private readonly ImageFactory $images,
         private readonly Options $options,
     ) {
-        $this->numbering = new NumberingRegistry;
-        $this->bookmarks = new BookmarkRegistry;
+        $this->numbering = new NumberingRegistry();
+        $this->bookmarks = new BookmarkRegistry();
         $this->tables = new TableBuilder($resolver, $mapper);
     }
 
@@ -137,13 +137,13 @@ final class DocumentBuilder
         $this->collectNotes($html);
         $this->collectHeadersFooters($html);
         $this->collectComments($html);
-        $sink = new BlockSink;
+        $sink = new BlockSink();
 
         $this->renderChildren($body, $this->resolver->resolve($body, $root), new BlockContext($this->pageContentWidth), $sink);
 
         $catalog = new StyleCatalog($this->resolver->withoutAuthorRules(), $this->mapper);
         $blocks = BlockNormalizer::normalize($sink->blocks);
-        $comments = CommentRanges::balance([$blocks, ...array_map(static fn (Note $note): array => $note->blocks, $this->notes)], $this->comments);
+        $comments = CommentRanges::balance([$blocks, ...array_map(static fn(Note $note): array => $note->blocks, $this->notes)], $this->comments);
 
         return new Document(
             blocks: $blocks,
@@ -152,7 +152,7 @@ final class DocumentBuilder
             lists: $this->numbering->definitions(),
             pageLayout: $pageLayout,
             metadata: new DocumentMetadata(
-                createdAt: $this->options->createdAt ?? new DateTimeImmutable,
+                createdAt: $this->options->createdAt ?? new DateTimeImmutable(),
                 title: $this->options->title ?? $html->title(),
                 author: $this->options->author,
                 language: $this->options->language,
@@ -311,13 +311,13 @@ final class DocumentBuilder
 
         $parent = $flow->context;
         $percentBase = $parent->availableWidth / Length::TWIPS_PER_POINT;
-        $length = static fn (string $property): float => max(0.0, $style->lengthPt($property, $percentBase) ?? 0.0);
+        $length = static fn(string $property): float => max(0.0, $style->lengthPt($property, $percentBase) ?? 0.0);
 
         // Percentage vertical padding around an embedded player is the responsive
         // aspect-ratio idiom: it reserves the player's height. The player becomes
         // a one-line link here, so that space would only be a blank gap.
         $sizesPlayer = $this->containsMedia($element);
-        $padding = static fn (string $side): float => $sizesPlayer && in_array($side, ['top', 'bottom'], true)
+        $padding = static fn(string $side): float => $sizesPlayer && in_array($side, ['top', 'bottom'], true)
             && str_ends_with((string) $style->value("padding-{$side}"), '%') ? 0.0 : $length("padding-{$side}");
 
         $edges = [];
@@ -457,7 +457,7 @@ final class DocumentBuilder
         $this->emitPendingMarker($flow, $sink);
 
         $renderContent = function (Element $container, ComputedStyle $containerStyle, BlockContext $context): array {
-            $contentSink = new BlockSink;
+            $contentSink = new BlockSink();
             $this->renderChildren($container, $containerStyle, $context, $contentSink);
 
             return $contentSink->blocks;
@@ -535,7 +535,7 @@ final class DocumentBuilder
         $type = strtolower((string) $element->getAttribute('type'));
 
         $text = match ($type) {
-            'checkbox', 'radio' => ($element->hasAttribute('checked') ? "\u{2611}" : "\u{2610}").' ',
+            'checkbox', 'radio' => ($element->hasAttribute('checked') ? "\u{2611}" : "\u{2610}") . ' ',
             'hidden' => '',
             default => (string) $element->getAttribute('value'),
         };
@@ -607,7 +607,7 @@ final class DocumentBuilder
     private function collectNotes(HtmlDocument $html): void
     {
         foreach (self::NOTE_LIST_CLASSES as $type => $class) {
-            foreach ($html->body()->querySelectorAll('ol.'.$class) as $list) {
+            foreach ($html->body()->querySelectorAll('ol.' . $class) as $list) {
                 $this->noteLists[spl_object_id($list)] = ['type' => $type, 'list' => $list];
                 $separator = $list->previousElementSibling;
 
@@ -667,7 +667,7 @@ final class DocumentBuilder
                 continue;
             }
 
-            $sink = new BlockSink;
+            $sink = new BlockSink();
             $this->renderChildren($item, $this->resolver->resolve($item, $style), new BlockContext($context->availableWidth), $sink);
             $this->notes[] = new Note($type, $body['number'], BlockNormalizer::normalize($sink->blocks));
         }
@@ -786,7 +786,7 @@ final class DocumentBuilder
      */
     private function renderApart(Element $container, ComputedStyle $style): array
     {
-        $sink = new BlockSink;
+        $sink = new BlockSink();
         $this->renderChildren($container, $style, new BlockContext($this->pageContentWidth), $sink);
 
         return BlockNormalizer::normalize($sink->blocks);
@@ -851,7 +851,7 @@ final class DocumentBuilder
 
         $encoded = (string) preg_replace_callback(
             '/[^\x21-\x7E]|["<>\\\\^`{|}]/',
-            static fn (array $m): string => rawurlencode($m[0]),
+            static fn(array $m): string => rawurlencode($m[0]),
             $href,
         );
 

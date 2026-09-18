@@ -54,7 +54,7 @@ final class Tokens
 
         $parts[] = $current;
 
-        return array_values(array_filter(array_map(trim(...), $parts), static fn (string $part): bool => $part !== ''));
+        return array_values(array_filter(array_map(trim(...), $parts), static fn(string $part): bool => $part !== ''));
     }
 
     /**
@@ -85,7 +85,7 @@ final class Tokens
 
         return (string) preg_replace_callback(
             '/\\\\(?:([0-9a-fA-F]{1,6})[ \n\t]?|(.))/su',
-            static fn (array $match): string => $match[1] === ''
+            static fn(array $match): string => $match[1] === ''
                 ? $match[2]
                 : (string) mb_chr((int) hexdec($match[1]), 'UTF-8'),
             $value,

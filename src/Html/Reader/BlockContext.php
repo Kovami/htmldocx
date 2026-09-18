@@ -23,7 +23,7 @@ final readonly class BlockContext
         public int $availableWidth,
         public int $indentLeft = 0,
         public int $indentRight = 0,
-        public BorderSet $borders = new BorderSet,
+        public BorderSet $borders = new BorderSet(),
         public ?string $shading = null,
         public ?string $styleId = null,
         public ?ListCounter $list = null,

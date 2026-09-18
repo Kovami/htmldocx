@@ -40,7 +40,7 @@ final readonly class WriterContext
         $this->dom = HTMLDocument::createEmpty();
         $this->resolver = StyleResolver::fromStylesheets($options->defaultStylesheet, $options->extraStylesheet, []);
         $this->css = new CssFormatter($options->cssUnit);
-        $this->comments = new OpenComments;
+        $this->comments = new OpenComments();
     }
 
     public function warn(string $message): void
@@ -73,7 +73,7 @@ final readonly class WriterContext
         }
 
         $existing = trim((string) $element->getAttribute('style'));
-        $element->setAttribute('style', trim($existing.' '.CssFormatter::declarations($own)));
+        $element->setAttribute('style', trim($existing . ' ' . CssFormatter::declarations($own)));
 
         return $this->resolver->resolve($element, $parent);
     }
@@ -86,7 +86,7 @@ final readonly class WriterContext
 
     public function id(string $name): string
     {
-        return $this->options->idPrefix.$name;
+        return $this->options->idPrefix . $name;
     }
 
     /**

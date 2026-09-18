@@ -57,7 +57,7 @@ final class PresentationalHints
             $value = trim((string) $element->getAttribute($dimension));
 
             if ($value !== '' && in_array($tag, ['table', 'td', 'th', 'tr', 'col', 'colgroup', 'img', 'hr'], true)) {
-                $hints[$dimension] = is_numeric($value) ? $value.'px' : $value;
+                $hints[$dimension] = is_numeric($value) ? $value . 'px' : $value;
             }
         }
 

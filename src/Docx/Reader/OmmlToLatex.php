@@ -86,22 +86,22 @@ final class OmmlToLatex
             'oMathPara', 'oMath', 'e', 'num', 'den', 'sub', 'sup', 'deg', 'lim', 'fName', 'box', 'phant' => self::children($element),
             'r' => self::run($element),
             'f' => self::fraction($element),
-            'sSup' => self::group($element, 'e').'^'.self::braced($element, 'sup'),
-            'sSub' => self::group($element, 'e').'_'.self::braced($element, 'sub'),
-            'sSubSup' => self::group($element, 'e').'_'.self::braced($element, 'sub').'^'.self::braced($element, 'sup'),
-            'sPre' => '{}_'.self::braced($element, 'sub').'^'.self::braced($element, 'sup').self::group($element, 'e'),
+            'sSup' => self::group($element, 'e') . '^' . self::braced($element, 'sup'),
+            'sSub' => self::group($element, 'e') . '_' . self::braced($element, 'sub'),
+            'sSubSup' => self::group($element, 'e') . '_' . self::braced($element, 'sub') . '^' . self::braced($element, 'sup'),
+            'sPre' => '{}_' . self::braced($element, 'sub') . '^' . self::braced($element, 'sup') . self::group($element, 'e'),
             'rad' => self::radical($element),
             'nary' => self::nary($element),
             'd' => self::delimiter($element),
             'func' => self::func($element),
             'acc' => self::accent($element),
-            'bar' => (self::property($element, 'barPr', 'pos') === 'bot' ? '\underline' : '\overline').self::braced($element, 'e'),
+            'bar' => (self::property($element, 'barPr', 'pos') === 'bot' ? '\underline' : '\overline') . self::braced($element, 'e'),
             'limLow' => self::limit($element, '\underset'),
             'limUpp' => self::limit($element, '\overset'),
             'groupChr' => self::groupCharacter($element),
-            'borderBox' => '\boxed'.self::braced($element, 'e'),
+            'borderBox' => '\boxed' . self::braced($element, 'e'),
             'm' => self::matrix($element),
-            'eqArr' => '\begin{aligned}'.implode(' \\\\ ', array_map(self::children(...), Xml::children($element, 'e', Namespaces::M))).'\end{aligned}',
+            'eqArr' => '\begin{aligned}' . implode(' \\\\ ', array_map(self::children(...), Xml::children($element, 'e', Namespaces::M))) . '\end{aligned}',
             default => str_ends_with((string) $element->localName, 'Pr') ? '' : self::children($element),
         };
     }
@@ -117,7 +117,7 @@ final class OmmlToLatex
         $properties = Xml::child($run, 'rPr', Namespaces::M);
 
         if (Xml::child($properties, 'nor', Namespaces::M) !== null) {
-            return '\text{'.self::escapeText($text).'}';
+            return '\text{' . self::escapeText($text) . '}';
         }
 
         return self::text($text, self::property($run, 'rPr', 'sty') === 'p');
@@ -128,19 +128,19 @@ final class OmmlToLatex
         $trimmed = trim($text);
 
         if (in_array($trimmed, self::FUNCTIONS, true)) {
-            return '\\'.$trimmed.' ';
+            return '\\' . $trimmed . ' ';
         }
 
         if ($upright && preg_match('/^[A-Za-z]{2,}$/', $trimmed) === 1) {
-            return '\mathrm{'.$trimmed.'}';
+            return '\mathrm{' . $trimmed . '}';
         }
 
         $latex = '';
 
         foreach (mb_str_split($text) as $character) {
             $latex .= match (true) {
-                isset(self::SYMBOLS[$character]) => self::SYMBOLS[$character].(preg_match('/[a-z]$/i', self::SYMBOLS[$character]) === 1 ? ' ' : ''),
-                in_array($character, ['{', '}', '#', '$', '%', '&', '_'], true) => '\\'.$character,
+                isset(self::SYMBOLS[$character]) => self::SYMBOLS[$character] . (preg_match('/[a-z]$/i', self::SYMBOLS[$character]) === 1 ? ' ' : ''),
+                in_array($character, ['{', '}', '#', '$', '%', '&', '_'], true) => '\\' . $character,
                 $character === '\\' => '\backslash ',
                 $character === '^' => '\hat{}',
                 $character === '~' => '\sim ',
@@ -158,9 +158,9 @@ final class OmmlToLatex
 
         return match (self::property($fraction, 'fPr', 'type')) {
             'lin' => "{$numerator}/{$denominator}",
-            'noBar' => '\genfrac{}{}{0pt}{}{'.$numerator.'}{'.$denominator.'}',
-            'skw' => '{}^{'.$numerator.'}/_{'.$denominator.'}',
-            default => '\frac{'.$numerator.'}{'.$denominator.'}',
+            'noBar' => '\genfrac{}{}{0pt}{}{' . $numerator . '}{' . $denominator . '}',
+            'skw' => '{}^{' . $numerator . '}/_{' . $denominator . '}',
+            default => '\frac{' . $numerator . '}{' . $denominator . '}',
         };
     }
 
@@ -169,7 +169,7 @@ final class OmmlToLatex
         $degree = self::children(Xml::child($radical, 'deg', Namespaces::M));
         $hidden = in_array(self::property($radical, 'radPr', 'degHide'), ['1', 'on', 'true'], true);
 
-        return '\sqrt'.($hidden || trim($degree) === '' ? '' : '['.$degree.']').self::braced($radical, 'e');
+        return '\sqrt' . ($hidden || trim($degree) === '' ? '' : '[' . $degree . ']') . self::braced($radical, 'e');
     }
 
     private static function nary(Element $nary): string
@@ -180,15 +180,15 @@ final class OmmlToLatex
 
         if (! in_array(self::property($nary, 'naryPr', 'subHide'), ['1', 'on', 'true'], true)) {
             $sub = self::children(Xml::child($nary, 'sub', Namespaces::M));
-            $latex .= trim($sub) === '' ? '' : '_{'.$sub.'}';
+            $latex .= trim($sub) === '' ? '' : '_{' . $sub . '}';
         }
 
         if (! in_array(self::property($nary, 'naryPr', 'supHide'), ['1', 'on', 'true'], true)) {
             $sup = self::children(Xml::child($nary, 'sup', Namespaces::M));
-            $latex .= trim($sup) === '' ? '' : '^{'.$sup.'}';
+            $latex .= trim($sup) === '' ? '' : '^{' . $sup . '}';
         }
 
-        return $latex.' '.self::group($nary, 'e');
+        return $latex . ' ' . self::group($nary, 'e');
     }
 
     private static function delimiter(Element $delimiter): string
@@ -199,9 +199,9 @@ final class OmmlToLatex
         $separator = self::optionalProperty($properties, 'sepChr') ?? '|';
         $parts = array_map(self::children(...), Xml::children($delimiter, 'e', Namespaces::M));
 
-        return '\left'.(self::DELIMITERS[$begin] ?? $begin).' '
-            .implode(' '.($separator === '|' ? '\mid' : self::text($separator, false)).' ', $parts)
-            .' \right'.(self::DELIMITERS[$end] ?? $end);
+        return '\left' . (self::DELIMITERS[$begin] ?? $begin) . ' '
+            . implode(' ' . ($separator === '|' ? '\mid' : self::text($separator, false)) . ' ', $parts)
+            . ' \right' . (self::DELIMITERS[$end] ?? $end);
     }
 
     private static function func(Element $function): string
@@ -209,17 +209,17 @@ final class OmmlToLatex
         $name = trim(self::children(Xml::child($function, 'fName', Namespaces::M)));
 
         if (preg_match('/^[A-Za-z]+$/', $name) === 1) {
-            $name = in_array($name, self::FUNCTIONS, true) ? '\\'.$name : '\operatorname{'.$name.'}';
+            $name = in_array($name, self::FUNCTIONS, true) ? '\\' . $name : '\operatorname{' . $name . '}';
         }
 
-        return $name.' '.self::group($function, 'e');
+        return $name . ' ' . self::group($function, 'e');
     }
 
     private static function accent(Element $accent): string
     {
         $character = self::property($accent, 'accPr', 'chr') ?? "\u{0302}";
 
-        return (self::ACCENTS[$character] ?? '\hat').self::braced($accent, 'e');
+        return (self::ACCENTS[$character] ?? '\hat') . self::braced($accent, 'e');
     }
 
     private static function limit(Element $limit, string $command): string
@@ -228,10 +228,10 @@ final class OmmlToLatex
         $bound = self::children(Xml::child($limit, 'lim', Namespaces::M));
 
         if ($command === '\underset' && in_array($base, ['\lim', '\max', '\min', '\sup', '\inf'], true)) {
-            return $base.'_{'.$bound.'}';
+            return $base . '_{' . $bound . '}';
         }
 
-        return $command.'{'.$bound.'}{'.$base.'}';
+        return $command . '{' . $bound . '}{' . $base . '}';
     }
 
     private static function groupCharacter(Element $group): string
@@ -246,7 +246,7 @@ final class OmmlToLatex
             default => $top ? '\overbrace' : '\underbrace',
         };
 
-        return $command.self::braced($group, 'e');
+        return $command . self::braced($group, 'e');
     }
 
     private static function matrix(Element $matrix): string
@@ -257,19 +257,19 @@ final class OmmlToLatex
             $rows[] = implode(' & ', array_map(self::children(...), Xml::children($row, 'e', Namespaces::M)));
         }
 
-        return '\begin{matrix}'.implode(' \\\\ ', $rows).'\end{matrix}';
+        return '\begin{matrix}' . implode(' \\\\ ', $rows) . '\end{matrix}';
     }
 
     private static function group(Element $parent, string $child): string
     {
         $content = self::children(Xml::child($parent, $child, Namespaces::M));
 
-        return mb_strlen(trim($content)) <= 1 || preg_match('/^\\\\[A-Za-z]+\s*$/', trim($content)) === 1 ? $content : '{'.$content.'}';
+        return mb_strlen(trim($content)) <= 1 || preg_match('/^\\\\[A-Za-z]+\s*$/', trim($content)) === 1 ? $content : '{' . $content . '}';
     }
 
     private static function braced(Element $parent, string $child): string
     {
-        return '{'.self::children(Xml::child($parent, $child, Namespaces::M)).'}';
+        return '{' . self::children(Xml::child($parent, $child, Namespaces::M)) . '}';
     }
 
     private static function property(Element $element, string $container, string $name): ?string

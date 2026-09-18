@@ -152,7 +152,7 @@ final class InlineBuffer
                 && $last['run']->properties->equals($properties)
                 && ($link === null ? $last['link'] === null : $link->equals($last['link']))
                 && ! isset($this->boundaries[count($this->items)])) {
-                $this->items[$lastKey]['run'] = new TextRun($last['run']->text.$text, $properties);
+                $this->items[$lastKey]['run'] = new TextRun($last['run']->text . $text, $properties);
                 $this->atLineStart = false;
 
                 return;
@@ -270,7 +270,7 @@ final class InlineBuffer
             'lowercase' => mb_strtolower($text),
             'capitalize' => (string) preg_replace_callback(
                 '/(^|[\s\p{Ps}\p{Pi}"\'-])(\p{Ll})/u',
-                static fn (array $m): string => $m[1].mb_strtoupper($m[2]),
+                static fn(array $m): string => $m[1] . mb_strtoupper($m[2]),
                 $text,
             ),
             default => $text,

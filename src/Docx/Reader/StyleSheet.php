@@ -88,13 +88,13 @@ final class StyleSheet
         $id = $this->effectiveId($id, 'paragraph');
 
         if ($id === null) {
-            return new ParagraphFormat;
+            return new ParagraphFormat();
         }
 
         return $this->paragraphCache[$id] ??= array_reduce(
             $this->chain($id),
-            fn (ParagraphFormat $format, Element $style): ParagraphFormat => $format->over($this->parser->paragraph(Xml::child($style, 'pPr'))),
-            new ParagraphFormat,
+            fn(ParagraphFormat $format, Element $style): ParagraphFormat => $format->over($this->parser->paragraph(Xml::child($style, 'pPr'))),
+            new ParagraphFormat(),
         );
     }
 
@@ -104,13 +104,13 @@ final class StyleSheet
         $id = $this->effectiveId($id, $type);
 
         if ($id === null) {
-            return new RunFormat;
+            return new RunFormat();
         }
 
-        return $this->runCache[$type.':'.$id] ??= array_reduce(
+        return $this->runCache[$type . ':' . $id] ??= array_reduce(
             $this->chain($id),
-            fn (RunFormat $format, Element $style): RunFormat => $format->over($this->parser->run(Xml::child($style, 'rPr'))),
-            new RunFormat,
+            fn(RunFormat $format, Element $style): RunFormat => $format->over($this->parser->run(Xml::child($style, 'rPr'))),
+            new RunFormat(),
         );
     }
 
@@ -119,13 +119,13 @@ final class StyleSheet
         $id = $this->effectiveId($id, 'table');
 
         if ($id === null) {
-            return new TableStyle;
+            return new TableStyle();
         }
 
         return $this->tableCache[$id] ??= array_reduce(
             $this->chain($id),
-            fn (TableStyle $format, Element $style): TableStyle => $format->over($this->readTableStyle($style)),
-            new TableStyle,
+            fn(TableStyle $format, Element $style): TableStyle => $format->over($this->readTableStyle($style)),
+            new TableStyle(),
         );
     }
 
@@ -138,7 +138,7 @@ final class StyleSheet
 
         return array_reduce(
             $this->chain($id),
-            fn (?string $numId, Element $style): ?string => $this->parser->paragraph(Xml::child($style, 'pPr'))->numId ?? $numId,
+            fn(?string $numId, Element $style): ?string => $this->parser->paragraph(Xml::child($style, 'pPr'))->numId ?? $numId,
             null,
         );
     }

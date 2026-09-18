@@ -8,6 +8,6 @@ final readonly class TextRun implements Inline
 {
     public function __construct(
         public string $text,
-        public RunProperties $properties = new RunProperties,
+        public RunProperties $properties = new RunProperties(),
     ) {}
 }

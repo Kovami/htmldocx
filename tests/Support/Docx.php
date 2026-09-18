@@ -36,7 +36,7 @@ final class Docx
         file_put_contents($path, $bytes);
 
         try {
-            $zip = new ZipArchive;
+            $zip = new ZipArchive();
 
             if ($zip->open($path, ZipArchive::CHECKCONS) !== true) {
                 throw new RuntimeException('Not a valid ZIP archive.');
@@ -65,7 +65,7 @@ final class Docx
     public function xpath(string $part = 'word/document.xml'): DOMXPath
     {
         if (! isset($this->xpaths[$part])) {
-            $document = new DOMDocument;
+            $document = new DOMDocument();
 
             if (! isset($this->parts[$part]) || ! @$document->loadXML($this->parts[$part])) {
                 throw new RuntimeException("Part {$part} is missing or not well-formed.");
@@ -164,7 +164,7 @@ final class Docx
      */
     public function paragraphTexts(): array
     {
-        return array_values(array_filter(array_map($this->text(...), $this->paragraphs()), static fn (string $t): bool => $t !== ''));
+        return array_values(array_filter(array_map($this->text(...), $this->paragraphs()), static fn(string $t): bool => $t !== ''));
     }
 
     /** The innermost paragraph (at any depth) whose text contains $needle. */

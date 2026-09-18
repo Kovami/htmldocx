@@ -15,7 +15,7 @@ final readonly class TableProperties
         public int $width,
         public ?string $alignment = null,
         public int $indentLeft = 0,
-        public BorderSet $borders = new BorderSet,
+        public BorderSet $borders = new BorderSet(),
         public ?string $shading = null,
         public bool $bidi = false,
     ) {}

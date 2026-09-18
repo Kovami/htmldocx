@@ -13,7 +13,7 @@ final class XmlBuilder
 
     public function __construct()
     {
-        $this->writer = new XMLWriter;
+        $this->writer = new XMLWriter();
         $this->writer->openMemory();
         $this->writer->startDocument('1.0', 'UTF-8', 'yes');
     }

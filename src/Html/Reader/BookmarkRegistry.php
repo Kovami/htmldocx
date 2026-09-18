@@ -22,12 +22,12 @@ final class BookmarkRegistry
             return $this->names[$htmlId];
         }
 
-        $base = '_'.substr((string) preg_replace('/[^A-Za-z0-9_]/', '_', $htmlId), 0, 32);
+        $base = '_' . substr((string) preg_replace('/[^A-Za-z0-9_]/', '_', $htmlId), 0, 32);
         $name = $base;
         $suffix = 1;
 
         while (in_array($name, $this->names, true)) {
-            $name = $base.'_'.$suffix++;
+            $name = $base . '_' . $suffix++;
         }
 
         return $this->names[$htmlId] = $name;

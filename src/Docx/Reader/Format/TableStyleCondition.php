@@ -8,10 +8,10 @@ namespace Kovami\HtmlDocx\Docx\Reader\Format;
 final readonly class TableStyleCondition
 {
     public function __construct(
-        public TableFormat $table = new TableFormat,
-        public CellFormat $cell = new CellFormat,
-        public ParagraphFormat $paragraph = new ParagraphFormat,
-        public RunFormat $run = new RunFormat,
+        public TableFormat $table = new TableFormat(),
+        public CellFormat $cell = new CellFormat(),
+        public ParagraphFormat $paragraph = new ParagraphFormat(),
+        public RunFormat $run = new RunFormat(),
     ) {}
 
     public function over(self $top): self

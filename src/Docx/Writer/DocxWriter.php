@@ -17,7 +17,7 @@ final class DocxWriter
      */
     public function write(Document $document, mixed $stream): void
     {
-        $relationships = new Relationships;
+        $relationships = new Relationships();
         $relationships->add(Relationships::STYLES, 'styles.xml');
         $relationships->add(Relationships::SETTINGS, 'settings.xml');
 
@@ -27,7 +27,7 @@ final class DocxWriter
             $relationships->add(Relationships::NUMBERING, 'numbering.xml');
         }
 
-        $media = new MediaRegistry;
+        $media = new MediaRegistry();
         $parts = [];
         $headersFooters = [];
         $counts = [];
@@ -35,10 +35,10 @@ final class DocxWriter
         // Each part below carries its own relationships: what it links to or
         // shows is addressed from that part, not from the document.
         foreach ($document->headersFooters as $headerFooter) {
-            $partRelationships = new Relationships;
+            $partRelationships = new Relationships();
             $xml = (new DocumentPart($document, $partRelationships, $media))->headerFooterXml($headerFooter);
             $counts[$headerFooter->kind] = ($counts[$headerFooter->kind] ?? 0) + 1;
-            $target = $headerFooter->kind.$counts[$headerFooter->kind].'.xml';
+            $target = $headerFooter->kind . $counts[$headerFooter->kind] . '.xml';
 
             $headersFooters[] = [
                 'kind' => $headerFooter->kind,
@@ -65,7 +65,7 @@ final class DocxWriter
         $notes = [];
 
         foreach ([Note::FOOTNOTE => Relationships::FOOTNOTES, Note::ENDNOTE => Relationships::ENDNOTES] as $type => $relationshipType) {
-            $noteRelationships = new Relationships;
+            $noteRelationships = new Relationships();
             $xml = (new DocumentPart($document, $noteRelationships, $media))->notesXml($type);
 
             if ($xml === null) {
@@ -79,7 +79,7 @@ final class DocxWriter
         }
 
         $extended = DocumentPart::commentsExtendedXml($document);
-        $commentRelationships = new Relationships;
+        $commentRelationships = new Relationships();
         $comments = (new DocumentPart($document, $commentRelationships, $media))->commentsXml($extended !== null);
 
         if ($comments !== null) {
@@ -92,7 +92,7 @@ final class DocxWriter
             $parts['word/commentsExtended.xml'] = $extended;
         }
 
-        $evenPages = array_filter($document->headersFooters, static fn (HeaderFooter $headerFooter): bool => $headerFooter->type === HeaderFooter::EVEN);
+        $evenPages = array_filter($document->headersFooters, static fn(HeaderFooter $headerFooter): bool => $headerFooter->type === HeaderFooter::EVEN);
         $parts['word/settings.xml'] = PackageParts::settings($notes, $evenPages !== []);
         $parts['word/_rels/document.xml.rels'] = $relationships->toXml();
         $parts = ['[Content_Types].xml' => PackageParts::contentTypes($media->contentTypes(), array_keys($parts)), ...$parts];

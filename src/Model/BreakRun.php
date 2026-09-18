@@ -11,7 +11,7 @@ final readonly class BreakRun implements Inline
     public const string PAGE = 'page';
 
     public function __construct(
-        public RunProperties $properties = new RunProperties,
+        public RunProperties $properties = new RunProperties(),
         public string $type = self::LINE,
     ) {}
 }

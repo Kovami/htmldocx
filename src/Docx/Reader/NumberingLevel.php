@@ -22,7 +22,7 @@ final readonly class NumberingLevel
         public ?int $restartAfter = null,
         public bool $legal = false,
         public ?string $paragraphStyleId = null,
-        public ParagraphFormat $paragraph = new ParagraphFormat,
-        public RunFormat $run = new RunFormat,
+        public ParagraphFormat $paragraph = new ParagraphFormat(),
+        public RunFormat $run = new RunFormat(),
     ) {}
 }

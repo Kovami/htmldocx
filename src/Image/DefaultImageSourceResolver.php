@@ -58,7 +58,7 @@ final readonly class DefaultImageSourceResolver implements ImageSourceResolver
             return null;
         }
 
-        $url = str_starts_with($source, '//') ? 'https:'.$source : $source;
+        $url = str_starts_with($source, '//') ? 'https:' . $source : $source;
         $bytes = ($this->remoteFetcher)($url);
 
         return is_string($bytes) && $bytes !== '' ? $bytes : null;
@@ -77,9 +77,9 @@ final readonly class DefaultImageSourceResolver implements ImageSourceResolver
             return null;
         }
 
-        $candidate = realpath($base.DIRECTORY_SEPARATOR.ltrim($path, '/\\'));
+        $candidate = realpath($base . DIRECTORY_SEPARATOR . ltrim($path, '/\\'));
 
-        if ($candidate === false || ! is_file($candidate) || ! str_starts_with($candidate, $base.DIRECTORY_SEPARATOR)) {
+        if ($candidate === false || ! is_file($candidate) || ! str_starts_with($candidate, $base . DIRECTORY_SEPARATOR)) {
             return null;
         }
 

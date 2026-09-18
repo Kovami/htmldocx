@@ -60,10 +60,10 @@ final readonly class TableReader
         }
 
         $grid = array_map(
-            static fn (Element $column): int => max(0, Xml::twips(Xml::attr($column, 'w')) ?? 0),
+            static fn(Element $column): int => max(0, Xml::twips(Xml::attr($column, 'w')) ?? 0),
             Xml::children(Xml::child($table, 'tblGrid'), 'gridCol'),
         );
-        $columnCount = max(count($grid), ...array_map(static fn (array $row): int => $row['columns'], $rows));
+        $columnCount = max(count($grid), ...array_map(static fn(array $row): int => $row['columns'], $rows));
         $grid = $this->gridWidths($grid, $columnCount, $rows, $format, $availableWidth);
         $tableWidth = array_sum($grid);
 
@@ -88,7 +88,7 @@ final readonly class TableReader
                 if ($span > 0) {
                     $cells[] = new TableCell(
                         new CellProperties(array_sum(array_slice($grid, $column, $span)), $span),
-                        [new Paragraph],
+                        [new Paragraph()],
                     );
                     $column += $span;
                 }
@@ -217,7 +217,7 @@ final readonly class TableReader
 
         $known = array_filter($grid);
         $fallback = $known === [] ? intdiv($availableWidth, max(1, $columnCount)) : intdiv(array_sum($known), count($known));
-        $grid = array_map(static fn (int $width): int => $width > 0 ? $width : $fallback, $grid);
+        $grid = array_map(static fn(int $width): int => $width > 0 ? $width : $fallback, $grid);
 
         $target = match ($format->width[1] ?? 'auto') {
             'dxa' => $format->width[0] > 0 ? $format->width[0] : null,
@@ -228,7 +228,7 @@ final readonly class TableReader
         $total = array_sum($grid);
 
         if ($target !== null && $total > 0 && abs($target - $total) > 20) {
-            $grid = array_map(static fn (int $width): int => max(1, (int) round($width * $target / $total)), $grid);
+            $grid = array_map(static fn(int $width): int => max(1, (int) round($width * $target / $total)), $grid);
         }
 
         return $grid;
@@ -267,7 +267,7 @@ final readonly class TableReader
             'seCell' => $isLastRow && $isLastColumn,
         ];
 
-        $result = [['type' => 'wholeTable', 'condition' => $style->whole->over($style->conditions['wholeTable'] ?? new TableStyleCondition)]];
+        $result = [['type' => 'wholeTable', 'condition' => $style->whole->over($style->conditions['wholeTable'] ?? new TableStyleCondition())]];
 
         foreach (TableStyle::CONDITION_ORDER as $type) {
             if (($applies[$type] ?? false) && isset($style->conditions[$type])) {
@@ -293,8 +293,8 @@ final readonly class TableReader
         ];
 
         $borders = self::regionBorders($table->borders, $edges);
-        $cellFormat = new CellFormat;
-        $merged = new TableStyleCondition;
+        $cellFormat = new CellFormat();
+        $merged = new TableStyleCondition();
 
         foreach ($conditions as ['type' => $type, 'condition' => $condition]) {
             $regionEdges = match (true) {
@@ -322,7 +322,7 @@ final readonly class TableReader
         $blocks = ($this->readBlocks)($element, $merged, max(360, $width - $margins['left'] - $margins['right']));
 
         if ($blocks === [] || ! $blocks[array_key_last($blocks)] instanceof Paragraph) {
-            $blocks[] = new Paragraph;
+            $blocks[] = new Paragraph();
         }
 
         return new TableCell(

@@ -36,7 +36,7 @@ final readonly class ParagraphFormat
         public ?int $level = null,
         public ?int $outlineLevel = null,
         public ?bool $bidi = null,
-        public RunFormat $mark = new RunFormat,
+        public RunFormat $mark = new RunFormat(),
     ) {}
 
     public function over(self $top): self

@@ -76,7 +76,7 @@ final class NumberingRegistry
      */
     public static function format(string $listStyleType, int $level, int $value = 1): array
     {
-        $placeholder = '%'.($level + 1).'.';
+        $placeholder = '%' . ($level + 1) . '.';
         $marker = self::marker($listStyleType);
 
         if ($marker !== null) {
@@ -86,7 +86,7 @@ final class NumberingRegistry
         if (self::isLiteral($listStyleType)) {
             return $value < 1
                 ? ['decimal', $placeholder]
-                : ['none', self::alphabetic($value, self::LITERAL_ALPHABETS[$listStyleType]).'.'];
+                : ['none', self::alphabetic($value, self::LITERAL_ALPHABETS[$listStyleType]) . '.'];
         }
 
         return match ($listStyleType) {
@@ -112,7 +112,7 @@ final class NumberingRegistry
 
         while ($value > 0) {
             $value--;
-            $text = $symbols[$value % count($symbols)].$text;
+            $text = $symbols[$value % count($symbols)] . $text;
             $value = intdiv($value, count($symbols));
         }
 

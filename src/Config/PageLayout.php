@@ -59,7 +59,10 @@ final readonly class PageLayout
         return new self(
             Length::twipsFromMillimeters($widthMm),
             Length::twipsFromMillimeters($heightMm),
-            $margin, $margin, $margin, $margin,
+            $margin,
+            $margin,
+            $margin,
+            $margin,
         );
     }
 
@@ -70,7 +73,10 @@ final readonly class PageLayout
         return new self(
             Length::twipsFromInches($widthInches),
             Length::twipsFromInches($heightInches),
-            $margin, $margin, $margin, $margin,
+            $margin,
+            $margin,
+            $margin,
+            $margin,
         );
     }
 

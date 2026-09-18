@@ -10,6 +10,6 @@ final readonly class Formula implements Inline
     public function __construct(
         public string $latex,
         public bool $display = false,
-        public RunProperties $properties = new RunProperties,
+        public RunProperties $properties = new RunProperties(),
     ) {}
 }

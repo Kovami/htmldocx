@@ -15,17 +15,17 @@ function colorOf(string $html, string $text): ?string
 it('orders rules by specificity, then source order', function () {
     $css = '<style>#id { color: #0000ff } .cls { color: #00ff00 } p { color: #ff0000 } p.cls { color: #ff00ff } .late { color: #111111 } .late2 { color: #222222 }</style>';
 
-    expect(colorOf($css.'<p id="id" class="cls">id wins</p>', 'id wins'))->toBe('0000FF')
-        ->and(colorOf($css.'<p class="cls">compound wins</p>', 'compound wins'))->toBe('FF00FF')
-        ->and(colorOf($css.'<div class="late late2">source order</div>', 'source order'))->toBe('222222');
+    expect(colorOf($css . '<p id="id" class="cls">id wins</p>', 'id wins'))->toBe('0000FF')
+        ->and(colorOf($css . '<p class="cls">compound wins</p>', 'compound wins'))->toBe('FF00FF')
+        ->and(colorOf($css . '<div class="late late2">source order</div>', 'source order'))->toBe('222222');
 });
 
 it('lets inline styles beat stylesheets and !important beat inline styles', function () {
     $css = '<style>.a { color: #ff0000 } .b { color: #00ff00 !important }</style>';
 
-    expect(colorOf($css.'<p class="a" style="color: #0000ff">inline</p>', 'inline'))->toBe('0000FF')
-        ->and(colorOf($css.'<p class="b" style="color: #0000ff">important</p>', 'important'))->toBe('00FF00')
-        ->and(colorOf($css.'<p class="b" style="color: #0000ff !important">both important</p>', 'both important'))->toBe('0000FF');
+    expect(colorOf($css . '<p class="a" style="color: #0000ff">inline</p>', 'inline'))->toBe('0000FF')
+        ->and(colorOf($css . '<p class="b" style="color: #0000ff">important</p>', 'important'))->toBe('00FF00')
+        ->and(colorOf($css . '<p class="b" style="color: #0000ff !important">both important</p>', 'both important'))->toBe('0000FF');
 });
 
 it('supports the full selector syntax of the HTML5 DOM', function (string $selector, string $html) {
@@ -45,7 +45,7 @@ it('supports the full selector syntax of the HTML5 DOM', function (string $selec
 it('ignores rules that cannot apply to printed content', function () {
     $css = '<style>p::before { color: #ff0000 } a:hover { color: #00ff00 } @media screen { p { color: #0000ff } } @font-face { font-family: x } p[ { broken }</style>';
 
-    expect(colorOf($css.'<p>unaffected</p>', 'unaffected'))->toBeNull();
+    expect(colorOf($css . '<p>unaffected</p>', 'unaffected'))->toBeNull();
 });
 
 it('applies @media print and @media all', function () {
@@ -56,7 +56,7 @@ it('applies @media print and @media all', function () {
 it('survives comments, strings with braces and data URLs in stylesheets', function () {
     $css = '<style>/* p { color: red } */ .x::after { content: "}{;" } .y { background: url("data:image/png;base64,AAA;B") no-repeat; color: #0a0b0c }</style>';
 
-    expect(colorOf($css.'<p class="y">tricky</p>', 'tricky'))->toBe('0A0B0C');
+    expect(colorOf($css . '<p class="y">tricky</p>', 'tricky'))->toBe('0A0B0C');
 });
 
 it('inherits text properties but not box properties', function () {

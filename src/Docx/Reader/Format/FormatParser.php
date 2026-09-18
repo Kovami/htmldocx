@@ -20,12 +20,12 @@ final readonly class FormatParser
         'darkRed' => '800000', 'darkYellow' => '808000', 'darkGray' => '808080', 'lightGray' => 'C0C0C0',
     ];
 
-    public function __construct(private Theme $theme = new Theme) {}
+    public function __construct(private Theme $theme = new Theme()) {}
 
     public function run(?Element $rPr): RunFormat
     {
         if ($rPr === null) {
-            return new RunFormat;
+            return new RunFormat();
         }
 
         $strike = Xml::onOff($rPr, 'strike');
@@ -61,7 +61,7 @@ final readonly class FormatParser
     public function paragraph(?Element $pPr): ParagraphFormat
     {
         if ($pPr === null) {
-            return new ParagraphFormat;
+            return new ParagraphFormat();
         }
 
         $ind = Xml::child($pPr, 'ind');
@@ -107,7 +107,7 @@ final readonly class FormatParser
     public function table(?Element $tblPr): TableFormat
     {
         if ($tblPr === null) {
-            return new TableFormat;
+            return new TableFormat();
         }
 
         return new TableFormat(
@@ -132,7 +132,7 @@ final readonly class FormatParser
     public function cell(?Element $tcPr): CellFormat
     {
         if ($tcPr === null) {
-            return new CellFormat;
+            return new CellFormat();
         }
 
         $vMerge = Xml::child($tcPr, 'vMerge');
@@ -159,7 +159,7 @@ final readonly class FormatParser
     public function row(?Element $trPr): RowFormat
     {
         if ($trPr === null) {
-            return new RowFormat;
+            return new RowFormat();
         }
 
         $height = Xml::child($trPr, 'trHeight');
@@ -264,7 +264,7 @@ final readonly class FormatParser
         }
 
         foreach (['hAnsi', 'ascii'] as $slot) {
-            $font = $this->theme->font(Xml::attr($rFonts, $slot.'Theme')) ?? Xml::attr($rFonts, $slot);
+            $font = $this->theme->font(Xml::attr($rFonts, $slot . 'Theme')) ?? Xml::attr($rFonts, $slot);
 
             if ($font !== null && trim($font) !== '') {
                 return trim($font);

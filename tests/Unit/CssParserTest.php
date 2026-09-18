@@ -11,7 +11,7 @@ function parseCss(string $css): array
     $order = 0;
 
     return array_map(
-        static fn (CssRule $rule): string => $rule->selector->text.' => '.implode(';', array_map(static fn ($d) => "{$d->property}:{$d->value}", $rule->declarations)),
+        static fn(CssRule $rule): string => $rule->selector->text . ' => ' . implode(';', array_map(static fn($d) => "{$d->property}:{$d->value}", $rule->declarations)),
         CssParser::parse($css, Origin::Author, $order),
     );
 }
@@ -27,7 +27,7 @@ it('assigns increasing source order across stylesheets', function () {
     $first = CssParser::parse('a { color: red } b { color: red }', Origin::Author, $order);
     $second = CssParser::parse('c { color: red }', Origin::Base, $order);
 
-    expect(array_map(static fn (CssRule $r): int => $r->sourceOrder, [...$first, ...$second]))->toBe([0, 1, 2])
+    expect(array_map(static fn(CssRule $r): int => $r->sourceOrder, [...$first, ...$second]))->toBe([0, 1, 2])
         ->and($second[0]->origin)->toBe(Origin::Base);
 });
 

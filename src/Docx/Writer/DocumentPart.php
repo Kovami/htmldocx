@@ -62,7 +62,7 @@ final class DocumentPart
 
     public function toXml(): string
     {
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('w:document', self::NAMESPACES);
         $xml->open('w:body');
 
@@ -83,7 +83,7 @@ final class DocumentPart
      */
     public function notesXml(string $type): ?string
     {
-        $notes = array_values(array_filter($this->document->notes, static fn (Note $note): bool => $note->type === $type));
+        $notes = array_values(array_filter($this->document->notes, static fn(Note $note): bool => $note->type === $type));
 
         if ($notes === []) {
             return null;
@@ -92,7 +92,7 @@ final class DocumentPart
         $isEndnote = $type === Note::ENDNOTE;
         $element = $isEndnote ? 'w:endnote' : 'w:footnote';
 
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open($isEndnote ? 'w:endnotes' : 'w:footnotes', self::NAMESPACES);
 
         // The rules Word draws above notes and above their continuation.
@@ -100,7 +100,7 @@ final class DocumentPart
             $xml->open($element, ['w:type' => $special, 'w:id' => $id])
                 ->open('w:p')
                 ->open('w:pPr')->leaf('w:spacing', ['w:after' => 0, 'w:line' => 240, 'w:lineRule' => 'auto'])->close()
-                ->open('w:r')->leaf('w:'.$special)->close()
+                ->open('w:r')->leaf('w:' . $special)->close()
                 ->close()
                 ->close();
         }
@@ -113,7 +113,7 @@ final class DocumentPart
             foreach ($note->blocks as $block) {
                 if ($first && $block instanceof Paragraph) {
                     // The note's own number, which Word renders from this element.
-                    $this->paragraph($xml, $block, fn (): XmlBuilder => $xml->open('w:r')->leaf($mark)->close());
+                    $this->paragraph($xml, $block, fn(): XmlBuilder => $xml->open('w:r')->leaf($mark)->close());
                     $first = false;
 
                     continue;
@@ -124,7 +124,7 @@ final class DocumentPart
             }
 
             if ($note->blocks === []) {
-                $this->paragraph($xml, new Paragraph, fn (): XmlBuilder => $xml->open('w:r')->leaf($mark)->close());
+                $this->paragraph($xml, new Paragraph(), fn(): XmlBuilder => $xml->open('w:r')->leaf($mark)->close());
             }
 
             $xml->close();
@@ -136,7 +136,7 @@ final class DocumentPart
     /** word/headerN.xml or word/footerN.xml. */
     public function headerFooterXml(HeaderFooter $headerFooter): string
     {
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open($headerFooter->kind === HeaderFooter::HEADER ? 'w:hdr' : 'w:ftr', self::NAMESPACES);
 
         foreach (self::endingInParagraph($headerFooter->blocks) as $block) {
@@ -163,7 +163,7 @@ final class DocumentPart
             $root += ['xmlns:mc' => Namespaces::MC, 'xmlns:w14' => Namespaces::W14, 'mc:Ignorable' => 'w14'];
         }
 
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('w:comments', $root);
 
         foreach ($this->document->comments as $comment) {
@@ -188,7 +188,7 @@ final class DocumentPart
                     $xml,
                     $block,
                     // The mark Word draws where the comment begins.
-                    $index === 0 ? fn (): XmlBuilder => $xml->open('w:r')->leaf('w:annotationRef')->close() : null,
+                    $index === 0 ? fn(): XmlBuilder => $xml->open('w:r')->leaf('w:annotationRef')->close() : null,
                     $withParagraphIds && $index === $last ? ['w14:paraId' => self::paragraphId($comment), 'w14:textId' => '77777777'] : [],
                 );
             }
@@ -205,7 +205,7 @@ final class DocumentPart
      */
     public static function commentsExtendedXml(Document $document): ?string
     {
-        $needed = array_filter($document->comments, static fn (Comment $comment): bool => $comment->parentId !== null || $comment->resolved);
+        $needed = array_filter($document->comments, static fn(Comment $comment): bool => $comment->parentId !== null || $comment->resolved);
 
         if ($needed === []) {
             return null;
@@ -217,7 +217,7 @@ final class DocumentPart
             $byId[$comment->id] = $comment;
         }
 
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('w15:commentsEx', ['xmlns:mc' => Namespaces::MC, 'xmlns:w15' => Namespaces::W15, 'mc:Ignorable' => 'w15']);
 
         foreach ($document->comments as $comment) {
@@ -249,7 +249,7 @@ final class DocumentPart
     {
         $last = $blocks === [] ? null : $blocks[count($blocks) - 1];
 
-        return $last instanceof Paragraph ? $blocks : [...$blocks, new Paragraph];
+        return $last instanceof Paragraph ? $blocks : [...$blocks, new Paragraph()];
     }
 
     private function block(XmlBuilder $xml, Block $block): void
@@ -286,12 +286,12 @@ final class DocumentPart
     private function inline(XmlBuilder $xml, Inline $inline, RunProperties $base): void
     {
         match (true) {
-            $inline instanceof TextRun => $this->run($xml, $inline->properties, $base, fn () => $xml->text('w:t', $inline->text, ['xml:space' => 'preserve'])),
-            $inline instanceof BreakRun => $this->run($xml, $inline->properties, $base, fn () => $xml->leaf('w:br', ['w:type' => $inline->type === BreakRun::PAGE ? BreakRun::PAGE : null])),
-            $inline instanceof TabRun => $this->run($xml, $inline->properties, $base, fn () => $xml->leaf('w:tab')),
+            $inline instanceof TextRun => $this->run($xml, $inline->properties, $base, fn() => $xml->text('w:t', $inline->text, ['xml:space' => 'preserve'])),
+            $inline instanceof BreakRun => $this->run($xml, $inline->properties, $base, fn() => $xml->leaf('w:br', ['w:type' => $inline->type === BreakRun::PAGE ? BreakRun::PAGE : null])),
+            $inline instanceof TabRun => $this->run($xml, $inline->properties, $base, fn() => $xml->leaf('w:tab')),
             $inline instanceof Formula => $this->formula($xml, $inline, $base),
-            $inline instanceof ImageRun => $this->run($xml, $inline->properties, $base, fn () => $this->drawing($xml, $inline)),
-            $inline instanceof NoteReference => $this->run($xml, $inline->properties, $base, fn () => $xml->leaf(
+            $inline instanceof ImageRun => $this->run($xml, $inline->properties, $base, fn() => $this->drawing($xml, $inline)),
+            $inline instanceof NoteReference => $this->run($xml, $inline->properties, $base, fn() => $xml->leaf(
                 $inline->type === Note::ENDNOTE ? 'w:endnoteReference' : 'w:footnoteReference',
                 ['w:id' => $inline->number],
             )),
@@ -313,7 +313,7 @@ final class DocumentPart
     private function field(XmlBuilder $xml, Field $field, RunProperties $base): void
     {
         $xml->open('w:fldSimple', ['w:instr' => " {$field->name} "]);
-        $this->run($xml, $field->properties, $base, fn () => $xml->text('w:t', $field->result, ['xml:space' => 'preserve']));
+        $this->run($xml, $field->properties, $base, fn() => $xml->text('w:t', $field->result, ['xml:space' => 'preserve']));
         $xml->close();
     }
 

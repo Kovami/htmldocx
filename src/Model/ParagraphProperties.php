@@ -25,7 +25,7 @@ final class ParagraphProperties
         public bool $keepLines = false,
         public bool $pageBreakBefore = false,
         public ?string $shading = null,
-        public BorderSet $borders = new BorderSet,
+        public BorderSet $borders = new BorderSet(),
         public ?NumberingReference $numbering = null,
         public bool $bidi = false,
         public ?int $outlineLevel = null,

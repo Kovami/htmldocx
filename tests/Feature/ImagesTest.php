@@ -19,19 +19,19 @@ function imageSizePx(Docx $docx, int $index = 0): array
 
 it('embeds data URI images with a relationship and content type', function () {
     $png = TestImage::png(40, 20);
-    $docx = docx('<p><img src="data:image/png;base64,'.base64_encode($png).'" alt="A chart"></p>');
+    $docx = docx('<p><img src="data:image/png;base64,' . base64_encode($png) . '" alt="A chart"></p>');
 
     $embed = $docx->first('//a:blip')->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
     $relationship = $docx->first("//rel:Relationship[@Id='{$embed}']", null, 'word/_rels/document.xml.rels');
 
-    expect($docx->parts['word/'.$relationship->getAttribute('Target')])->toBe($png)
+    expect($docx->parts['word/' . $relationship->getAttribute('Target')])->toBe($png)
         ->and($docx->first("//ct:Default[@Extension='png']", null, '[Content_Types].xml')->getAttribute('ContentType'))->toBe('image/png')
         ->and($docx->first('//wp:docPr')->getAttribute('descr'))->toBe('A chart')
         ->and(imageSizePx($docx))->toBe([40, 20]);
 });
 
 it('sizes images from CSS, attributes and intrinsic size', function (string $attributes, array $expected) {
-    $docx = docx('<p><img src="'.TestImage::pngDataUri(200, 100)."\" {$attributes}></p>");
+    $docx = docx('<p><img src="' . TestImage::pngDataUri(200, 100) . "\" {$attributes}></p>");
 
     expect(imageSizePx($docx))->toBe($expected);
 })->with([
@@ -45,7 +45,7 @@ it('sizes images from CSS, attributes and intrinsic size', function (string $att
 ]);
 
 it('never makes an image wider than the available width', function () {
-    $docx = docx('<p><img src="'.TestImage::pngDataUri(2000, 1000).'"></p><table><tr><td><img src="'.TestImage::pngDataUri(2000, 1000).'"></td><td>x</td></tr></table>');
+    $docx = docx('<p><img src="' . TestImage::pngDataUri(2000, 1000) . '"></p><table><tr><td><img src="' . TestImage::pngDataUri(2000, 1000) . '"></td><td>x</td></tr></table>');
 
     [$pageWidth, $pageHeight] = imageSizePx($docx, 0);
     [$cellWidth] = imageSizePx($docx, 1);
@@ -60,7 +60,7 @@ it('stores an image used several times only once', function () {
     $docx = docx("<p><img src=\"{$uri}\"><img src=\"{$uri}\"></p><p><img src=\"{$uri}\"></p>");
 
     expect($docx->count('//w:drawing'))->toBe(3)
-        ->and(array_filter(array_keys($docx->parts), static fn (string $name): bool => str_starts_with($name, 'word/media/')))->toHaveCount(1);
+        ->and(array_filter(array_keys($docx->parts), static fn(string $name): bool => str_starts_with($name, 'word/media/')))->toHaveCount(1);
 });
 
 it('embeds JPEG and GIF, identifying the format from the bytes', function () {
@@ -72,7 +72,7 @@ it('embeds JPEG and GIF, identifying the format from the bytes', function () {
     imagegif($image);
     $gif = ob_get_clean();
 
-    $docx = docx('<p><img src="data:image/png;base64,'.base64_encode($jpeg).'"><img src="data:image/gif;base64,'.base64_encode($gif).'"></p>');
+    $docx = docx('<p><img src="data:image/png;base64,' . base64_encode($jpeg) . '"><img src="data:image/gif;base64,' . base64_encode($gif) . '"></p>');
 
     expect($docx->has('word/media/image1.jpeg'))->toBeTrue()
         ->and($docx->has('word/media/image2.gif'))->toBeTrue();
@@ -84,7 +84,7 @@ it('converts WebP to PNG', function () {
     imagewebp($image);
     $webp = ob_get_clean();
 
-    $docx = docx('<p><img src="data:image/webp;base64,'.base64_encode($webp).'"></p>');
+    $docx = docx('<p><img src="data:image/webp;base64,' . base64_encode($webp) . '"></p>');
 
     expect($docx->has('word/media/image1.png'))->toBeTrue()
         ->and(imageSizePx($docx))->toBe([6, 3]);
@@ -120,10 +120,10 @@ it('fetches remote images only through the application callback', function () {
 });
 
 it('reads local images only inside the configured directory', function () {
-    $directory = sys_get_temp_dir().'/kovami-images-'.bin2hex(random_bytes(4));
-    mkdir($directory.'/nested', recursive: true);
-    file_put_contents($directory.'/nested/pic.png', TestImage::png(3, 3));
-    file_put_contents(dirname($directory).'/kovami-outside.png', TestImage::png(3, 3));
+    $directory = sys_get_temp_dir() . '/kovami-images-' . bin2hex(random_bytes(4));
+    mkdir($directory . '/nested', recursive: true);
+    file_put_contents($directory . '/nested/pic.png', TestImage::png(3, 3));
+    file_put_contents(dirname($directory) . '/kovami-outside.png', TestImage::png(3, 3));
 
     try {
         $converter = (new HtmlDocx(testOptions()))->withLocalImageBaseDir($directory);
@@ -132,16 +132,15 @@ it('reads local images only inside the configured directory', function () {
         expect($docx->count('//w:drawing'))->toBe(2)
             ->and($docx->paragraphTexts())->toBe(['blocked']);
     } finally {
-        @unlink($directory.'/nested/pic.png');
-        @rmdir($directory.'/nested');
+        @unlink($directory . '/nested/pic.png');
+        @rmdir($directory . '/nested');
         @rmdir($directory);
-        @unlink(dirname($directory).'/kovami-outside.png');
+        @unlink(dirname($directory) . '/kovami-outside.png');
     }
 });
 
 it('accepts a custom image resolver', function () {
-    $resolver = new class implements ImageSourceResolver
-    {
+    $resolver = new class implements ImageSourceResolver {
         public function resolve(string $source): ?string
         {
             return $source === 'storage://avatar' ? TestImage::png(7, 7) : null;
@@ -155,8 +154,8 @@ it('accepts a custom image resolver', function () {
 
 it('renders SunEditor image components centered with their caption', function () {
     $html = '<div class="se-component se-image-container __se__float-center" contenteditable="false">'
-        .'<figure style="margin: auto; width: 100px;"><img src="'.TestImage::pngDataUri(100, 50).'" alt="" data-rotate="" data-proportion="true" data-size="100px,auto" data-align="center" style="width: 100px; height: auto;">'
-        .'<figcaption>Figure 1</figcaption></figure></div>';
+        . '<figure style="margin: auto; width: 100px;"><img src="' . TestImage::pngDataUri(100, 50) . '" alt="" data-rotate="" data-proportion="true" data-size="100px,auto" data-align="center" style="width: 100px; height: auto;">'
+        . '<figcaption>Figure 1</figcaption></figure></div>';
 
     $docx = docx($html);
     $imageParagraph = $docx->first('//w:p[.//w:drawing]');
@@ -167,7 +166,7 @@ it('renders SunEditor image components centered with their caption', function ()
 });
 
 it('keeps images inside links clickable', function () {
-    $docx = docx('<p><a href="https://example.com"><img src="'.TestImage::pngDataUri(5, 5).'"></a></p>');
+    $docx = docx('<p><a href="https://example.com"><img src="' . TestImage::pngDataUri(5, 5) . '"></a></p>');
 
     expect($docx->count('//w:hyperlink//w:drawing'))->toBe(1);
 });

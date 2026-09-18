@@ -150,7 +150,7 @@ final class PropertiesWriter
      */
     public static function borders(XmlBuilder $xml, string $element, BorderSet $borders, array $sides): void
     {
-        $present = array_filter($sides, static fn (string $side): bool => self::side($borders, $side) !== null);
+        $present = array_filter($sides, static fn(string $side): bool => self::side($borders, $side) !== null);
 
         if ($present === []) {
             return;
@@ -159,7 +159,7 @@ final class PropertiesWriter
         $xml->open($element);
 
         foreach ($present as $side) {
-            self::border($xml, 'w:'.$side, self::side($borders, $side));
+            self::border($xml, 'w:' . $side, self::side($borders, $side));
         }
 
         $xml->close();

@@ -19,14 +19,14 @@ final class NumberFormat
     {
         return match ($format) {
             'none', 'bullet' => '',
-            'decimalZero' => $value >= 0 && $value < 10 ? '0'.$value : (string) $value,
+            'decimalZero' => $value >= 0 && $value < 10 ? '0' . $value : (string) $value,
             'upperRoman' => self::roman($value),
             'lowerRoman' => strtolower(self::roman($value)),
             'upperLetter' => strtoupper(self::repeatedLetter($value, range('a', 'z'))),
             'lowerLetter' => self::repeatedLetter($value, range('a', 'z')),
             'russianLower' => self::repeatedLetter($value, self::RUSSIAN),
             'russianUpper' => mb_strtoupper(self::repeatedLetter($value, self::RUSSIAN)),
-            'ordinal' => $value.self::ordinalSuffix($value),
+            'ordinal' => $value . self::ordinalSuffix($value),
             'cardinalText' => ucfirst(self::cardinal($value)),
             'ordinalText' => ucfirst(self::ordinalWord($value)),
             'hex' => strtoupper(dechex(max(0, $value))),
@@ -95,9 +95,9 @@ final class NumberFormat
 
         return match (true) {
             $value < 20 => self::CARDINALS[$value],
-            $value < 100 => self::TENS[intdiv($value, 10)].($value % 10 === 0 ? '' : '-'.self::CARDINALS[$value % 10]),
-            $value < 1000 => self::CARDINALS[intdiv($value, 100)].' hundred'.($value % 100 === 0 ? '' : ' '.self::cardinal($value % 100)),
-            default => self::cardinal(intdiv($value, 1000)).' thousand'.($value % 1000 === 0 ? '' : ' '.self::cardinal($value % 1000)),
+            $value < 100 => self::TENS[intdiv($value, 10)] . ($value % 10 === 0 ? '' : '-' . self::CARDINALS[$value % 10]),
+            $value < 1000 => self::CARDINALS[intdiv($value, 100)] . ' hundred' . ($value % 100 === 0 ? '' : ' ' . self::cardinal($value % 100)),
+            default => self::cardinal(intdiv($value, 1000)) . ' thousand' . ($value % 1000 === 0 ? '' : ' ' . self::cardinal($value % 1000)),
         };
     }
 
@@ -111,15 +111,15 @@ final class NumberFormat
         }
 
         $last = $match[1];
-        $ordinal = $irregular[$last] ?? (str_ends_with($last, 'y') ? substr($last, 0, -1).'ieth' : $last.'th');
+        $ordinal = $irregular[$last] ?? (str_ends_with($last, 'y') ? substr($last, 0, -1) . 'ieth' : $last . 'th');
 
-        return substr($cardinal, 0, -strlen($last)).$ordinal;
+        return substr($cardinal, 0, -strlen($last)) . $ordinal;
     }
 
     private static function fullWidth(int $value): string
     {
         return implode('', array_map(
-            static fn (string $digit): string => ctype_digit($digit) ? mb_chr(0xFF10 + (int) $digit) : $digit,
+            static fn(string $digit): string => ctype_digit($digit) ? mb_chr(0xFF10 + (int) $digit) : $digit,
             str_split((string) $value),
         ));
     }

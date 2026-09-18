@@ -25,7 +25,7 @@ it('writes only the parts it needs', function () {
 
 it('is deterministic for a fixed creation time', function () {
     $converter = new HtmlDocx(testOptions());
-    $html = '<h1>Title</h1><p>Body <img src="'.TestImage::pngDataUri(4, 4).'"></p><ol><li>x</li></ol>';
+    $html = '<h1>Title</h1><p>Body <img src="' . TestImage::pngDataUri(4, 4) . '"></p><ol><li>x</li></ol>';
 
     expect($converter->htmlToDocx($html))->toBe($converter->htmlToDocx($html));
 });
@@ -51,7 +51,7 @@ it('writes the same bytes to a string, a file and a stream', function () {
 });
 
 it('reports an unwritable destination', function () {
-    (new HtmlDocx)->htmlToDocxFile('<p>x</p>', '/nonexistent-dir/out.docx');
+    (new HtmlDocx())->htmlToDocxFile('<p>x</p>', '/nonexistent-dir/out.docx');
 })->throws(HtmlDocxException::class);
 
 it('writes document metadata', function () {

@@ -126,7 +126,7 @@ final class DocxIntegrity
 
         foreach (['_rels/.rels' => '', 'word/_rels/document.xml.rels' => 'word/'] as $relsPart => $baseDir) {
             foreach ($docx->query('/rel:Relationships/rel:Relationship', null, $relsPart) as $relationship) {
-                if ($relationship->getAttribute('TargetMode') !== 'External' && ! $docx->has($baseDir.$relationship->getAttribute('Target'))) {
+                if ($relationship->getAttribute('TargetMode') !== 'External' && ! $docx->has($baseDir . $relationship->getAttribute('Target'))) {
                     $errors[] = "{$relsPart} targets missing part {$relationship->getAttribute('Target')}";
                 }
             }
@@ -197,8 +197,8 @@ final class DocxIntegrity
             $errors[] = 'adjacent w:tbl elements would be merged by Word';
         }
 
-        $bookmarkStarts = array_map(static fn (DOMElement $e): string => (string) Docx::attr($e, 'id'), $docx->query('//w:bookmarkStart'));
-        $bookmarkEnds = array_map(static fn (DOMElement $e): string => (string) Docx::attr($e, 'id'), $docx->query('//w:bookmarkEnd'));
+        $bookmarkStarts = array_map(static fn(DOMElement $e): string => (string) Docx::attr($e, 'id'), $docx->query('//w:bookmarkStart'));
+        $bookmarkEnds = array_map(static fn(DOMElement $e): string => (string) Docx::attr($e, 'id'), $docx->query('//w:bookmarkEnd'));
 
         if (count($bookmarkStarts) !== count(array_unique($bookmarkStarts))) {
             $errors[] = 'duplicate bookmark ids';
@@ -211,7 +211,7 @@ final class DocxIntegrity
             $errors[] = 'unbalanced bookmarkStart/bookmarkEnd';
         }
 
-        $drawingIds = array_map(static fn (DOMElement $e): string => $e->getAttribute('id'), $docx->query('//wp:docPr'));
+        $drawingIds = array_map(static fn(DOMElement $e): string => $e->getAttribute('id'), $docx->query('//wp:docPr'));
 
         if (count($drawingIds) !== count(array_unique($drawingIds))) {
             $errors[] = 'duplicate wp:docPr ids';
@@ -245,29 +245,29 @@ final class DocxIntegrity
             }
         }
 
-        $bookmarkNames = array_map(static fn (DOMElement $e): string => (string) Docx::attr($e, 'name'), $docx->query('//w:bookmarkStart'));
+        $bookmarkNames = array_map(static fn(DOMElement $e): string => (string) Docx::attr($e, 'name'), $docx->query('//w:bookmarkStart'));
 
         foreach ($docx->query('//w:hyperlink[@w:anchor]') as $hyperlink) {
             if (! in_array(Docx::attr($hyperlink, 'anchor'), $bookmarkNames, true)) {
-                $errors[] = 'hyperlink anchor '.Docx::attr($hyperlink, 'anchor').' has no bookmark';
+                $errors[] = 'hyperlink anchor ' . Docx::attr($hyperlink, 'anchor') . ' has no bookmark';
             }
         }
 
-        $styleIds = array_map(static fn (DOMElement $e): string => (string) Docx::attr($e, 'styleId'), $docx->query('//w:style', null, 'word/styles.xml'));
+        $styleIds = array_map(static fn(DOMElement $e): string => (string) Docx::attr($e, 'styleId'), $docx->query('//w:style', null, 'word/styles.xml'));
 
         foreach ($docx->query('//w:pStyle | //w:basedOn | //w:next', null, 'word/styles.xml') as $reference) {
             if (! in_array(Docx::attr($reference, 'val'), $styleIds, true)) {
-                $errors[] = 'styles.xml references unknown style '.Docx::attr($reference, 'val');
+                $errors[] = 'styles.xml references unknown style ' . Docx::attr($reference, 'val');
             }
         }
 
         foreach ($docx->query('//w:pStyle') as $reference) {
             if (! in_array(Docx::attr($reference, 'val'), $styleIds, true)) {
-                $errors[] = 'document references unknown style '.Docx::attr($reference, 'val');
+                $errors[] = 'document references unknown style ' . Docx::attr($reference, 'val');
             }
         }
 
-        $usedNumIds = array_unique(array_map(static fn (DOMElement $e): string => (string) Docx::attr($e, 'val'), $docx->query('//w:numPr/w:numId')));
+        $usedNumIds = array_unique(array_map(static fn(DOMElement $e): string => (string) Docx::attr($e, 'val'), $docx->query('//w:numPr/w:numId')));
 
         if ($usedNumIds === []) {
             return;
@@ -279,7 +279,7 @@ final class DocxIntegrity
             return;
         }
 
-        $abstractIds = array_map(static fn (DOMElement $e): string => (string) Docx::attr($e, 'abstractNumId'), $docx->query('//w:abstractNum', null, 'word/numbering.xml'));
+        $abstractIds = array_map(static fn(DOMElement $e): string => (string) Docx::attr($e, 'abstractNumId'), $docx->query('//w:abstractNum', null, 'word/numbering.xml'));
         $numIds = [];
 
         foreach ($docx->query('//w:num', null, 'word/numbering.xml') as $num) {
@@ -291,7 +291,7 @@ final class DocxIntegrity
         }
 
         foreach ($docx->query('//w:abstractNum', null, 'word/numbering.xml') as $abstract) {
-            $levels = array_map(static fn (DOMElement $e): string => (string) Docx::attr($e, 'ilvl'), $docx->query('w:lvl', $abstract, 'word/numbering.xml'));
+            $levels = array_map(static fn(DOMElement $e): string => (string) Docx::attr($e, 'ilvl'), $docx->query('w:lvl', $abstract, 'word/numbering.xml'));
 
             if ($levels !== ['0', '1', '2', '3', '4', '5', '6', '7', '8']) {
                 $errors[] = 'w:abstractNum must define levels 0-8 in order';
@@ -311,7 +311,7 @@ final class DocxIntegrity
     private static function checkTables(Docx $docx, array &$errors): void
     {
         foreach ($docx->query('//w:tbl') as $table) {
-            $gridWidths = array_map(static fn (DOMElement $e): int => (int) Docx::attr($e, 'w'), $docx->query('w:tblGrid/w:gridCol', $table));
+            $gridWidths = array_map(static fn(DOMElement $e): int => (int) Docx::attr($e, 'w'), $docx->query('w:tblGrid/w:gridCol', $table));
             $columns = count($gridWidths);
 
             if ($columns === 0) {

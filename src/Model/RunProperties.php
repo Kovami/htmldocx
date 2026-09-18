@@ -36,7 +36,7 @@ final readonly class RunProperties
     /** Keeps only the properties that differ from $base. */
     public function relativeTo(self $base): self
     {
-        $differs = static fn (mixed $own, mixed $inherited): mixed => $own === $inherited ? null : $own;
+        $differs = static fn(mixed $own, mixed $inherited): mixed => $own === $inherited ? null : $own;
 
         return new self(
             $differs($this->fontFamily, $base->fontFamily),
@@ -58,7 +58,7 @@ final readonly class RunProperties
 
     public function isEmpty(): bool
     {
-        return array_filter(get_object_vars($this), static fn (mixed $value): bool => $value !== null) === [];
+        return array_filter(get_object_vars($this), static fn(mixed $value): bool => $value !== null) === [];
     }
 
     public function equals(self $other): bool

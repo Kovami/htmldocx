@@ -20,8 +20,8 @@ final readonly class TableStyle
      * @param  array<string, TableStyleCondition>  $conditions
      */
     public function __construct(
-        public TableFormat $table = new TableFormat,
-        public TableStyleCondition $whole = new TableStyleCondition,
+        public TableFormat $table = new TableFormat(),
+        public TableStyleCondition $whole = new TableStyleCondition(),
         public array $conditions = [],
     ) {}
 

@@ -7,9 +7,9 @@ use Kovami\HtmlDocx\Image\ImageInspector;
 use Kovami\HtmlDocx\Tests\Support\TestImage;
 
 it('decodes base64 and percent-encoded data URIs', function () {
-    $resolver = new DefaultImageSourceResolver;
+    $resolver = new DefaultImageSourceResolver();
 
-    expect($resolver->resolve('data:image/png;base64,'.base64_encode('bytes')))->toBe('bytes')
+    expect($resolver->resolve('data:image/png;base64,' . base64_encode('bytes')))->toBe('bytes')
         ->and($resolver->resolve("data:image/png;base64,Ynl0\n ZXM="))->toBe('bytes')
         ->and($resolver->resolve('data:image/svg+xml,%3Csvg%3E'))->toBe('<svg>')
         ->and($resolver->resolve('data:image/png;base64,***'))->toBeNull()
@@ -17,11 +17,11 @@ it('decodes base64 and percent-encoded data URIs', function () {
 });
 
 it('does not touch the network or the filesystem unless configured', function (string $source) {
-    expect((new DefaultImageSourceResolver)->resolve($source))->toBeNull();
+    expect((new DefaultImageSourceResolver())->resolve($source))->toBeNull();
 })->with(['https://example.com/a.png', '//example.com/a.png', '/etc/hosts', 'file:///etc/hosts', 'ftp://x/a.png', '']);
 
 it('confines local paths to the base directory', function () {
-    $base = sys_get_temp_dir().'/kovami-resolver-'.bin2hex(random_bytes(4));
+    $base = sys_get_temp_dir() . '/kovami-resolver-' . bin2hex(random_bytes(4));
     mkdir($base);
     file_put_contents("{$base}/a b.png", 'inside');
     $resolver = new DefaultImageSourceResolver(localBaseDirectory: $base);
@@ -29,7 +29,7 @@ it('confines local paths to the base directory', function () {
     try {
         expect($resolver->resolve('a%20b.png'))->toBe('inside')
             ->and($resolver->resolve('/a b.png#frag'))->toBe('inside')
-            ->and($resolver->resolve('../'.basename($base).'/a b.png'))->toBe('inside')
+            ->and($resolver->resolve('../' . basename($base) . '/a b.png'))->toBe('inside')
             ->and($resolver->resolve('../../../../etc/hosts'))->toBeNull()
             ->and($resolver->resolve('.'))->toBeNull()
             ->and($resolver->resolve('missing.png'))->toBeNull();
@@ -40,7 +40,7 @@ it('confines local paths to the base directory', function () {
 });
 
 it('detects formats from content, not from names', function () {
-    $inspector = new ImageInspector;
+    $inspector = new ImageInspector();
     $png = $inspector->inspect(TestImage::png(12, 34));
 
     expect($png?->extension)->toBe('png')

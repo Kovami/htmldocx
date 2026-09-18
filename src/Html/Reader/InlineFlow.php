@@ -23,6 +23,6 @@ final class InlineFlow
 
     public function buffer(): InlineBuffer
     {
-        return $this->buffer ??= new InlineBuffer;
+        return $this->buffer ??= new InlineBuffer();
     }
 }

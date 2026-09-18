@@ -164,7 +164,7 @@ it('renders definition lists', function () {
 });
 
 it('keeps a usable text width inside deeply nested boxes', function () {
-    $html = str_repeat('<blockquote>', 40).'deep'.str_repeat('</blockquote>', 40);
+    $html = str_repeat('<blockquote>', 40) . 'deep' . str_repeat('</blockquote>', 40);
     $docx = docx($html);
     $ind = $docx->first('w:pPr/w:ind', $docx->paragraph('deep'));
     $contentWidth = PageLayout::a4Portrait()->contentWidthTwips();
@@ -174,7 +174,7 @@ it('keeps a usable text width inside deeply nested boxes', function () {
 });
 
 it('leaves moderate nesting indents untouched', function () {
-    $html = str_repeat('<div style="margin-left: 1in">', 5).'five'.str_repeat('</div>', 5);
+    $html = str_repeat('<div style="margin-left: 1in">', 5) . 'five' . str_repeat('</div>', 5);
 
     expect(Docx::attr(docx($html)->first('//w:p/w:pPr/w:ind'), 'left'))->toBe('7200');
 });

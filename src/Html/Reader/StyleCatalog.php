@@ -38,7 +38,7 @@ final class StyleCatalog
         $bodyStyle = $this->resolver->resolve($html->body(), $root);
 
         $definitions = [
-            new StyleDefinition('Normal', 'Normal', new ParagraphProperties, $this->mapper->run($root), basedOn: null, isDefault: true),
+            new StyleDefinition('Normal', 'Normal', new ParagraphProperties(), $this->mapper->run($root), basedOn: null, isDefault: true),
         ];
 
         foreach ($html->body()->children as $element) {

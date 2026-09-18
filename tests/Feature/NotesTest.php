@@ -22,12 +22,12 @@ function annotatedDocument(): Document
     $run = new RunProperties(fontFamily: 'Calibri', size: 22, color: '000000');
     $mark = new RunProperties(fontFamily: 'Calibri', size: 22, color: '000000', verticalAlign: 'superscript');
 
-    $note = static fn (string $type, string $text): Note => new Note($type, 1, [
+    $note = static fn(string $type, string $text): Note => new Note($type, 1, [
         new Paragraph(new ParagraphProperties(spacingBefore: 0, spacingAfter: 0), [new TextRun($text, $run)]),
     ]);
 
     return new Document(
-        blocks: [new Paragraph(new ParagraphProperties, [
+        blocks: [new Paragraph(new ParagraphProperties(), [
             new TextRun('Claim', $run),
             new NoteReference(Note::FOOTNOTE, 1, $mark),
             new TextRun(' and another', $run),
@@ -98,7 +98,7 @@ function noteText(array $blocks): string
         foreach ($block->children as $inline) {
             $text .= match (true) {
                 $inline instanceof TextRun => $inline->text,
-                $inline instanceof Hyperlink => implode('', array_map(static fn ($run) => $run->text ?? '', $inline->children)),
+                $inline instanceof Hyperlink => implode('', array_map(static fn($run) => $run->text ?? '', $inline->children)),
                 default => '',
             };
         }
@@ -118,7 +118,7 @@ it('reads its own notes section back as notes', function () {
         ->and(noteText($read->notes[0]->blocks))->toBe('The footnote body.')
         ->and(noteText($read->notes[1]->blocks))->toBe('The endnote body.');
 
-    $marks = array_values(array_filter($read->blocks[0]->children, static fn ($inline) => $inline instanceof NoteReference));
+    $marks = array_values(array_filter($read->blocks[0]->children, static fn($inline) => $inline instanceof NoteReference));
 
     expect($marks)->toHaveCount(2)
         ->and($marks[0]->type)->toBe(Note::FOOTNOTE)

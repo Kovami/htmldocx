@@ -91,7 +91,7 @@ final class Color
     private static function fromHexDigits(string $digits): ?string
     {
         if (strlen($digits) <= 4) {
-            $digits = implode('', array_map(static fn (string $c): string => $c.$c, str_split($digits)));
+            $digits = implode('', array_map(static fn(string $c): string => $c . $c, str_split($digits)));
         }
 
         $alpha = strlen($digits) === 8 ? hexdec(substr($digits, 6, 2)) / 255 : 1.0;
@@ -158,7 +158,7 @@ final class Color
             return null;
         }
 
-        $blend = static fn (int $channel): int => (int) round($channel * $alpha + 255 * (1 - $alpha));
+        $blend = static fn(int $channel): int => (int) round($channel * $alpha + 255 * (1 - $alpha));
 
         return sprintf('%02X%02X%02X', $blend($r), $blend($g), $blend($b));
     }

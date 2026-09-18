@@ -6,7 +6,7 @@ use Kovami\HtmlDocx\Css\DeclarationParser;
 
 function declarations(string $block): array
 {
-    return array_map(static fn ($d) => $d->value, DeclarationParser::parse($block));
+    return array_map(static fn($d) => $d->value, DeclarationParser::parse($block));
 }
 
 it('parses declarations and flags !important', function () {

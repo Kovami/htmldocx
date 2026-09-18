@@ -71,7 +71,7 @@ final class ZipReader
      */
     public function names(): array
     {
-        return array_values(array_map(static fn (array $entry): string => $entry['name'], $this->entries));
+        return array_values(array_map(static fn(array $entry): string => $entry['name'], $this->entries));
     }
 
     public function read(string $name): string
@@ -135,7 +135,7 @@ final class ZipReader
 
         do {
             $last = $position + self::CHUNK >= $length;
-            set_error_handler(static fn (): bool => true);
+            set_error_handler(static fn(): bool => true);
 
             try {
                 $chunk = inflate_add($context, substr($compressed, $position, self::CHUNK), $last ? ZLIB_FINISH : ZLIB_SYNC_FLUSH);

@@ -23,7 +23,7 @@ final class DocxBuilder
     private array $parts = [];
 
     /** @var array<string, string> part name => content type */
-    private array $contentTypes = ['/word/document.xml' => self::OFFICE_DOCUMENT.'.document.main+xml'];
+    private array $contentTypes = ['/word/document.xml' => self::OFFICE_DOCUMENT . '.document.main+xml'];
 
     /** @var list<string> */
     private array $relationships = [];
@@ -34,7 +34,7 @@ final class DocxBuilder
 
     public static function make(): self
     {
-        return new self;
+        return new self();
     }
 
     /** The inner XML of `w:body`; the section properties are added for you. */
@@ -48,20 +48,20 @@ final class DocxBuilder
     /** The inner XML of `w:styles`. */
     public function styles(string $xml): self
     {
-        return $this->related('styles.xml', 'styles', self::OFFICE_DOCUMENT.'.styles+xml', self::root('w:styles', $xml));
+        return $this->related('styles.xml', 'styles', self::OFFICE_DOCUMENT . '.styles+xml', self::root('w:styles', $xml));
     }
 
     /** The inner XML of `w:numbering`. */
     public function numbering(string $xml): self
     {
-        return $this->related('numbering.xml', 'numbering', self::OFFICE_DOCUMENT.'.numbering+xml', self::root('w:numbering', $xml));
+        return $this->related('numbering.xml', 'numbering', self::OFFICE_DOCUMENT . '.numbering+xml', self::root('w:numbering', $xml));
     }
 
     /** The inner XML of `a:theme`. */
     public function theme(string $xml): self
     {
         $theme = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            .'<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Test">'.$xml.'</a:theme>';
+            . '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Test">' . $xml . '</a:theme>';
 
         return $this->related('theme/theme1.xml', 'theme', 'application/vnd.openxmlformats-officedocument.theme+xml', $theme);
     }
@@ -73,13 +73,13 @@ final class DocxBuilder
      */
     public function notes(string $type, string $xml): self
     {
-        return $this->related("{$type}s.xml", "{$type}s", self::OFFICE_DOCUMENT.".{$type}s+xml", self::root("w:{$type}s", $xml));
+        return $this->related("{$type}s.xml", "{$type}s", self::OFFICE_DOCUMENT . ".{$type}s+xml", self::root("w:{$type}s", $xml));
     }
 
     /** The inner XML of the body's final `w:sectPr`. */
     public function section(string $xml): self
     {
-        $this->section = '<w:sectPr>'.$xml.'</w:sectPr>';
+        $this->section = '<w:sectPr>' . $xml . '</w:sectPr>';
 
         return $this;
     }
@@ -87,7 +87,7 @@ final class DocxBuilder
     /** The inner XML of `w:settings`. */
     public function settings(string $xml): self
     {
-        return $this->related('settings.xml', 'settings', self::OFFICE_DOCUMENT.'.settings+xml', self::root('w:settings', $xml));
+        return $this->related('settings.xml', 'settings', self::OFFICE_DOCUMENT . '.settings+xml', self::root('w:settings', $xml));
     }
 
     /**
@@ -99,7 +99,7 @@ final class DocxBuilder
     public function headerFooter(string $kind, string $id, string $target, string $xml): self
     {
         $this->parts["word/{$target}"] = self::root($kind === 'header' ? 'w:hdr' : 'w:ftr', $xml);
-        $this->contentTypes["/word/{$target}"] = self::OFFICE_DOCUMENT.".{$kind}+xml";
+        $this->contentTypes["/word/{$target}"] = self::OFFICE_DOCUMENT . ".{$kind}+xml";
 
         return $this->relationship($id, $kind, $target);
     }
@@ -107,15 +107,15 @@ final class DocxBuilder
     /** The inner XML of `w:comments`. */
     public function comments(string $xml): self
     {
-        return $this->related('comments.xml', 'comments', self::OFFICE_DOCUMENT.'.comments+xml', self::root('w:comments', $xml));
+        return $this->related('comments.xml', 'comments', self::OFFICE_DOCUMENT . '.comments+xml', self::root('w:comments', $xml));
     }
 
     /** The inner XML of Word 2013's `w15:commentsEx`: threads and the done state. */
     public function commentsExtended(string $xml): self
     {
         $this->parts['word/commentsExtended.xml'] = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            .'<w15:commentsEx xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml">'.$xml.'</w15:commentsEx>';
-        $this->contentTypes['/word/commentsExtended.xml'] = self::OFFICE_DOCUMENT.'.commentsExtended+xml';
+            . '<w15:commentsEx xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml">' . $xml . '</w15:commentsEx>';
+        $this->contentTypes['/word/commentsExtended.xml'] = self::OFFICE_DOCUMENT . '.commentsExtended+xml';
         $this->relationships[] = '<Relationship Id="rIdCommentsEx" Type="http://schemas.microsoft.com/office/2011/relationships/commentsExtended" Target="commentsExtended.xml"/>';
 
         return $this;
@@ -124,9 +124,9 @@ final class DocxBuilder
     /** A relationship of the document part, e.g. a hyperlink or an image. */
     public function relationship(string $id, string $type, string $target, bool $external = false): self
     {
-        $this->relationships[] = '<Relationship Id="'.$id.'"'
-            .' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/'.$type.'"'
-            .' Target="'.$target.'"'.($external ? ' TargetMode="External"' : '').'/>';
+        $this->relationships[] = '<Relationship Id="' . $id . '"'
+            . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/' . $type . '"'
+            . ' Target="' . $target . '"' . ($external ? ' TargetMode="External"' : '') . '/>';
 
         return $this;
     }
@@ -148,13 +148,13 @@ final class DocxBuilder
         return self::zip([
             '[Content_Types].xml' => $this->contentTypesXml(),
             '_rels/.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-                .'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-                .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
-                .'</Relationships>',
-            'word/document.xml' => self::root('w:document', '<w:body>'.$this->body.$this->section.'</w:body>'),
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
+                . '</Relationships>',
+            'word/document.xml' => self::root('w:document', '<w:body>' . $this->body . $this->section . '</w:body>'),
             'word/_rels/document.xml.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-                .'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-                .implode('', $this->relationships).'</Relationships>',
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . implode('', $this->relationships) . '</Relationships>',
             ...$this->parts,
         ]);
     }
@@ -162,7 +162,7 @@ final class DocxBuilder
     /** Reads the package back through the reader under test. */
     public function read(?Options $options = null): Document
     {
-        return (new HtmlDocx($options ?? new Options))->readDocx($this->toBytes());
+        return (new HtmlDocx($options ?? new Options()))->readDocx($this->toBytes());
     }
 
     private function related(string $target, string $type, string $contentType, string $contents): self
@@ -170,7 +170,7 @@ final class DocxBuilder
         $this->parts["word/{$target}"] = $contents;
         $this->contentTypes["/word/{$target}"] = $contentType;
 
-        return $this->relationship('rIdPart'.count($this->relationships), $type, $target);
+        return $this->relationship('rIdPart' . count($this->relationships), $type, $target);
     }
 
     private function contentTypesXml(): string
@@ -178,16 +178,16 @@ final class DocxBuilder
         $overrides = '';
 
         foreach ($this->contentTypes as $part => $type) {
-            $overrides .= '<Override PartName="'.$part.'" ContentType="'.$type.'"/>';
+            $overrides .= '<Override PartName="' . $part . '" ContentType="' . $type . '"/>';
         }
 
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            .'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            .'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            .'<Default Extension="xml" ContentType="application/xml"/>'
-            .'<Default Extension="png" ContentType="image/png"/>'
-            .$overrides
-            .'</Types>';
+            . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            . '<Default Extension="xml" ContentType="application/xml"/>'
+            . '<Default Extension="png" ContentType="image/png"/>'
+            . $overrides
+            . '</Types>';
     }
 
     /** Every namespace a fragment might use, declared once on the root. */
@@ -214,7 +214,7 @@ final class DocxBuilder
         }
 
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            ."<{$element}{$declarations}>{$xml}</{$element}>";
+            . "<{$element}{$declarations}>{$xml}</{$element}>";
     }
 
     /**

@@ -45,13 +45,13 @@ final readonly class HtmlDocx
      * @param  Closure(string): void|null  $warningHandler  receives a message for every piece of content that could not be converted
      */
     public function __construct(
-        private Options $options = new Options,
+        private Options $options = new Options(),
         ?ImageSourceResolver $imageResolver = null,
         ?ImageHandler $imageHandler = null,
         private ?Closure $warningHandler = null,
     ) {
-        $this->imageResolver = $imageResolver ?? new DefaultImageSourceResolver;
-        $this->imageHandler = $imageHandler ?? new DataUriImageHandler;
+        $this->imageResolver = $imageResolver ?? new DefaultImageSourceResolver();
+        $this->imageHandler = $imageHandler ?? new DataUriImageHandler();
     }
 
     public function withOptions(Options $options): self
@@ -86,7 +86,7 @@ final readonly class HtmlDocx
      */
     public function withRemoteImages(Closure $fetcher): self
     {
-        $current = $this->imageResolver instanceof DefaultImageSourceResolver ? $this->imageResolver : new DefaultImageSourceResolver;
+        $current = $this->imageResolver instanceof DefaultImageSourceResolver ? $this->imageResolver : new DefaultImageSourceResolver();
 
         return $this->withImageResolver(new DefaultImageSourceResolver($fetcher, $current->localBaseDirectory));
     }
@@ -94,7 +94,7 @@ final readonly class HtmlDocx
     /** Resolves relative `<img src>` paths inside the given directory only. */
     public function withLocalImageBaseDir(string $directory): self
     {
-        $current = $this->imageResolver instanceof DefaultImageSourceResolver ? $this->imageResolver : new DefaultImageSourceResolver;
+        $current = $this->imageResolver instanceof DefaultImageSourceResolver ? $this->imageResolver : new DefaultImageSourceResolver();
 
         return $this->withImageResolver(new DefaultImageSourceResolver($current->remoteFetcher, $directory));
     }
@@ -112,8 +112,8 @@ final readonly class HtmlDocx
 
         $builder = new DocumentBuilder(
             $resolver,
-            new PropertyMapper,
-            new ImageFactory($this->imageResolver, new ImageInspector),
+            new PropertyMapper(),
+            new ImageFactory($this->imageResolver, new ImageInspector()),
             $this->options,
         );
 
@@ -156,7 +156,7 @@ final readonly class HtmlDocx
             throw HtmlDocxException::writerFailure('the output is not a writable stream');
         }
 
-        (new DocxWriter)->write($document, $stream);
+        (new DocxWriter())->write($document, $stream);
     }
 
     public function writeHtml(Document $document): string

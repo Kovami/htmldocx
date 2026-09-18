@@ -15,8 +15,8 @@ use Kovami\HtmlDocx\Tests\Support\TestImage;
 /** `<w:tc>` holding one paragraph of text, with optional cell properties. */
 function cellXml(string $text, string $properties = ''): string
 {
-    return '<w:tc><w:tcPr><w:tcW w:w="2500" w:type="dxa"/>'.$properties.'</w:tcPr>'
-        .'<w:p><w:r><w:t>'.$text.'</w:t></w:r></w:p></w:tc>';
+    return '<w:tc><w:tcPr><w:tcW w:w="2500" w:type="dxa"/>' . $properties . '</w:tcPr>'
+        . '<w:p><w:r><w:t>' . $text . '</w:t></w:r></w:p></w:tc>';
 }
 
 function firstTable(array $blocks): Table
@@ -38,10 +38,10 @@ function cellText(TableCell $cell): string
 it('reads a table grid, its rows and their cells', function () {
     $document = DocxBuilder::make()->body(
         '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="dxa"/></w:tblPr>'
-        .'<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
-        .'<w:tr>'.cellXml('a').cellXml('b').'</w:tr>'
-        .'<w:tr>'.cellXml('c').cellXml('d').'</w:tr>'
-        .'</w:tbl>'
+        . '<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
+        . '<w:tr>' . cellXml('a') . cellXml('b') . '</w:tr>'
+        . '<w:tr>' . cellXml('c') . cellXml('d') . '</w:tr>'
+        . '</w:tbl>',
     )->read();
 
     $table = firstTable($document->blocks);
@@ -57,18 +57,18 @@ it('applies a table style and its conditional formatting to the first row', func
     $document = DocxBuilder::make()
         ->styles(
             '<w:style w:type="table" w:styleId="Grid"><w:name w:val="Table Grid"/>'
-            .'<w:tblPr><w:tblBorders><w:insideH w:val="single" w:sz="4" w:color="808080"/></w:tblBorders></w:tblPr>'
-            .'<w:tcPr><w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr>'
-            .'<w:tblStylePr w:type="firstRow"><w:rPr><w:b/></w:rPr><w:tcPr><w:shd w:val="clear" w:fill="D9E2F3"/></w:tcPr></w:tblStylePr>'
-            .'</w:style>'
+            . '<w:tblPr><w:tblBorders><w:insideH w:val="single" w:sz="4" w:color="808080"/></w:tblBorders></w:tblPr>'
+            . '<w:tcPr><w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr>'
+            . '<w:tblStylePr w:type="firstRow"><w:rPr><w:b/></w:rPr><w:tcPr><w:shd w:val="clear" w:fill="D9E2F3"/></w:tcPr></w:tblStylePr>'
+            . '</w:style>',
         )
         ->body(
             '<w:tbl><w:tblPr><w:tblStyle w:val="Grid"/><w:tblW w:w="5000" w:type="dxa"/>'
-            .'<w:tblLook w:firstRow="1" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr>'
-            .'<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
-            .'<w:tr><w:trPr><w:tblHeader/></w:trPr>'.cellXml('head').cellXml('also head').'</w:tr>'
-            .'<w:tr>'.cellXml('body').cellXml('more body').'</w:tr>'
-            .'</w:tbl>'
+            . '<w:tblLook w:firstRow="1" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr>'
+            . '<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
+            . '<w:tr><w:trPr><w:tblHeader/></w:trPr>' . cellXml('head') . cellXml('also head') . '</w:tr>'
+            . '<w:tr>' . cellXml('body') . cellXml('more body') . '</w:tr>'
+            . '</w:tbl>',
         )
         ->read();
 
@@ -91,11 +91,11 @@ it('applies a table style and its conditional formatting to the first row', func
 it('reads merged cells', function () {
     $document = DocxBuilder::make()->body(
         '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="dxa"/></w:tblPr>'
-        .'<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
-        .'<w:tr>'.cellXml('wide', '<w:gridSpan w:val="2"/>').'</w:tr>'
-        .'<w:tr>'.cellXml('tall', '<w:vMerge w:val="restart"/>').cellXml('right top').'</w:tr>'
-        .'<w:tr>'.cellXml('', '<w:vMerge/>').cellXml('right bottom').'</w:tr>'
-        .'</w:tbl>'
+        . '<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
+        . '<w:tr>' . cellXml('wide', '<w:gridSpan w:val="2"/>') . '</w:tr>'
+        . '<w:tr>' . cellXml('tall', '<w:vMerge w:val="restart"/>') . cellXml('right top') . '</w:tr>'
+        . '<w:tr>' . cellXml('', '<w:vMerge/>') . cellXml('right bottom') . '</w:tr>'
+        . '</w:tbl>',
     )->read();
 
     $table = firstTable($document->blocks);
@@ -107,11 +107,11 @@ it('reads merged cells', function () {
 
 it('reads a table nested in a cell', function () {
     $inner = '<w:tbl><w:tblPr><w:tblW w:w="2000" w:type="dxa"/></w:tblPr><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid>'
-        .'<w:tr>'.cellXml('inner').'</w:tr></w:tbl><w:p/>';
+        . '<w:tr>' . cellXml('inner') . '</w:tr></w:tbl><w:p/>';
 
     $document = DocxBuilder::make()->body(
         '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="dxa"/></w:tblPr><w:tblGrid><w:gridCol w:w="5000"/></w:tblGrid>'
-        .'<w:tr><w:tc><w:tcPr><w:tcW w:w="5000" w:type="dxa"/></w:tcPr>'.$inner.'</w:tc></w:tr></w:tbl>'
+        . '<w:tr><w:tc><w:tcPr><w:tcW w:w="5000" w:type="dxa"/></w:tcPr>' . $inner . '</w:tc></w:tr></w:tbl>',
     )->read();
 
     $outer = firstTable($document->blocks);
@@ -124,11 +124,11 @@ it('reads a table nested in a cell', function () {
 it('reads widths given as a percentage of the space the table has', function () {
     $document = DocxBuilder::make()->body(
         '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/></w:tblPr>'
-        .'<w:tblGrid><w:gridCol/><w:gridCol/></w:tblGrid>'
-        .'<w:tr>'
-        .'<w:tc><w:tcPr><w:tcW w:w="1250" w:type="pct"/></w:tcPr><w:p><w:r><w:t>quarter</w:t></w:r></w:p></w:tc>'
-        .'<w:tc><w:tcPr><w:tcW w:w="3750" w:type="pct"/></w:tcPr><w:p><w:r><w:t>rest</w:t></w:r></w:p></w:tc>'
-        .'</w:tr></w:tbl>'
+        . '<w:tblGrid><w:gridCol/><w:gridCol/></w:tblGrid>'
+        . '<w:tr>'
+        . '<w:tc><w:tcPr><w:tcW w:w="1250" w:type="pct"/></w:tcPr><w:p><w:r><w:t>quarter</w:t></w:r></w:p></w:tc>'
+        . '<w:tc><w:tcPr><w:tcW w:w="3750" w:type="pct"/></w:tcPr><w:p><w:r><w:t>rest</w:t></w:r></w:p></w:tc>'
+        . '</w:tr></w:tbl>',
     )->read();
 
     $table = firstTable($document->blocks);
@@ -142,13 +142,13 @@ it('reads widths given as a percentage of the space the table has', function () 
 
 it('lifts the text of a text box out of the paragraph it hangs on', function () {
     $textBox = '<w:r><mc:AlternateContent><mc:Fallback>'
-        .'<w:pict><v:shape style="width:100pt;height:50pt"><v:textbox><w:txbxContent>'
-        .'<w:p><w:r><w:t>boxed</w:t></w:r></w:p>'
-        .'</w:txbxContent></v:textbox></v:shape></w:pict>'
-        .'</mc:Fallback></mc:AlternateContent></w:r>';
+        . '<w:pict><v:shape style="width:100pt;height:50pt"><v:textbox><w:txbxContent>'
+        . '<w:p><w:r><w:t>boxed</w:t></w:r></w:p>'
+        . '</w:txbxContent></v:textbox></v:shape></w:pict>'
+        . '</mc:Fallback></mc:AlternateContent></w:r>';
 
     $document = DocxBuilder::make()->body(
-        '<w:p><w:r><w:t>before</w:t></w:r>'.$textBox.'</w:p><w:p><w:r><w:t>after</w:t></w:r></w:p>'
+        '<w:p><w:r><w:t>before</w:t></w:r>' . $textBox . '</w:p><w:p><w:r><w:t>after</w:t></w:r></w:p>',
     )->read();
 
     expect(blockTexts($document->blocks))->toBe(['before', 'boxed', 'after']);
@@ -156,18 +156,18 @@ it('lifts the text of a text box out of the paragraph it hangs on', function () 
 
 it('reads an inline picture with its size and description', function () {
     $drawing = '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">'
-        .'<wp:extent cx="952500" cy="476250"/>'
-        .'<wp:docPr id="1" name="Picture 1" descr="a chart"/>'
-        .'<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
-        .'<pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="Picture 1"/><pic:cNvPicPr/></pic:nvPicPr>'
-        .'<pic:blipFill><a:blip r:embed="rIdImage"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
-        .'<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="952500" cy="476250"/></a:xfrm></pic:spPr>'
-        .'</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
+        . '<wp:extent cx="952500" cy="476250"/>'
+        . '<wp:docPr id="1" name="Picture 1" descr="a chart"/>'
+        . '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+        . '<pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="Picture 1"/><pic:cNvPicPr/></pic:nvPicPr>'
+        . '<pic:blipFill><a:blip r:embed="rIdImage"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+        . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="952500" cy="476250"/></a:xfrm></pic:spPr>'
+        . '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
 
     $document = DocxBuilder::make()
         ->part('media/image1.png', TestImage::png(100, 50), 'image/png')
         ->relationship('rIdImage', 'image', 'media/image1.png')
-        ->body('<w:p>'.$drawing.'</w:p>')
+        ->body('<w:p>' . $drawing . '</w:p>')
         ->read();
 
     $paragraph = $document->blocks[0];
@@ -186,13 +186,13 @@ it('leaves out a picture whose part is missing, and says so', function () {
     $bytes = DocxBuilder::make()
         ->relationship('rIdImage', 'image', 'media/gone.png')
         ->body('<w:p><w:r><w:drawing><wp:inline><wp:extent cx="1" cy="1"/><wp:docPr id="1" name="p"/>'
-            .'<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic>'
-            .'<pic:nvPicPr><pic:cNvPr id="1" name="p"/><pic:cNvPicPr/></pic:nvPicPr>'
-            .'<pic:blipFill><a:blip r:embed="rIdImage"/></pic:blipFill><pic:spPr/></pic:pic>'
-            .'</a:graphicData></a:graphic></wp:inline></w:drawing></w:r><w:r><w:t>text</w:t></w:r></w:p>')
+            . '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic>'
+            . '<pic:nvPicPr><pic:cNvPr id="1" name="p"/><pic:cNvPicPr/></pic:nvPicPr>'
+            . '<pic:blipFill><a:blip r:embed="rIdImage"/></pic:blipFill><pic:spPr/></pic:pic>'
+            . '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r><w:r><w:t>text</w:t></w:r></w:p>')
         ->toBytes();
 
-    $document = (new HtmlDocx)
+    $document = (new HtmlDocx())
         ->withWarningHandler(function (string $message) use (&$warnings): void {
             $warnings[] = $message;
         })
@@ -205,12 +205,12 @@ it('leaves out a picture whose part is missing, and says so', function () {
 it('reads a complex hyperlink field', function () {
     $document = DocxBuilder::make()->body(
         '<w:p>'
-        .'<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
-        .'<w:r><w:instrText xml:space="preserve"> HYPERLINK "https://example.com/deep" \\l "anchor" </w:instrText></w:r>'
-        .'<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
-        .'<w:r><w:t>linked</w:t></w:r>'
-        .'<w:r><w:fldChar w:fldCharType="end"/></w:r>'
-        .'</w:p>'
+        . '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+        . '<w:r><w:instrText xml:space="preserve"> HYPERLINK "https://example.com/deep" \\l "anchor" </w:instrText></w:r>'
+        . '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+        . '<w:r><w:t>linked</w:t></w:r>'
+        . '<w:r><w:fldChar w:fldCharType="end"/></w:r>'
+        . '</w:p>',
     )->read();
 
     $paragraph = $document->blocks[0];
@@ -234,20 +234,20 @@ it('bands the rows and marks the first column the way the table style asks', fun
     $document = DocxBuilder::make()
         ->styles(
             '<w:style w:type="table" w:styleId="Banded"><w:name w:val="Banded"/>'
-            .'<w:tblPr><w:tblStyleRowBandSize w:val="1"/></w:tblPr>'
-            .'<w:tblStylePr w:type="firstRow"><w:tcPr><w:shd w:val="clear" w:fill="222222"/></w:tcPr></w:tblStylePr>'
-            .'<w:tblStylePr w:type="band1Horz"><w:tcPr><w:shd w:val="clear" w:fill="EEEEEE"/></w:tcPr></w:tblStylePr>'
-            .'<w:tblStylePr w:type="firstCol"><w:rPr><w:b/></w:rPr></w:tblStylePr>'
-            .'</w:style>'
+            . '<w:tblPr><w:tblStyleRowBandSize w:val="1"/></w:tblPr>'
+            . '<w:tblStylePr w:type="firstRow"><w:tcPr><w:shd w:val="clear" w:fill="222222"/></w:tcPr></w:tblStylePr>'
+            . '<w:tblStylePr w:type="band1Horz"><w:tcPr><w:shd w:val="clear" w:fill="EEEEEE"/></w:tcPr></w:tblStylePr>'
+            . '<w:tblStylePr w:type="firstCol"><w:rPr><w:b/></w:rPr></w:tblStylePr>'
+            . '</w:style>',
         )
         ->body(
             '<w:tbl><w:tblPr><w:tblStyle w:val="Banded"/><w:tblW w:w="5000" w:type="dxa"/>'
-            .'<w:tblLook w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr>'
-            .'<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
-            .'<w:tr>'.cellXml('head a').cellXml('head b').'</w:tr>'
-            .'<w:tr>'.cellXml('band one').cellXml('plain one').'</w:tr>'
-            .'<w:tr>'.cellXml('band two').cellXml('plain two').'</w:tr>'
-            .'</w:tbl>'
+            . '<w:tblLook w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr>'
+            . '<w:tblGrid><w:gridCol w:w="2500"/><w:gridCol w:w="2500"/></w:tblGrid>'
+            . '<w:tr>' . cellXml('head a') . cellXml('head b') . '</w:tr>'
+            . '<w:tr>' . cellXml('band one') . cellXml('plain one') . '</w:tr>'
+            . '<w:tr>' . cellXml('band two') . cellXml('plain two') . '</w:tr>'
+            . '</w:tbl>',
         )
         ->read();
 
@@ -269,13 +269,13 @@ it('bands the rows and marks the first column the way the table style asks', fun
 it('applies a row\'s exceptions to the table properties', function () {
     $document = DocxBuilder::make()->body(
         '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="dxa"/>'
-        .'<w:tblBorders><w:top w:val="single" w:sz="4" w:color="111111"/><w:bottom w:val="single" w:sz="4" w:color="111111"/></w:tblBorders>'
-        .'</w:tblPr>'
-        .'<w:tblGrid><w:gridCol w:w="5000"/></w:tblGrid>'
-        .'<w:tr>'.cellXml('ordinary').'</w:tr>'
-        .'<w:tr><w:tblPrEx><w:tblBorders><w:top w:val="single" w:sz="24" w:color="FF0000"/><w:bottom w:val="single" w:sz="24" w:color="FF0000"/></w:tblBorders></w:tblPrEx>'
-        .cellXml('exceptional').'</w:tr>'
-        .'</w:tbl>'
+        . '<w:tblBorders><w:top w:val="single" w:sz="4" w:color="111111"/><w:bottom w:val="single" w:sz="4" w:color="111111"/></w:tblBorders>'
+        . '</w:tblPr>'
+        . '<w:tblGrid><w:gridCol w:w="5000"/></w:tblGrid>'
+        . '<w:tr>' . cellXml('ordinary') . '</w:tr>'
+        . '<w:tr><w:tblPrEx><w:tblBorders><w:top w:val="single" w:sz="24" w:color="FF0000"/><w:bottom w:val="single" w:sz="24" w:color="FF0000"/></w:tblBorders></w:tblPrEx>'
+        . cellXml('exceptional') . '</w:tr>'
+        . '</w:tbl>',
     )->read();
 
     $table = firstTable($document->blocks);

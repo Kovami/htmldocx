@@ -189,7 +189,7 @@ final readonly class DrawingReader
         $relationship = $this->context->package->relationship($this->part, $relationshipId);
 
         if ($relationship === null || $relationship->external) {
-            $this->context->warn('A picture was not loaded: '.($relationship === null ? 'its part is missing' : 'external images are never fetched'));
+            $this->context->warn('A picture was not loaded: ' . ($relationship === null ? 'its part is missing' : 'external images are never fetched'));
 
             return null;
         }
@@ -242,7 +242,7 @@ final readonly class DrawingReader
     private static function float(Element $anchor): ?string
     {
         $wraps = ['wrapSquare', 'wrapTight', 'wrapThrough'];
-        $wrapped = array_filter($wraps, static fn (string $wrap): bool => Xml::child($anchor, $wrap, Namespaces::WP) !== null) !== [];
+        $wrapped = array_filter($wraps, static fn(string $wrap): bool => Xml::child($anchor, $wrap, Namespaces::WP) !== null) !== [];
 
         if (! $wrapped) {
             return null;

@@ -273,7 +273,7 @@ final readonly class InlineWriter
 
     private function hyperlink(Hyperlink $hyperlink, Element $parent, ComputedStyle $parentStyle, string $comments): void
     {
-        $href = $hyperlink->anchor !== null ? '#'.$this->context->bookmarkId($hyperlink->anchor) : self::safeUrl((string) $hyperlink->url);
+        $href = $hyperlink->anchor !== null ? '#' . $this->context->bookmarkId($hyperlink->anchor) : self::safeUrl((string) $hyperlink->url);
 
         if ($href === null) {
             $this->write($hyperlink->children, $parent, $parentStyle, $comments);
@@ -292,7 +292,7 @@ final readonly class InlineWriter
         $element = $this->imageElement($image, $parent);
 
         if ($element !== null && $image->float !== null) {
-            $element->setAttribute('style', $element->getAttribute('style').' float: '.$image->float.';');
+            $element->setAttribute('style', $element->getAttribute('style') . ' float: ' . $image->float . ';');
         }
     }
 
@@ -300,7 +300,7 @@ final readonly class InlineWriter
     {
         $sup = $this->context->element('sup', $parent);
         $link = $this->context->element('a', $sup);
-        $link->setAttribute('href', '#'.$this->context->id("{$reference->type}-{$reference->number}"));
+        $link->setAttribute('href', '#' . $this->context->id("{$reference->type}-{$reference->number}"));
         $link->setAttribute('id', $this->context->id("{$reference->type}-ref-{$reference->number}"));
         $link->append(self::noteLabel($reference->type, $reference->number));
     }

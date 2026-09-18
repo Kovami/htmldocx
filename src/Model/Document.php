@@ -24,7 +24,7 @@ final readonly class Document
         public PageLayout $pageLayout,
         public DocumentMetadata $metadata,
         public array $notes = [],
-        public ParagraphProperties $defaultParagraphProperties = new ParagraphProperties,
+        public ParagraphProperties $defaultParagraphProperties = new ParagraphProperties(),
         public array $headersFooters = [],
         public array $comments = [],
     ) {}

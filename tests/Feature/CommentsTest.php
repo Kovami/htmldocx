@@ -34,7 +34,7 @@ function commentedText(array $inlines): string
             $inline instanceof TextRun => $inline->text,
             $inline instanceof CommentStart => "[{$inline->id}",
             $inline instanceof CommentEnd => "{$inline->id}]",
-            $inline instanceof Hyperlink => '<'.commentedText($inline->children).'>',
+            $inline instanceof Hyperlink => '<' . commentedText($inline->children) . '>',
             default => '',
         };
     }
@@ -45,14 +45,14 @@ function commentedText(array $inlines): string
 /** @return list<string> */
 function commentedParagraphs(Document $document): array
 {
-    return array_map(static fn (Paragraph $paragraph): string => commentedText($paragraph->children), $document->blocks);
+    return array_map(static fn(Paragraph $paragraph): string => commentedText($paragraph->children), $document->blocks);
 }
 
 /** @return list<string> */
 function commentTexts(Document $document): array
 {
     return array_map(
-        static fn (Comment $comment): string => implode("\n", array_map(static fn (Paragraph $p): string => commentedText($p->children), $comment->blocks)),
+        static fn(Comment $comment): string => implode("\n", array_map(static fn(Paragraph $p): string => commentedText($p->children), $comment->blocks)),
         $document->comments,
     );
 }
@@ -64,8 +64,8 @@ function commentTexts(Document $document): array
 function reviewedDocument(): Document
 {
     $run = new RunProperties(fontFamily: 'Calibri', size: 22, color: '000000');
-    $properties = static fn (): ParagraphProperties => new ParagraphProperties(spacingBefore: 0, spacingAfter: 0);
-    $body = static fn (string $text): array => [new Paragraph($properties(), [new TextRun($text, $run)])];
+    $properties = static fn(): ParagraphProperties => new ParagraphProperties(spacingBefore: 0, spacingAfter: 0);
+    $body = static fn(string $text): array => [new Paragraph($properties(), [new TextRun($text, $run)])];
 
     return new Document(
         blocks: [
@@ -102,22 +102,22 @@ it('reads comments, their ranges and threads the way Word writes them', function
     $document = DocxBuilder::make()
         ->comments(
             '<w:comment w:id="7" w:author="Ann" w:date="2026-05-06T07:08:09Z" w:initials="A">'
-            .'<w:p w14:paraId="0A000001"><w:r><w:annotationRef/></w:r><w:r><w:t>Rephrase this.</w:t></w:r></w:p></w:comment>'
-            .'<w:comment w:id="9" w:author="Bob"><w:p w14:paraId="0A000002"><w:r><w:t>Agreed.</w:t></w:r></w:p></w:comment>'
-            .'<w:comment w:id="12" w:author="Cy"><w:p w14:paraId="0A000003"><w:r><w:t>Here.</w:t></w:r></w:p></w:comment>'
+            . '<w:p w14:paraId="0A000001"><w:r><w:annotationRef/></w:r><w:r><w:t>Rephrase this.</w:t></w:r></w:p></w:comment>'
+            . '<w:comment w:id="9" w:author="Bob"><w:p w14:paraId="0A000002"><w:r><w:t>Agreed.</w:t></w:r></w:p></w:comment>'
+            . '<w:comment w:id="12" w:author="Cy"><w:p w14:paraId="0A000003"><w:r><w:t>Here.</w:t></w:r></w:p></w:comment>',
         )
         ->commentsExtended(
             // Word keeps the state of a thread on its first comment.
             '<w15:commentEx w15:paraId="0A000001" w15:done="1"/>'
-            .'<w15:commentEx w15:paraId="0A000002" w15:paraIdParent="0A000001" w15:done="0"/>'
+            . '<w15:commentEx w15:paraId="0A000002" w15:paraIdParent="0A000001" w15:done="0"/>',
         )
         ->body(
             '<w:commentRangeStart w:id="7"/><w:commentRangeStart w:id="9"/>'
-            .'<w:p><w:r><w:t>First</w:t></w:r></w:p>'
-            .'<w:p><w:r><w:t>second</w:t></w:r><w:commentRangeEnd w:id="7"/><w:r><w:commentReference w:id="7"/></w:r>'
-            .'<w:commentRangeEnd w:id="9"/><w:r><w:commentReference w:id="9"/></w:r>'
+            . '<w:p><w:r><w:t>First</w:t></w:r></w:p>'
+            . '<w:p><w:r><w:t>second</w:t></w:r><w:commentRangeEnd w:id="7"/><w:r><w:commentReference w:id="7"/></w:r>'
+            . '<w:commentRangeEnd w:id="9"/><w:r><w:commentReference w:id="9"/></w:r>'
             // A comment on a point: Word writes only the reference.
-            .'<w:r><w:t xml:space="preserve"> point</w:t></w:r><w:r><w:commentReference w:id="12"/></w:r></w:p>'
+            . '<w:r><w:t xml:space="preserve"> point</w:t></w:r><w:r><w:commentReference w:id="12"/></w:r></w:p>',
         )
         ->read();
 
@@ -136,7 +136,7 @@ it('reads comments, their ranges and threads the way Word writes them', function
 it('anchors a comment whose range lost its end', function () {
     $document = DocxBuilder::make()
         ->comments('<w:comment w:id="1" w:author="A"><w:p><w:r><w:t>Note</w:t></w:r></w:p></w:comment>'
-            .'<w:comment w:id="2" w:author="B"><w:p><w:r><w:t>Orphan</w:t></w:r></w:p></w:comment>')
+            . '<w:comment w:id="2" w:author="B"><w:p><w:r><w:t>Orphan</w:t></w:r></w:p></w:comment>')
         ->body('<w:p><w:r><w:t>One </w:t></w:r><w:commentRangeStart w:id="1"/><w:r><w:t>two</w:t></w:r></w:p>')
         ->read();
 
@@ -222,9 +222,9 @@ it('reads comment markup an editor has reshaped', function () {
 it('numbers comments in the order of their anchors, whatever order the part lists them in', function () {
     $document = DocxBuilder::make()
         ->comments('<w:comment w:id="0" w:author="Late"><w:p><w:r><w:t>second</w:t></w:r></w:p></w:comment>'
-            .'<w:comment w:id="5" w:author="Early"><w:p><w:r><w:t>first</w:t></w:r></w:p></w:comment>')
+            . '<w:comment w:id="5" w:author="Early"><w:p><w:r><w:t>first</w:t></w:r></w:p></w:comment>')
         ->body('<w:p><w:commentRangeStart w:id="5"/><w:r><w:t>a</w:t></w:r><w:commentRangeEnd w:id="5"/>'
-            .'<w:commentRangeStart w:id="0"/><w:r><w:t>b</w:t></w:r><w:commentRangeEnd w:id="0"/></w:p>')
+            . '<w:commentRangeStart w:id="0"/><w:r><w:t>b</w:t></w:r><w:commentRangeEnd w:id="0"/></w:p>')
         ->read();
 
     expect(commentedParagraphs($document))->toBe(['[1a1][2b2]'])
@@ -242,14 +242,14 @@ it('keeps a thread in one state and breaks loops of replies', function () {
         </ol>
         HTML);
 
-    $threads = array_map(static fn (Comment $comment): array => [$comment->parentId, $comment->resolved], $document->comments);
+    $threads = array_map(static fn(Comment $comment): array => [$comment->parentId, $comment->resolved], $document->comments);
 
     expect($threads)->toBe([[null, true], [1, true], [null, true], [null, false]]);
 });
 
 it('keeps white space collapsing across comment boundaries', function () {
     $document = (new HtmlDocx(testOptions()))->readHtml(
-        '<p>a <span class="se-comment" data-comment="1"> b </span> c</p><ol class="se-comments"><li data-comment="1"><p>x</p></li></ol>'
+        '<p>a <span class="se-comment" data-comment="1"> b </span> c</p><ol class="se-comments"><li data-comment="1"><p>x</p></li></ol>',
     );
 
     expect(commentedParagraphs($document))->toBe(['a [1b 1]c']);

@@ -15,7 +15,7 @@ final class StylesPart
     {
         $defaults = $document->defaultRunProperties;
 
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('w:styles', ['xmlns:w' => Namespaces::W]);
 
         $xml->open('w:docDefaults')->open('w:rPrDefault');

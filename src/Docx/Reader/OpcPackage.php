@@ -60,7 +60,7 @@ final class OpcPackage
 
     public function contentType(string $partName): ?string
     {
-        $partName = '/'.ltrim($partName, '/');
+        $partName = '/' . ltrim($partName, '/');
 
         return $this->overrides[strtolower($partName)]
             ?? $this->defaults[strtolower(pathinfo($partName, PATHINFO_EXTENSION))]
@@ -88,7 +88,7 @@ final class OpcPackage
     public function relationshipByType(string $sourcePart, string $typeSuffix): ?Relationship
     {
         foreach ($this->relationshipsOf($sourcePart) as $relationship) {
-            if (str_ends_with($relationship->type, '/'.$typeSuffix)) {
+            if (str_ends_with($relationship->type, '/' . $typeSuffix)) {
                 return $relationship;
             }
         }
@@ -101,14 +101,14 @@ final class OpcPackage
      */
     private function relationshipsOf(string $sourcePart): array
     {
-        $sourcePart = '/'.ltrim($sourcePart, '/');
+        $sourcePart = '/' . ltrim($sourcePart, '/');
 
         if (isset($this->relationships[$sourcePart])) {
             return $this->relationships[$sourcePart];
         }
 
         $directory = $sourcePart === '/' ? '' : dirname($sourcePart);
-        $relsPart = $sourcePart === '/' ? '/_rels/.rels' : rtrim($directory, '/').'/_rels/'.basename($sourcePart).'.rels';
+        $relsPart = $sourcePart === '/' ? '/_rels/.rels' : rtrim($directory, '/') . '/_rels/' . basename($sourcePart) . '.rels';
         $relationships = [];
 
         if ($this->has($relsPart)) {
@@ -136,7 +136,7 @@ final class OpcPackage
     private static function resolve(string $directory, string $target): ?string
     {
         $target = rawurldecode(explode('#', $target, 2)[0]);
-        $path = str_starts_with($target, '/') ? $target : rtrim($directory, '/').'/'.$target;
+        $path = str_starts_with($target, '/') ? $target : rtrim($directory, '/') . '/' . $target;
         $segments = [];
 
         foreach (explode('/', str_replace('\\', '/', $path)) as $segment) {
@@ -157,6 +157,6 @@ final class OpcPackage
             $segments[] = $segment;
         }
 
-        return '/'.implode('/', $segments);
+        return '/' . implode('/', $segments);
     }
 }

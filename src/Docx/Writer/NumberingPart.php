@@ -15,7 +15,7 @@ final class NumberingPart
      */
     public static function toXml(array $lists): string
     {
-        $xml = new XmlBuilder;
+        $xml = new XmlBuilder();
         $xml->open('w:numbering', ['xmlns:w' => Namespaces::W]);
 
         foreach ($lists as $list) {

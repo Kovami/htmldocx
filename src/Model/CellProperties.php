@@ -21,7 +21,7 @@ final readonly class CellProperties
         public ?string $verticalMerge = null,
         public ?string $shading = null,
         public ?string $verticalAlign = null,
-        public BorderSet $borders = new BorderSet,
+        public BorderSet $borders = new BorderSet(),
         public ?CellMargins $margins = null,
         public bool $noWrap = false,
     ) {}

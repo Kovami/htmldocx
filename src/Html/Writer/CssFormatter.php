@@ -25,7 +25,7 @@ final readonly class CssFormatter
 
         $value = $this->unit === 'pt' ? $points : $points / Length::POINTS_PER_PIXEL;
 
-        return self::number($value).$this->unit;
+        return self::number($value) . $this->unit;
     }
 
     public function twips(int $twips): string
@@ -48,7 +48,7 @@ final readonly class CssFormatter
 
     public static function color(string $hex): string
     {
-        return '#'.strtolower($hex);
+        return '#' . strtolower($hex);
     }
 
     public function border(?Border $border): string
@@ -69,7 +69,7 @@ final readonly class CssFormatter
             default => 'solid',
         };
 
-        return $this->points($border->size / 8).' '.$style.' '.self::color($border->color === 'auto' ? '000000' : $border->color);
+        return $this->points($border->size / 8) . ' ' . $style . ' ' . self::color($border->color === 'auto' ? '000000' : $border->color);
     }
 
     /**
@@ -86,11 +86,11 @@ final readonly class CssFormatter
         foreach (['top', 'right', 'bottom', 'left'] as $side) {
             $wanted = $this->border($borders->{$side});
             $edge = $baseline->border($side);
-            $current = $edge === null ? 'none' : $this->points($edge->widthPt).' '.$edge->style.' '.self::color($edge->color);
+            $current = $edge === null ? 'none' : $this->points($edge->widthPt) . ' ' . $edge->style . ' ' . self::color($edge->color);
             $sides[$side] = [$wanted, $wanted !== $current];
         }
 
-        $changed = array_filter($sides, static fn (array $side): bool => $side[1]);
+        $changed = array_filter($sides, static fn(array $side): bool => $side[1]);
 
         if ($changed === []) {
             return [];
@@ -115,13 +115,13 @@ final readonly class CssFormatter
     {
         return preg_match('/^[A-Za-z][A-Za-z0-9-]*$/', $family) === 1 && ! in_array(strtolower($family), ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'inherit', 'initial'], true)
             ? $family
-            : '"'.str_replace(['\\', '"'], ['\\\\', '\"'], $family).'"';
+            : '"' . str_replace(['\\', '"'], ['\\\\', '\"'], $family) . '"';
     }
 
     /** A CSS string, e.g. for `list-style-type: "1.2. "`. */
     public static function string(string $value): string
     {
-        return '"'.str_replace(['\\', '"', "\n"], ['\\\\', '\"', '\A '], $value).'"';
+        return '"' . str_replace(['\\', '"', "\n"], ['\\\\', '\"', '\A '], $value) . '"';
     }
 
     public static function number(float $value): string
@@ -137,7 +137,7 @@ final readonly class CssFormatter
     public static function declarations(array $declarations): string
     {
         return implode(' ', array_map(
-            static fn (string $property, string $value): string => "{$property}: {$value};",
+            static fn(string $property, string $value): string => "{$property}: {$value};",
             array_keys($declarations),
             $declarations,
         ));

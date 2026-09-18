@@ -44,7 +44,7 @@ it('percent-encodes characters that are not valid in a URI', function () {
 
 it('supports mailto and tel links', function () {
     $docx = docx('<p><a href="mailto:a@b.test">mail</a> <a href="tel:+100">call</a></p>');
-    $targets = array_map(static fn (DOMElement $h): ?string => hyperlinkTarget($docx, $h), $docx->query('//w:hyperlink'));
+    $targets = array_map(static fn(DOMElement $h): ?string => hyperlinkTarget($docx, $h), $docx->query('//w:hyperlink'));
 
     expect($targets)->toBe(['mailto:a@b.test', 'tel:+100']);
 });
@@ -80,7 +80,7 @@ it('creates bookmarks only for ids that links point to', function () {
 
 it('sanitizes bookmark names to what Word accepts', function () {
     $id = 'section 1: "introduction" — with a very long identifier that exceeds forty characters';
-    $docx = docx('<p><a href="#'.rawurlencode($id).'">go</a></p><p id="'.htmlspecialchars($id).'">target</p>');
+    $docx = docx('<p><a href="#' . rawurlencode($id) . '">go</a></p><p id="' . htmlspecialchars($id) . '">target</p>');
     $name = Docx::attr($docx->first('//w:bookmarkStart'), 'name');
 
     expect($name)->toMatch('/^_\w{1,39}$/');

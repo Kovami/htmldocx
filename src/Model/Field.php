@@ -22,6 +22,6 @@ final readonly class Field implements Inline
     public function __construct(
         public string $name,
         public string $result,
-        public RunProperties $properties = new RunProperties,
+        public RunProperties $properties = new RunProperties(),
     ) {}
 }

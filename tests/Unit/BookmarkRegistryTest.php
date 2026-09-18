@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Kovami\HtmlDocx\Html\Reader\BookmarkRegistry;
 
 it('produces stable, unique, Word-compatible names', function () {
-    $registry = new BookmarkRegistry;
+    $registry = new BookmarkRegistry();
 
     expect($registry->nameFor('intro'))->toBe('_intro')
         ->and($registry->nameFor('intro'))->toBe('_intro')
@@ -16,7 +16,7 @@ it('produces stable, unique, Word-compatible names', function () {
 });
 
 it('hands out sequential ids', function () {
-    $registry = new BookmarkRegistry;
+    $registry = new BookmarkRegistry();
 
     expect([$registry->nextId(), $registry->nextId(), $registry->nextId()])->toBe([0, 1, 2]);
 });

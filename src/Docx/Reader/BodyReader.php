@@ -69,7 +69,7 @@ final class BodyReader
         private readonly string $part,
     ) {
         $this->tables = new TableReader($context, $this->blocks(...));
-        $this->drawings = new DrawingReader($context, $part, fn (Element $content): array => $this->nested($content));
+        $this->drawings = new DrawingReader($context, $part, fn(Element $content): array => $this->nested($content));
     }
 
     /**
@@ -156,7 +156,7 @@ final class BodyReader
         $styleId = $styles->effectiveId(Xml::val($pPr, 'pStyle'), 'paragraph');
         $isDefaultStyle = $styleId === null || $styleId === $styles->defaultStyleId('paragraph');
         $style = $styles->paragraphStyle($styleId);
-        $tableParagraph = $table === null ? new ParagraphFormat : $table->paragraph;
+        $tableParagraph = $table === null ? new ParagraphFormat() : $table->paragraph;
 
         $format = $styles->defaultParagraph->over($isDefaultStyle ? $style->over($tableParagraph) : $tableParagraph->over($style));
         [$numbering, $level] = $this->numbering($direct, $style, $styleId);
@@ -168,7 +168,7 @@ final class BodyReader
         $format = $format->over($direct);
 
         $paragraphRun = $styles->runStyle($styleId, 'paragraph');
-        $tableRun = $table === null ? new RunFormat : $table->run;
+        $tableRun = $table === null ? new RunFormat() : $table->run;
         $runLayers = $isDefaultStyle ? [$paragraphRun, $tableRun] : [$tableRun, $paragraphRun];
 
         $inlines = $this->inlines($element, $runLayers, null);
@@ -474,7 +474,7 @@ final class BodyReader
         $result = $this->drawings->read($element, $properties);
         array_push($this->lifted, ...$result['blocks']);
 
-        return array_map(fn (Inline $inline): Inline => $this->wrap($inline, $link), $result['inlines']);
+        return array_map(fn(Inline $inline): Inline => $this->wrap($inline, $link), $result['inlines']);
     }
 
     /**
@@ -560,10 +560,10 @@ final class BodyReader
         $page = self::pageField($instruction);
 
         if ($page !== null) {
-            $shown = array_values(array_filter($this->inlines($field, $runLayers, null), static fn (Inline $inline): bool => $inline instanceof TextRun));
-            $properties = $shown === [] ? self::withFont(RunFormat::resolve($this->context->styles->defaultRun, $runLayers, new RunFormat)->toProperties()) : $shown[0]->properties;
+            $shown = array_values(array_filter($this->inlines($field, $runLayers, null), static fn(Inline $inline): bool => $inline instanceof TextRun));
+            $properties = $shown === [] ? self::withFont(RunFormat::resolve($this->context->styles->defaultRun, $runLayers, new RunFormat())->toProperties()) : $shown[0]->properties;
 
-            return [$this->wrap(new Field($page, implode('', array_map(static fn (TextRun $run): string => $run->text, $shown)), $properties), $link)];
+            return [$this->wrap(new Field($page, implode('', array_map(static fn(TextRun $run): string => $run->text, $shown)), $properties), $link)];
         }
 
         $target = self::fieldTarget($instruction);
@@ -608,7 +608,7 @@ final class BodyReader
                 $url ??= $token['text'];
             }
         } elseif (in_array($name, ['REF', 'PAGEREF', 'NOTEREF'], true) && isset($arguments[0])) {
-            $switches = array_map(static fn (array $token): string => strtolower($token['text']), array_slice($arguments, 1));
+            $switches = array_map(static fn(array $token): string => strtolower($token['text']), array_slice($arguments, 1));
 
             if (in_array('\h', $switches, true)) {
                 $anchor = $arguments[0]['text'];
@@ -621,7 +621,7 @@ final class BodyReader
         // A HYPERLINK field with both a target and a \l switch points into that
         // document, exactly like a w:hyperlink carrying an id and an anchor.
         if ($url !== null && $anchor !== null) {
-            return ['url' => explode('#', $url, 2)[0].'#'.$anchor, 'anchor' => null];
+            return ['url' => explode('#', $url, 2)[0] . '#' . $anchor, 'anchor' => null];
         }
 
         return ['url' => $url, 'anchor' => $anchor];
@@ -642,7 +642,7 @@ final class BodyReader
         }
 
         if ($url !== null && $anchor !== null) {
-            return ['url' => explode('#', $url, 2)[0].'#'.$anchor, 'anchor' => null];
+            return ['url' => explode('#', $url, 2)[0] . '#' . $anchor, 'anchor' => null];
         }
 
         return $url === null && $anchor === null ? null : ['url' => $url, 'anchor' => $anchor];
@@ -782,7 +782,7 @@ final class BodyReader
             }
 
             if ($inline instanceof TextRun && $previous instanceof TextRun && $inline->properties->equals($previous->properties)) {
-                $result[array_key_last($result)] = new TextRun($previous->text.$inline->text, $previous->properties);
+                $result[array_key_last($result)] = new TextRun($previous->text . $inline->text, $previous->properties);
 
                 continue;
             }
@@ -791,7 +791,7 @@ final class BodyReader
         }
 
         return array_map(
-            static fn (Inline $inline): Inline => $inline instanceof Hyperlink
+            static fn(Inline $inline): Inline => $inline instanceof Hyperlink
                 ? new Hyperlink($inline->url, $inline->anchor, self::normalizeInlines($inline->children))
                 : $inline,
             $result,

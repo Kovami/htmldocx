@@ -16,7 +16,7 @@ final readonly class ImageRun implements Inline
         public int $width,
         public int $height,
         public string $description = '',
-        public RunProperties $properties = new RunProperties,
+        public RunProperties $properties = new RunProperties(),
         public ?string $float = null,
     ) {}
 }

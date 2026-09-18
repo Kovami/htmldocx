@@ -46,7 +46,7 @@ final readonly class TableWriter
             $css = [];
 
             if (! $fullWidth) {
-                $css['width'] = CssFormatter::number(min(100, $percent)).'%';
+                $css['width'] = CssFormatter::number(min(100, $percent)) . '%';
             }
 
             foreach (['margin-top' => $marginTop, 'margin-bottom' => $marginBottom] as $property => $twips) {
@@ -81,7 +81,7 @@ final readonly class TableWriter
         $colgroup = $this->context->element('colgroup', $element);
 
         foreach ($table->gridColumns as $width) {
-            $this->context->element('col', $colgroup)->setAttribute('style', 'width: '.CssFormatter::number($width / $total * 100).'%;');
+            $this->context->element('col', $colgroup)->setAttribute('style', 'width: ' . CssFormatter::number($width / $total * 100) . '%;');
         }
 
         $rowSpans = self::rowSpans($table);
@@ -98,7 +98,7 @@ final readonly class TableWriter
 
             $sectionStyle = $this->context->resolver->resolve($section, $tableStyle);
             $tr = $this->context->element('tr', $section);
-            $rowStyle = $this->context->style($tr, $sectionStyle, fn (): array => $row->minHeight === null ? [] : ['height' => $this->context->css->twips($row->minHeight)]);
+            $rowStyle = $this->context->style($tr, $sectionStyle, fn(): array => $row->minHeight === null ? [] : ['height' => $this->context->css->twips($row->minHeight)]);
 
             $column = 0;
 
@@ -152,11 +152,11 @@ final readonly class TableWriter
 
             if (! ($this->adoptsWordDefaults() && $margins === self::WORD_CELL_MARGINS)) {
                 $paddings = array_map(
-                    fn (int $twips): string => $this->context->css->twips($twips),
+                    fn(int $twips): string => $this->context->css->twips($twips),
                     $margins,
                 );
                 $baselinePaddings = array_map(
-                    fn (string $side): string => $this->context->css->points($baseline->lengthPt("padding-{$side}") ?? 0),
+                    fn(string $side): string => $this->context->css->points($baseline->lengthPt("padding-{$side}") ?? 0),
                     ['top', 'right', 'bottom', 'left'],
                 );
 

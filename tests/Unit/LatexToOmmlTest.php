@@ -11,12 +11,12 @@ use Kovami\HtmlDocx\Model\RunProperties;
 /** The Office Math one formula becomes, as an `m:oMath` element. */
 function omml(string $latex): string
 {
-    $xml = new XmlBuilder;
+    $xml = new XmlBuilder();
     $xml->open('m:oMath', [
         'xmlns:m' => 'http://schemas.openxmlformats.org/officeDocument/2006/math',
         'xmlns:w' => 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
     ]);
-    LatexToOmml::write($xml, $latex, new RunProperties);
+    LatexToOmml::write($xml, $latex, new RunProperties());
 
     return $xml->close()->toString();
 }
@@ -84,7 +84,7 @@ it('shows a command it does not know as its name', function () {
 });
 
 it('carries the formula\'s own formatting into every run', function () {
-    $xml = new XmlBuilder;
+    $xml = new XmlBuilder();
     $xml->open('m:oMath', [
         'xmlns:m' => 'http://schemas.openxmlformats.org/officeDocument/2006/math',
         'xmlns:w' => 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',

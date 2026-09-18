@@ -73,7 +73,7 @@ final class DeclarationParser
             'margin-block-end', 'padding-block-end' => [str_replace('block-end', 'bottom', $property) => $value],
             'border' => self::expandBorder(self::SIDES, $value),
             'border-top', 'border-right', 'border-bottom', 'border-left' => self::expandBorder([substr($property, 7)], $value),
-            'border-width', 'border-style', 'border-color' => self::expandBox('border', '-'.substr($property, 7), $value),
+            'border-width', 'border-style', 'border-color' => self::expandBox('border', '-' . substr($property, 7), $value),
             'background' => self::expandBackground($value),
             'text-decoration' => self::expandTextDecoration($value),
             'list-style' => self::expandListStyle($value),
@@ -214,8 +214,8 @@ final class DeclarationParser
     private static function expandFont(string $value): array
     {
         $pattern = '/^((?:(?:italic|oblique|normal|small-caps|bold|bolder|lighter|[1-9]00)\s+)*)'
-            .'((?:[\d.]+(?:px|pt|em|rem|%|pc|in|cm|mm))|xx-small|x-small|small|medium|large|x-large|xx-large|xxx-large|smaller|larger)'
-            .'(?:\s*\/\s*([^\s]+))?\s+(.+)$/i';
+            . '((?:[\d.]+(?:px|pt|em|rem|%|pc|in|cm|mm))|xx-small|x-small|small|medium|large|x-large|xx-large|xxx-large|smaller|larger)'
+            . '(?:\s*\/\s*([^\s]+))?\s+(.+)$/i';
 
         if (! preg_match($pattern, trim($value), $m)) {
             return [];

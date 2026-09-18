@@ -66,11 +66,26 @@ final class ZipWriter
 
         $this->centralDirectory[] = pack(
             'VvvvvvvVVVvvvvvVV',
-            0x02014B50, 20, 20, self::FLAG_UTF8_NAMES, $method, $this->dosTime, $this->dosDate,
-            $crc, $compressedSize, $size, strlen($name), 0, 0, 0, 0, 0, $this->offset,
-        ).$name;
+            0x02014B50,
+            20,
+            20,
+            self::FLAG_UTF8_NAMES,
+            $method,
+            $this->dosTime,
+            $this->dosDate,
+            $crc,
+            $compressedSize,
+            $size,
+            strlen($name),
+            0,
+            0,
+            0,
+            0,
+            0,
+            $this->offset,
+        ) . $name;
 
-        $this->write($header.$name);
+        $this->write($header . $name);
         $this->write($payload);
     }
 

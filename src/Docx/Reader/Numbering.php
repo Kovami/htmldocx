@@ -107,9 +107,9 @@ final class Numbering
         }
 
         $instance = $this->instances[$numId];
-        $key = array_filter($instance['overrides'], static fn (array $override): bool => $override['start'] !== null) === []
-            ? 'abstract:'.$this->abstractId($numId)
-            : 'num:'.$numId;
+        $key = array_filter($instance['overrides'], static fn(array $override): bool => $override['start'] !== null) === []
+            ? 'abstract:' . $this->abstractId($numId)
+            : 'num:' . $numId;
 
         $counters = $this->counters[$key] ?? [];
 

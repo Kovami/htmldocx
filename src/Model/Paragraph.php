@@ -10,7 +10,7 @@ final class Paragraph implements Block
      * @param  list<Inline>  $children
      */
     public function __construct(
-        public ParagraphProperties $properties = new ParagraphProperties,
+        public ParagraphProperties $properties = new ParagraphProperties(),
         public array $children = [],
     ) {}
 }

@@ -68,19 +68,19 @@ final class HtmlWriter
      */
     public function __construct(
         Document $document,
-        Options $options = new Options,
+        Options $options = new Options(),
         ?ImageHandler $images = null,
         ?Closure $warn = null,
     ) {
         $this->context = new WriterContext(
             $document,
             $options,
-            $images ?? new DataUriImageHandler,
+            $images ?? new DataUriImageHandler(),
             $warn ?? static function (string $message): void {},
         );
         $this->inlines = new InlineWriter($this->context);
         $this->tables = new TableWriter($this->context, $this->writeBlocks(...));
-        $this->lists = new ListStack;
+        $this->lists = new ListStack();
     }
 
     public function toHtml(): string
@@ -120,7 +120,7 @@ final class HtmlWriter
     public function writeBlocks(array $blocks, Element $parent, ComputedStyle $parentStyle, string $paragraphTag = 'p', int $availableWidth = 0): void
     {
         $enclosing = $this->lists;
-        $this->lists = new ListStack;
+        $this->lists = new ListStack();
         $previousAfter = 0;
 
         foreach ($blocks as $block) {
@@ -218,7 +218,7 @@ final class HtmlWriter
             $style = $this->context->style(
                 $element,
                 $baseline ?? $parentStyle,
-                fn (ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark),
+                fn(ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark),
             );
 
             $this->inlines->write($children, $element, $style);
@@ -234,7 +234,7 @@ final class HtmlWriter
      */
     private function closeParagraph(array $children, Element $element): void
     {
-        $visible = array_values(array_filter($children, static fn (Inline $child): bool => ! self::isMarker($child)));
+        $visible = array_values(array_filter($children, static fn(Inline $child): bool => ! self::isMarker($child)));
         $last = $visible === [] ? null : $visible[count($visible) - 1];
 
         while ($last instanceof Hyperlink) {
@@ -512,7 +512,7 @@ final class HtmlWriter
         if ($marker === null) {
             $label = $numbering->label ?? self::literalLabel($level, $ordinal);
             $item->setAttribute('style', CssFormatter::declarations([
-                'list-style-type' => $label === '' ? 'none' : CssFormatter::string($label.' '),
+                'list-style-type' => $label === '' ? 'none' : CssFormatter::string($label . ' '),
             ]));
         }
 
@@ -584,7 +584,7 @@ final class HtmlWriter
         foreach ([Note::FOOTNOTE => 'decimal', Note::ENDNOTE => 'lower-roman'] as $type => $marker) {
             $notes = array_values(array_filter(
                 $this->context->document->notes,
-                static fn (Note $note): bool => $note->type === $type,
+                static fn(Note $note): bool => $note->type === $type,
             ));
 
             if ($notes === []) {
@@ -594,7 +594,7 @@ final class HtmlWriter
             $this->context->element('hr', $parent)->setAttribute('style', 'width: 30%; margin-left: 0;');
             $list = $this->context->element('ol', $parent);
             $list->setAttribute('class', "se-{$type}s");
-            $style = $this->context->style($list, $parentStyle, static fn (): array => ['list-style-type' => $marker]);
+            $style = $this->context->style($list, $parentStyle, static fn(): array => ['list-style-type' => $marker]);
             $expected = 1;
 
             foreach ($notes as $note) {
@@ -610,7 +610,7 @@ final class HtmlWriter
                 $this->writeBlocks($note->blocks, $item, $itemStyle, 'p', $this->context->document->pageLayout->contentWidthTwips());
 
                 $backlink = $this->context->element('a', $item->lastElementChild ?? $item);
-                $backlink->setAttribute('href', '#'.$this->context->id("{$type}-ref-{$note->number}"));
+                $backlink->setAttribute('href', '#' . $this->context->id("{$type}-ref-{$note->number}"));
                 $backlink->append(" \u{21A9}");
             }
         }
@@ -700,17 +700,17 @@ final class HtmlWriter
         $options = $this->context->options;
         $metadata = $this->context->document->metadata;
         $language = $metadata->language ?? $options->language;
-        $escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         $head = ['<meta charset="utf-8">'];
         $head[] = '<meta name="viewport" content="width=device-width, initial-scale=1">';
 
         if ($metadata->title !== null) {
-            $head[] = '<title>'.$escape($metadata->title).'</title>';
+            $head[] = '<title>' . $escape($metadata->title) . '</title>';
         }
 
         if ($metadata->author !== null) {
-            $head[] = '<meta name="author" content="'.$escape($metadata->author).'">';
+            $head[] = '<meta name="author" content="' . $escape($metadata->author) . '">';
         }
 
         $environment = CssFormatter::declarations([
@@ -719,14 +719,14 @@ final class HtmlWriter
             'color' => CssFormatter::color(ltrim($options->textColor, '#')),
         ]);
 
-        $stylesheet = trim($options->defaultStylesheet."\n".$options->extraStylesheet)."\nbody { {$environment} }";
-        $head[] = "<style>\n".str_replace('</style', '<\/style', $stylesheet)."\n</style>";
+        $stylesheet = trim($options->defaultStylesheet . "\n" . $options->extraStylesheet) . "\nbody { {$environment} }";
+        $head[] = "<style>\n" . str_replace('</style', '<\/style', $stylesheet) . "\n</style>";
 
-        return '<!DOCTYPE html>'."\n"
-            .'<html'.($language === null ? '' : ' lang="'.$escape($language).'"').'>'."\n"
-            .'<head>'."\n".implode("\n", $head)."\n".'</head>'."\n"
-            .'<body class="sun-editor-editable">'."\n".$body."\n".'</body>'."\n"
-            .'</html>'."\n";
+        return '<!DOCTYPE html>' . "\n"
+            . '<html' . ($language === null ? '' : ' lang="' . $escape($language) . '"') . '>' . "\n"
+            . '<head>' . "\n" . implode("\n", $head) . "\n" . '</head>' . "\n"
+            . '<body class="sun-editor-editable">' . "\n" . $body . "\n" . '</body>' . "\n"
+            . '</html>' . "\n";
     }
 
     /** Headings come from the outline level, which a named style may carry instead of the paragraph. */
@@ -735,7 +735,7 @@ final class HtmlWriter
         $level = $properties->outlineLevel
             ?? $this->context->document->style($properties->styleId)?->paragraph->outlineLevel;
 
-        return $level !== null && $level >= 0 && $level <= 5 ? 'h'.($level + 1) : null;
+        return $level !== null && $level >= 0 && $level <= 5 ? 'h' . ($level + 1) : null;
     }
 
     /**
@@ -858,7 +858,7 @@ final class HtmlWriter
             default => null,
         };
 
-        return ['ol', $keyword !== null && $level->text === '%'.($level->level + 1).'.' ? $keyword : null];
+        return ['ol', $keyword !== null && $level->text === '%' . ($level->level + 1) . '.' ? $keyword : null];
     }
 
     /** The marker of one item, for levels CSS has no counter style for. */
@@ -874,7 +874,7 @@ final class HtmlWriter
 
         return (string) preg_replace_callback(
             '/%([1-9])/',
-            static fn (array $match): string => (int) $match[1] - 1 === $level->level
+            static fn(array $match): string => (int) $match[1] - 1 === $level->level
                 ? NumberFormat::format($ordinal, $level->format)
                 : '',
             $level->text,

@@ -14,7 +14,7 @@ it('writes archives that ZipArchive reads back byte for byte', function () {
     file_put_contents($path, zipBytes($files));
 
     try {
-        $archive = new ZipArchive;
+        $archive = new ZipArchive();
         expect($archive->open($path, ZipArchive::CHECKCONS))->toBeTrue()
             ->and($archive->numFiles)->toBe(4);
 
@@ -45,7 +45,7 @@ it('stores data that does not shrink when deflated', function () {
     file_put_contents($path, zipBytes(['noise' => [random_bytes(64), true]]));
 
     try {
-        $archive = new ZipArchive;
+        $archive = new ZipArchive();
         $archive->open($path);
 
         expect($archive->statIndex(0)['comp_method'])->toBe(ZipArchive::CM_STORE);
@@ -63,11 +63,11 @@ it('is deterministic', function () {
 
 it('passes the system unzip integrity test', function () {
     $placeholder = tempnam(sys_get_temp_dir(), 'zip');
-    $path = $placeholder.'.zip';
+    $path = $placeholder . '.zip';
     file_put_contents($path, zipBytes(['x/y.txt' => [str_repeat('z', 10000), true]]));
 
     try {
-        exec('unzip -t '.escapeshellarg($path).' 2>&1', $output, $exitCode);
+        exec('unzip -t ' . escapeshellarg($path) . ' 2>&1', $output, $exitCode);
 
         expect($exitCode)->toBe(0)
             ->and(implode("\n", $output))->toContain('No errors detected');

@@ -29,7 +29,7 @@ final class MediaRegistry
         $hash = $image->hash();
 
         $this->media[$hash] ??= [
-            'path' => 'media/image'.(count($this->media) + 1).'.'.$image->extension,
+            'path' => 'media/image' . (count($this->media) + 1) . '.' . $image->extension,
             'image' => $image,
         ];
 
@@ -44,7 +44,7 @@ final class MediaRegistry
         $parts = [];
 
         foreach ($this->media as $entry) {
-            $parts['word/'.$entry['path']] = $entry['image']->bytes;
+            $parts['word/' . $entry['path']] = $entry['image']->bytes;
         }
 
         return $parts;

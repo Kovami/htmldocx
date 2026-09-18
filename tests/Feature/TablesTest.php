@@ -13,7 +13,7 @@ function tableMatrix(Docx $docx, int $index = 0): array
     $table = $docx->query('//w:tbl')[$index];
 
     return array_map(
-        static fn (DOMElement $row): array => array_map($docx->text(...), $docx->query('w:tc', $row)),
+        static fn(DOMElement $row): array => array_map($docx->text(...), $docx->query('w:tc', $row)),
         $docx->query('w:tr', $table),
     );
 }
@@ -27,7 +27,7 @@ it('renders a simple table', function () {
 
 it('spans the content width by default with equal columns', function () {
     $docx = docx('<table><tr><td>a</td><td>b</td><td>c</td></tr></table>');
-    $widths = array_map(static fn (DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
+    $widths = array_map(static fn(DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
 
     expect(array_sum($widths))->toBe(9638)
         ->and(max($widths) - min($widths))->toBeLessThanOrEqual(2)
@@ -98,7 +98,7 @@ it('pads ragged rows to a rectangular grid', function () {
 
 it('uses colgroup widths', function () {
     $docx = docx('<table><colgroup><col style="width: 25%"><col style="width: 75%"></colgroup><tr><td>a</td><td>b</td></tr></table>');
-    $widths = array_map(static fn (DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
+    $widths = array_map(static fn(DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
 
     expect(array_sum($widths))->toBe(9638)
         ->and(abs($widths[1] - 3 * $widths[0]))->toBeLessThanOrEqual(3);
@@ -106,14 +106,14 @@ it('uses colgroup widths', function () {
 
 it('uses cell widths and shares the remaining space', function () {
     $docx = docx('<table style="width: 400pt"><tr><td style="width: 100pt">fixed</td><td>rest</td><td>rest</td></tr></table>');
-    $widths = array_map(static fn (DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
+    $widths = array_map(static fn(DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
 
     expect($widths)->toBe([2000, 3000, 3000]);
 });
 
 it('never makes a table wider than the page', function () {
     $docx = docx('<table style="width: 3000px"><tr><td style="width: 2000px">a</td><td style="width: 2000px">b</td></tr></table>');
-    $widths = array_map(static fn (DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
+    $widths = array_map(static fn(DOMElement $col): int => (int) Docx::attr($col, 'w'), $docx->query('//w:gridCol'));
 
     expect(array_sum($widths))->toBe(9638)
         ->and($widths[0])->toBe($widths[1]);
@@ -195,7 +195,7 @@ it('moves table margins onto the neighbouring paragraphs', function () {
 });
 
 it('separates SunEditor tables from following content by their margin', function () {
-    $docx = docx('<table><tr><td>x</td></tr></table><div class="se-component"><img src="'.TestImage::pngDataUri(10, 10).'"></div>');
+    $docx = docx('<table><tr><td>x</td></tr></table><div class="se-component"><img src="' . TestImage::pngDataUri(10, 10) . '"></div>');
     $next = $docx->first('/w:document/w:body/w:tbl/following-sibling::w:p[1]');
 
     expect(Docx::attr($docx->first('w:pPr/w:spacing', $next), 'before'))->toBe('150');

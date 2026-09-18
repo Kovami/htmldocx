@@ -11,6 +11,6 @@ final readonly class DataUriImageHandler implements ImageHandler
 {
     public function source(ImageData $image, string $description): string
     {
-        return 'data:'.$image->contentType.';base64,'.base64_encode($image->bytes);
+        return 'data:' . $image->contentType . ';base64,' . base64_encode($image->bytes);
     }
 }

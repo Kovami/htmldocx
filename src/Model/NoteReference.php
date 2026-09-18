@@ -13,6 +13,6 @@ final readonly class NoteReference implements Inline
     public function __construct(
         public string $type,
         public int $number,
-        public RunProperties $properties = new RunProperties,
+        public RunProperties $properties = new RunProperties(),
     ) {}
 }
