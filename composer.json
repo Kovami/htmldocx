@@ -2,8 +2,18 @@
     "name": "kovami/htmldocx",
     "description": "Dependency-free PHP library that converts HTML to DOCX (Office Open XML) and DOCX back to HTML. Framework-agnostic, with no runtime dependencies.",
     "type": "library",
-    "version": "2.0.0",
     "license": "MIT",
+    "homepage": "https://github.com/kovami/htmldocx",
+    "authors": [
+        {
+            "name": "kovami",
+            "email": "alexandr.minakov178@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/kovami/htmldocx/issues",
+        "source": "https://github.com/kovami/htmldocx"
+    },
     "keywords": [
         "html",
         "docx",
