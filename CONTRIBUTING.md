@@ -95,9 +95,8 @@ model, `declare(strict_types=1)` everywhere, full types on every signature.
 ## Security
 
 The library parses untrusted documents, so reports about entity expansion, zip
-bombs, path traversal or unsafe URLs matter. Report them privately through
-GitHub's "Report a vulnerability" on the repository's Security tab rather than in
-an issue.
+bombs, path traversal or unsafe URLs matter. Report them privately, as
+[SECURITY.md](SECURITY.md) describes, rather than in an issue.
 
 ## License
 
