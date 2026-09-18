@@ -1,0 +1,38 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+The first public release.
+
+### Added
+
+- `HtmlDocx` facade converting HTML to DOCX and DOCX to HTML through one
+  document model, with strings, files and streams on either side.
+- HTML → DOCX: a CSS cascade (selectors, specificity, inheritance, `<style>`
+  blocks and inline styles) turned into Word paragraph and run formatting;
+  headings, lists with any nesting and marker style, tables with column grids,
+  merged cells, borders and shading, images (data URIs, local files and, when
+  allowed, remote ones), hyperlinks and bookmarks, page breaks, and LaTeX
+  formulas written as editable Office Math.
+- DOCX → HTML: Word's formatting hierarchy resolved (document defaults, style
+  chains, numbering, table styles, themes) and written as HTML with inline
+  styles, emitting only what differs from the editor stylesheet so documents
+  survive round trips.
+- Footnotes and endnotes in both directions.
+- Page headers and footers in both directions, including first-page and
+  even-page variants, with `PAGE` and `NUMPAGES` fields.
+- Comments in both directions: ranges across paragraphs, overlapping comments,
+  authors, initials, dates, replies and the resolved state.
+- `Options` for the editor environment (font, size, colour, stylesheets), page
+  layout, output format and size limits of untrusted packages.
+- Warnings for content that could not be converted, through a handler you
+  provide.
+- Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
+  extensions.
+
+[Unreleased]: https://github.com/kovami/htmldocx/commits/main

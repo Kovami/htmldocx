@@ -39,6 +39,8 @@ composer test
 - **New behaviour has a test**, and a fix comes with a test that failed before it.
 - **Both READMEs are updated** (`README.md` and `README.ru.md`) when you change
   what is converted, how it looks in HTML, or an option.
+- **`CHANGELOG.md` has an entry** under `Unreleased` for every change users can
+  notice.
 
 Keep a pull request to one change. If you plan something large — a new part of
 the format, a change to the HTML conventions — open an issue first so the design
