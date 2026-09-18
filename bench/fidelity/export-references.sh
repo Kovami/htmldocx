@@ -14,6 +14,10 @@ with timeout of 180 seconds
     tell application "Microsoft Word"
         open POSIX file "$work/$name.docx"
         set d to active document
+        -- Print the document itself, without the margin that shows comments.
+        try
+            set show revisions and comments of view of active window to false
+        end try
         save as d file name "$work/$name.pdf" file format format PDF
         close active document saving no
     end tell
