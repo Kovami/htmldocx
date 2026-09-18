@@ -1,5 +1,10 @@
 # kovami/htmldocx
 
+[![CI](https://github.com/kovami/htmldocx/actions/workflows/ci.yml/badge.svg)](https://github.com/kovami/htmldocx/actions/workflows/ci.yml)
+[![Latest version](https://img.shields.io/packagist/v/kovami/htmldocx)](https://packagist.org/packages/kovami/htmldocx)
+[![PHP version](https://img.shields.io/packagist/dependency-v/kovami/htmldocx/php)](https://packagist.org/packages/kovami/htmldocx)
+[![License](https://img.shields.io/github/license/kovami/htmldocx)](LICENSE)
+
 **English** · [Русский](README.ru.md)
 
 Convert HTML into Word documents, and Word documents back into HTML — with one library, no runtime dependencies, and no Word, LibreOffice or headless browser anywhere in sight.

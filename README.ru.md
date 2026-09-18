@@ -1,5 +1,10 @@
 # kovami/htmldocx
 
+[![CI](https://github.com/kovami/htmldocx/actions/workflows/ci.yml/badge.svg)](https://github.com/kovami/htmldocx/actions/workflows/ci.yml)
+[![Latest version](https://img.shields.io/packagist/v/kovami/htmldocx)](https://packagist.org/packages/kovami/htmldocx)
+[![PHP version](https://img.shields.io/packagist/dependency-v/kovami/htmldocx/php)](https://packagist.org/packages/kovami/htmldocx)
+[![License](https://img.shields.io/github/license/kovami/htmldocx)](LICENSE)
+
 [English](README.md) · **Русский**
 
 Превращает HTML в документы Word и документы Word обратно в HTML — одной библиотекой, без зависимостей в рантайме и без Word, LibreOffice или headless-браузера где-либо поблизости.
