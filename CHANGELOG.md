@@ -100,6 +100,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Table columns HTML leaves unsized share the table the way a browser shares
+  it, by how wide their content is, instead of equally; a table without a
+  width is as wide as its content (up to the page) rather than the page.
+- A quotation keeps the indent a browser gives it (`blockquote`: 40px on both
+  sides); CKEditor's gets its rule, padding and italics. Plain HTML also reads
+  a browser's defaults for `pre`, `dl` and `dd`.
 - Bullets from HTML are Word's own: `disc`, `circle` and `square` become the
   Symbol, Courier New and Wingdings bullets Word draws, instead of the
   Unicode characters in the text font, which Word drew smaller and lower.

@@ -142,6 +142,11 @@ final class DefaultStylesheet
         ul ul, ol ul { list-style-type: circle; }
         ul ul ul, ul ol ul, ol ul ul, ol ol ul { list-style-type: square; }
 
+        blockquote { margin: 1em 40px; }
+        pre { font-family: monospace; white-space: pre; margin: 1em 0; }
+        dl { margin: 1em 0; }
+        dd { margin-left: 40px; }
+
         hr { border: 1px inset; margin: 0.5em 0; }
         thead, tbody, tfoot, tr { vertical-align: middle; }
         td, th { padding: 1px; vertical-align: inherit; }
@@ -153,5 +158,6 @@ final class DefaultStylesheet
         table { border: 1px double #b3b3b3; border-collapse: collapse; }
         td, th { border: 1px solid #bfbfbf; padding: 0.4em; vertical-align: middle; }
         th { background-color: #f2f2f2; }
+        blockquote { margin-left: 0; margin-right: 0; padding-left: 1.5em; padding-right: 1.5em; font-style: italic; border-left: 5px solid #cccccc; }
         CSS;
 }

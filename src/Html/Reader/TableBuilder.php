@@ -86,8 +86,9 @@ final class TableBuilder
             $blocks[0]->properties->spacingBefore = max($blocks[0]->properties->spacingBefore ?? 0, $marginTop);
         }
 
-        $tableWidth = $this->tableWidth($style, $context);
-        $widths = $this->columnWidths($columnCount, $tableWidth, $columnStyles, $cells);
+        $natural = $this->naturalWidths($columnCount, $cells);
+        $tableWidth = $this->tableWidth($style, $context, $columnStyles === [] && ! $this->anyCellWidth($cells) ? array_sum($natural) : null);
+        $widths = $this->columnWidths($columnCount, $tableWidth, $columnStyles, $cells, $natural);
         $tableRows = [];
 
         foreach ($rows as $r => $row) {
@@ -259,12 +260,16 @@ final class TableBuilder
         return [$cells, $slots, $columnCount];
     }
 
-    private function tableWidth(ComputedStyle $style, BlockContext $context): int
+    /**
+     * @param  int|null  $content  how wide the content would lay the table out, when nothing sizes its columns
+     */
+    private function tableWidth(ComputedStyle $style, BlockContext $context, ?int $content): int
     {
         $width = $style->lengthPt('width', $context->availableWidth / Length::TWIPS_PER_POINT);
 
         if ($width === null || $width <= 0) {
-            return $context->availableWidth;
+            // A browser makes a table without a width as wide as its content, up to the page.
+            return $content === null ? $context->availableWidth : min($context->availableWidth, $content);
         }
 
         return min($context->availableWidth, Length::pointsToTwips($width));
@@ -273,9 +278,10 @@ final class TableBuilder
     /**
      * @param  list<ComputedStyle>  $columnStyles
      * @param  list<array{element: Element, style: ComputedStyle, row: int, col: int, colspan: int, rowspan: int}>  $cells
+     * @param  list<int>  $natural  each column's content width, see naturalWidths()
      * @return list<int>
      */
-    private function columnWidths(int $columnCount, int $tableWidth, array $columnStyles, array $cells): array
+    private function columnWidths(int $columnCount, int $tableWidth, array $columnStyles, array $cells, array $natural): array
     {
         $tableWidthPt = $tableWidth / Length::TWIPS_PER_POINT;
         $widths = array_fill(0, $columnCount, null);
@@ -290,11 +296,15 @@ final class TableBuilder
             }
         }
 
-        $unknown = count(array_filter($widths, static fn(?int $w): bool => $w === null));
-        $share = $unknown > 0
-            ? max(self::MIN_COLUMN_TWIPS, intdiv(max(0, $tableWidth - array_sum(array_filter($widths))), $unknown))
-            : 0;
-        $widths = array_map(static fn(?int $w): int => $w ?? $share, $widths);
+        // Columns nothing sizes share what is left as a browser shares it:
+        // in proportion to how wide their content is.
+        $left = max(0, $tableWidth - array_sum(array_filter($widths)));
+        $unsized = array_sum(array_map(static fn(?int $w, int $n): int => $w === null ? $n : 0, $widths, $natural));
+        $widths = array_map(
+            static fn(?int $w, int $n): int => $w ?? max(self::MIN_COLUMN_TWIPS, intdiv($left * $n, max(1, $unsized))),
+            $widths,
+            $natural,
+        );
         $total = array_sum($widths);
 
         // Scale to the table width; the last column absorbs the rounding.
@@ -309,6 +319,79 @@ final class TableBuilder
         }
 
         return $scaled;
+    }
+
+    /**
+     * How wide each column's content is laid out on one line (CSS's
+     * max-content), padding and borders included, from its single-column cells.
+     *
+     * @param  list<array{element: Element, style: ComputedStyle, row: int, col: int, colspan: int, rowspan: int}>  $cells
+     * @return list<int>
+     */
+    private function naturalWidths(int $columnCount, array $cells): array
+    {
+        $widths = array_fill(0, $columnCount, self::MIN_COLUMN_TWIPS);
+
+        foreach ($cells as $cell) {
+            if ($cell['colspan'] !== 1) {
+                continue;
+            }
+
+            $style = $cell['style'];
+            $longest = 0.0;
+
+            // Lines break at <br> and between blocks; the rest is one line.
+            $text = html_entity_decode(strip_tags((string) preg_replace('~<br\b[^>]*>|</(?:p|div|li|h[1-6])>~i', "\n", $cell['element']->innerHTML)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+                $longest = max($longest, self::ems(trim($line)) * ($style->bold ? 1.05 : 1.0));
+            }
+
+            $frame = 0.0;
+
+            foreach (['left', 'right'] as $side) {
+                $frame += max(0, $style->lengthPt("padding-{$side}") ?? 0) + ($style->border($side)->widthPt ?? 0);
+            }
+
+            $widths[$cell['col']] = max($widths[$cell['col']], Length::pointsToTwips($longest * $style->fontSizePt + $frame));
+        }
+
+        return array_values($widths);
+    }
+
+    /**
+     * About how wide a line of text is in a common text face, in ems.
+     * ponytail: rough widths by kind of character, not the font's own; measure glyphs if tables come out uneven.
+     */
+    private static function ems(string $line): float
+    {
+        $ems = 0.0;
+
+        foreach (mb_str_split($line) as $char) {
+            $ems += match (true) {
+                str_contains(" .,:;'!|il\u{00A0}", $char) => 0.25,
+                str_contains('fjrt()[]-/', $char) => 0.33,
+                str_contains('mwMW', $char) => 0.8,
+                preg_match('/\p{Lu}/u', $char) === 1 => 0.6,
+                default => 0.5,
+            };
+        }
+
+        return $ems;
+    }
+
+    /**
+     * @param  list<array{element: Element, style: ComputedStyle, row: int, col: int, colspan: int, rowspan: int}>  $cells
+     */
+    private function anyCellWidth(array $cells): bool
+    {
+        foreach ($cells as $cell) {
+            if (($cell['style']->lengthPt('width', 100) ?? 0) > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function positiveTwips(?float $points): ?int

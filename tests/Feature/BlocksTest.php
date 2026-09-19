@@ -180,3 +180,15 @@ it('leaves moderate nesting indents untouched', function () {
 
     expect(Docx::attr(docx($html)->first('//w:p/w:pPr/w:ind'), 'left'))->toBe('7200');
 });
+
+it('indents a quotation the way the editor showing it does', function (?Kovami\HtmlDocx\Editor $editor, int $indent, bool $rule, bool $italic) {
+    $converter = $editor === null ? Kovami\HtmlDocx\HtmlDocx::plain(testOptions()) : Kovami\HtmlDocx\HtmlDocx::for($editor, testOptions());
+    $paragraph = $converter->fromHtml('<blockquote><p>quoted</p></blockquote>')->document()->blocks[0];
+
+    expect($paragraph->properties->indentLeft)->toBe($indent)
+        ->and($paragraph->properties->borders->left !== null)->toBe($rule)
+        ->and($paragraph->children[0]->properties->italic)->toBe($italic);
+})->with([
+    'a browser: 40px on both sides' => [null, 600, false, false],
+    'CKEditor: a rule and 1.5em' => [Kovami\HtmlDocx\Editor::CKEditor, 405, true, true],
+]);

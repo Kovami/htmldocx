@@ -219,3 +219,24 @@ it('puts the top margin of a captioned table above its caption', function () {
 
     expect(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('Table 1')), 'before'))->toBe('400');
 });
+
+it('shares a table among columns nothing sizes as a browser does, by their content', function () {
+    $table = Kovami\HtmlDocx\HtmlDocx::plain(testOptions())
+        ->fromHtml('<table style="width: 100%"><tr><th>Item</th><th>Amount, k$</th></tr><tr><td>Online platform</td><td>135</td></tr></table>')
+        ->document()->blocks[0];
+    [$first, $second] = array_map(static fn($cell): int => $cell->properties->width, $table->rows[0]->cells);
+
+    // Chromium gives these columns 55% and 45% of the table.
+    expect($first / ($first + $second))->toBeGreaterThan(0.52)->toBeLessThan(0.6);
+});
+
+it('keeps a table without a width as narrow as its content', function () {
+    $table = Kovami\HtmlDocx\HtmlDocx::plain(testOptions())
+        ->fromHtml('<table><tr><td>a</td><td>b</td></tr></table><table><tr><td>' . str_repeat('long words ', 80) . '</td></tr></table>')
+        ->document()->blocks;
+    $table = array_values(array_filter($table, static fn($block): bool => $block instanceof Kovami\HtmlDocx\Model\Table));
+    $width = static fn($table): int => array_sum(array_map(static fn($cell): int => $cell->properties->width, $table->rows[0]->cells));
+
+    expect($width($table[0]))->toBeLessThan(1000)
+        ->and($width($table[1]))->toBe(testOptions()->page()->contentWidthTwips());
+});
