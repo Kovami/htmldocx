@@ -47,9 +47,9 @@ use Kovami\HtmlDocx\Options;
  * comments are lists between the body and the footers. The text a comment
  * is about is wrapped in `<span class="se-comment" data-comment="…">`.
  *
- * Word's vertical spacing is additive and CSS margins collapse, so a
- * paragraph's top margin carries its own spacing plus the previous
- * paragraph's: `max(prevBottom, top)` then equals Word's `after + before`.
+ * Between two paragraphs Word leaves the larger of the first one's space
+ * after and the second one's space before, as collapsing CSS margins do, so
+ * each paragraph's margins carry its own spacing.
  *
  * One instance converts one document.
  */
@@ -130,7 +130,6 @@ final class HtmlWriter
     {
         $enclosing = $this->lists;
         $this->lists = new ListStack();
-        $previousAfter = 0;
 
         foreach ($blocks as $block) {
             if ($block instanceof Table) {
@@ -138,7 +137,6 @@ final class HtmlWriter
                 // A table has no spacing of its own in Word: the model moved it
                 // onto the neighbouring paragraphs, which carry it in CSS too.
                 $this->tables->write($block, $parent, $parentStyle, $availableWidth, $block->marginTop, $block->marginBottom);
-                $previousAfter = 0;
 
                 continue;
             }
@@ -156,17 +154,15 @@ final class HtmlWriter
                 // second paragraph of that item, not the end of the list.
                 if ($frame !== null && $frame->item !== null && $frame->itemStyle !== null
                     && $block->properties->indentLeft >= $frame->indent) {
-                    $this->paragraph($block, $frame->item, $frame->itemStyle, $paragraphTag, $previousAfter, $frame->indent);
+                    $this->paragraph($block, $frame->item, $frame->itemStyle, $paragraphTag, $frame->indent);
                 } else {
                     $this->lists->clear();
-                    $this->paragraph($block, $parent, $parentStyle, $paragraphTag, $previousAfter, 0);
+                    $this->paragraph($block, $parent, $parentStyle, $paragraphTag, 0);
                 }
             } else {
                 $item = $this->listItem($numbering, $block->properties, $parent, $parentStyle);
-                $this->paragraph($block, $item['list'], $item['style'], $paragraphTag, $previousAfter, $item['indent'], $item['element']);
+                $this->paragraph($block, $item['list'], $item['style'], $paragraphTag, $item['indent'], $item['element']);
             }
-
-            $previousAfter = $block->properties->spacingAfter ?? 0;
         }
 
         $this->lists = $enclosing;
@@ -175,7 +171,6 @@ final class HtmlWriter
     /**
      * @param  Element  $parent  where new elements go
      * @param  ComputedStyle  $parentStyle  the computed style of $parent
-     * @param  int  $previousAfter  spacing the previous block leaves behind, in twips
      * @param  int  $indentBase  indentation the container already provides, in twips
      * @param  Element|null  $item  the `li` to fill, when the paragraph is a list item
      */
@@ -184,7 +179,6 @@ final class HtmlWriter
         Element $parent,
         ComputedStyle $parentStyle,
         string $tag,
-        int $previousAfter,
         int $indentBase,
         ?Element $item = null,
     ): void {
@@ -196,7 +190,7 @@ final class HtmlWriter
             $image = self::imageOnly($segments[0]);
 
             if ($image !== null) {
-                $this->imageComponent($image, $properties, $segments[0], $parent, $parentStyle, $previousAfter);
+                $this->imageComponent($image, $properties, $segments[0], $parent, $parentStyle);
 
                 return;
             }
@@ -216,7 +210,7 @@ final class HtmlWriter
                 $baseline = $item === null ? $parentStyle : $itemStyle;
             }
 
-            $top = $index === 0 ? ($properties->spacingBefore ?? 0) + $previousAfter : 0;
+            $top = $index === 0 ? ($properties->spacingBefore ?? 0) : 0;
             $bottom = $index === $last ? ($properties->spacingAfter ?? 0) : 0;
             $pageBreak = $index === 0 ? $properties->pageBreakBefore : true;
             $preserve = self::preservesWhitespace($children);
@@ -464,7 +458,6 @@ final class HtmlWriter
         array $children,
         Element $parent,
         ComputedStyle $parentStyle,
-        int $previousAfter,
     ): void {
         $float = $image->float ?? match ($properties->alignment) {
             'center' => 'center',
@@ -477,9 +470,9 @@ final class HtmlWriter
         $container->setAttribute('class', "se-component se-image-container __se__float-{$float}");
         $container->setAttribute('contenteditable', 'false');
 
-        $this->context->style($container, $parentStyle, function (ComputedStyle $editor) use ($properties, $previousAfter): array {
+        $this->context->style($container, $parentStyle, function (ComputedStyle $editor) use ($properties): array {
             $css = [];
-            $margins = ['margin-top' => ($properties->spacingBefore ?? 0) + $previousAfter, 'margin-bottom' => $properties->spacingAfter ?? 0];
+            $margins = ['margin-top' => $properties->spacingBefore ?? 0, 'margin-bottom' => $properties->spacingAfter ?? 0];
 
             foreach ($margins as $property => $twips) {
                 $value = $this->context->css->length($twips, $editor->lengthPt($property));

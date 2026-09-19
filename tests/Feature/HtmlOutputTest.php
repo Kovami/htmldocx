@@ -9,12 +9,11 @@ use Kovami\HtmlDocx\Tests\Support\TestImage;
 
 it('writes paragraphs and headings', function () {
     expect(html('<h1>Title</h1><p>Body</p>'))
-        ->toBe("<h1>Title</h1>\n<p style=\"margin-top: 19.67px;\">Body</p>");
+        ->toBe("<h1>Title</h1>\n<p>Body</p>");
 });
 
-it('adds the previous spacing to the next paragraph, so collapsing margins keep Word spacing', function () {
-    // Word adds the two paragraphs' spacing (20px after + 10px before);
-    // CSS takes the larger margin, so the second one carries the sum.
+it('keeps each paragraph\'s own spacing, which Word collapses the way CSS does', function () {
+    // Between two paragraphs Word leaves the larger of space after and space before.
     expect(html('<p style="margin-bottom: 20px">a</p><p style="margin-top: 30px">b</p>'))
         ->toContain('<p style="margin-bottom: 20px;">a</p>')
         ->toContain('<p style="margin-top: 30px;">b</p>');
@@ -27,7 +26,7 @@ it('writes nothing the editor stylesheet already says', function () {
 
 it('keeps an empty paragraph visible and as tall as its paragraph mark', function () {
     expect(html('<p>a</p><p><br></p>'))
-        ->toContain('<p style="margin-top: 10px;"><br></p>');
+        ->toBe("<p>a</p>\n<p><br></p>");
 });
 
 it('doubles a trailing line break, which HTML would otherwise drop', function () {

@@ -12,7 +12,6 @@ use Kovami\HtmlDocx\Model\Table;
 
 /**
  * Final structural fixes on a sequence of blocks:
- * - collapses adjacent vertical margins (CSS uses the larger one, Word adds both);
  * - separates consecutive tables, which Word would otherwise merge into one;
  * - moves table margins onto the neighbouring paragraphs, as tables have no spacing;
  * - guarantees a trailing paragraph, which table cells require.
@@ -38,9 +37,6 @@ final class BlockNormalizer
                 $previous->properties->spacingAfter = max($previous->properties->spacingAfter ?? 0, $block->marginTop);
             } elseif ($block instanceof Paragraph && $previous instanceof Table && $previous->marginBottom > 0) {
                 $block->properties->spacingBefore = max($block->properties->spacingBefore ?? 0, $previous->marginBottom);
-            } elseif ($block instanceof Paragraph && $previous instanceof Paragraph
-                && $block->properties->spacingBefore !== null && $previous->properties->spacingAfter !== null) {
-                $block->properties->spacingBefore = max(0, $block->properties->spacingBefore - $previous->properties->spacingAfter);
             }
 
             $result[] = $block;

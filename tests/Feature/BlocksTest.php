@@ -76,11 +76,11 @@ it('maps line-height', function (string $css, string $line, string $rule) {
     'length' => ['20pt', '400', 'atLeast'],
 ]);
 
-it('maps vertical margins to spacing and collapses them between paragraphs', function () {
+it('maps vertical margins to spacing, which Word collapses the way CSS does', function () {
     $docx = docx('<p style="margin: 0 0 20pt">a</p><p style="margin: 30pt 0 0">b</p><p style="margin-top: 10pt">c</p>');
 
     expect(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('a')), 'after'))->toBe('400')
-        ->and(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('b')), 'before'))->toBe('200')
+        ->and(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('b')), 'before'))->toBe('600')
         ->and(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('c')), 'before'))->toBe('200');
 });
 
