@@ -340,7 +340,7 @@ final readonly class InlineWriter
     private function formula(Formula $formula, Element $parent): void
     {
         if ($this->context->editor === null) {
-            (new MathMlWriter($this->context->dom))->write($formula->latex, $parent);
+            (new MathMlWriter($this->context->dom))->write($formula->latex, $parent, $formula->display);
 
             return;
         }
@@ -355,7 +355,7 @@ final readonly class InlineWriter
                 $span->setAttribute('class', 'math-tex');
             }
 
-            $span->append('\\(' . $formula->latex . '\\)');
+            $span->append($formula->display ? '\\[' . $formula->latex . '\\]' : '\\(' . $formula->latex . '\\)');
 
             return;
         }

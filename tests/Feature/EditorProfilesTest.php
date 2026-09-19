@@ -22,17 +22,30 @@ it('writes a formula in the shape its editor\'s math plugin reads', function (Ed
     'TipTap (Mathematics)' => [Editor::TipTap, '<span data-type="inline-math" data-latex="x^2 + \frac{a}{b}">\(x^2 + \frac{a}{b}\)</span>'],
 ]);
 
-it('reads a formula back from every shape an editor keeps', function (string $html, string $latex) {
+it('reads a formula back from every shape an editor keeps', function (string $html, string $latex, bool $display) {
     $formula = HtmlDocx::plain(testOptions())->fromHtml("<p>{$html}</p>")->document()->blocks[0]->children[0];
 
     expect($formula)->toBeInstanceOf(Formula::class)
-        ->and($formula->latex)->toBe($latex);
+        ->and($formula->latex)->toBe($latex)
+        ->and($formula->display)->toBe($display);
 })->with([
-    'math-tex, inline' => ['<span class="math-tex">\(x^2\)</span>', 'x^2'],
-    'math-tex, display' => ['<span class="math-tex">\[ a + b \]</span>', 'a + b'],
-    'TipTap inline math' => ['<span data-type="inline-math" data-latex="y_1"></span>', 'y_1'],
-    'MathML' => ['<math><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>', 'z'],
-    'SunEditor KaTeX' => ['<span class="__se__katex katex" data-exp="k">k</span>', 'k'],
+    'math-tex, inline' => ['<span class="math-tex">\(x^2\)</span>', 'x^2', false],
+    'math-tex, display' => ['<span class="math-tex">\[ a + b \]</span>', 'a + b', true],
+    'TipTap inline math' => ['<span data-type="inline-math" data-latex="y_1"></span>', 'y_1', false],
+    'TipTap block math' => ['<span data-type="block-math" data-latex="y_2"></span>', 'y_2', true],
+    'MathML' => ['<math><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>', 'z', false],
+    'MathML, display' => ['<math display="block"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>', 'z', true],
+    'SunEditor KaTeX' => ['<span class="__se__katex katex" data-exp="k">k</span>', 'k', false],
+]);
+
+it('keeps a formula on a line of its own on the way through HTML', function (?Editor $editor, string $shape) {
+    $docx = HtmlDocx::plain(testOptions())->fromHtml('<p><math display="block"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math></p>')->toDocx();
+    $converter = $editor === null ? HtmlDocx::plain(testOptions()) : HtmlDocx::for($editor, testOptions());
+
+    expect($converter->fromDocx($docx)->toHtml())->toContain($shape);
+})->with([
+    'plain' => [null, '<math display="block">'],
+    'CKEditor' => [Editor::CKEditor, '<span class="math-tex">\[z\]</span>'],
 ]);
 
 it('writes cell lines as paragraphs, which editors keep', function (Editor $editor) {

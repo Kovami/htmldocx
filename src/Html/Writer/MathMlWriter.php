@@ -26,9 +26,16 @@ final readonly class MathMlWriter
 
     public function __construct(private HTMLDocument $dom) {}
 
-    public function write(string $latex, Element $parent): void
+    /** @param  bool  $display  set on a line of its own (Word's display math) rather than in the text */
+    public function write(string $latex, Element $parent, bool $display = false): void
     {
-        $semantics = $this->element('semantics', $this->element('math', $parent));
+        $math = $this->element('math', $parent);
+
+        if ($display) {
+            $math->setAttribute('display', 'block');
+        }
+
+        $semantics = $this->element('semantics', $math);
         $this->row(LatexParser::parse($latex), $semantics);
 
         $annotation = $this->element('annotation', $semantics);

@@ -279,7 +279,7 @@ final class DocumentBuilder
 
         if ($latex !== null) {
             if ($latex !== '') {
-                $flow->buffer()->appendFormula(new Formula($latex, properties: $this->mapper->run($style)), $flow->link);
+                $flow->buffer()->appendFormula(new Formula($latex, self::isDisplay($element), $this->mapper->run($style)), $flow->link);
             }
 
             return;
@@ -651,6 +651,16 @@ final class DocumentBuilder
         };
 
         return $latex === false ? null : trim((string) $latex);
+    }
+
+    /** Whether a formula element is set on a line of its own, as Word's display math is. */
+    private static function isDisplay(Element $element): bool
+    {
+        return match (true) {
+            $element->localName === 'math' => $element->getAttribute('display') === 'block',
+            $element->hasAttribute('data-type') => $element->getAttribute('data-type') === 'block-math',
+            default => str_starts_with(trim((string) $element->textContent), '\\['),
+        };
     }
 
     /**

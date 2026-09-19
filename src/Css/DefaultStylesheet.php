@@ -32,7 +32,9 @@ final class DefaultStylesheet
         tfoot { display: table-footer-group; }
         tr { display: table-row; }
         td, th { display: table-cell; }
-        head, script, style, template, title, meta, link, base, noscript, rp, colgroup, col,
+        colgroup { display: table-column-group; }
+        col { display: table-column; }
+        head, script, style, template, title, meta, link, base, noscript, rp,
         datalist, param, source, track, [hidden] { display: none; }
 
         CSS;

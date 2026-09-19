@@ -91,6 +91,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A formula on a line of its own (Word's display math) stays one: plain HTML
+  writes `<math display="block">`, CKEditor and TinyMCE get `\[…\]`, and the
+  HTML reader reads those and TipTap's `block-math` back as display math.
+  It used to become an inline formula at the start of the line.
+- The stylesheet embedded in a full HTML document no longer hides `colgroup`
+  and `col` (`display: none`), which made a browser ignore the column widths.
 - A double, dotted, dashed or wavy underline is written on the `<u>` that draws
   it; on a span around it the style did not apply and was lost on the way back.
 - A paragraph that follows Word's default alignment inside a centred container
