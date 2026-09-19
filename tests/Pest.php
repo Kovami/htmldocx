@@ -43,6 +43,12 @@ function html(string $source, ?Options $options = null): string
     return $converter->fromHtml($source)->toHtml();
 }
 
+/** The markup of some HTML without its inline styles, for tests about its structure. */
+function markup(string $html): string
+{
+    return (string) preg_replace('/ style="[^"]*"/', '', $html);
+}
+
 /** HTML → DOCX → HTML: everything both directions do, through a real package. */
 function roundTrip(string $source, ?Options $options = null): string
 {

@@ -149,6 +149,7 @@ final class DefaultStylesheet
 
     public const string CKEDITOR = self::BROWSER . <<<'CSS'
         table { border: 1px double #b3b3b3; border-collapse: collapse; }
-        td, th { border: 1px solid #bfbfbf; padding: 0.4em; }
+        td, th { border: 1px solid #bfbfbf; padding: 0.4em; vertical-align: middle; }
+        th { background-color: #f2f2f2; }
         CSS;
 }

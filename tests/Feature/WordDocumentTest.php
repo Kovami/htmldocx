@@ -29,7 +29,7 @@ it('paints a table styled from Word\'s gallery', function () {
     expect($html)
         // The header row: white text on the accent colour the style names.
         ->toContain('<th style="border: 0.67px solid #8eaadb; background-color: #4472c4;')
-        ->toContain('<span style="color: #ffffff;">Показатель</span>')
+        ->toContain('color: #ffffff; margin: 0 0 10.67px 0; line-height: 1.317;">Показатель</div>')
         // The first body row is banded, the one after it is not.
         ->toContain('background-color: #dae3f3;')
         // The first column is bold, the last row has the style's double rule.
@@ -47,7 +47,7 @@ it('keeps Word\'s footnotes and endnotes with their marks and text', function ()
         ->toContain('<li id="footnote-1">')
         ->toContain('<li id="endnote-1">')
         // The note styles are resolved: footnote text is 10pt.
-        ->toContain('font-size: 13.33px;">Сноска, как её пишет Word.</span>')
+        ->toContain('font-size: 13.33px; color: #000000; margin: 0 0 0 0; line-height: 1.221;">Сноска, как её пишет Word.')
         ->toContain('<a href="#footnote-ref-1">');
 });
 

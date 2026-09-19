@@ -54,7 +54,7 @@ it('reads and writes files, streams and bytes', function () {
         $converter->fromHtmlFile($htmlPath)->streamDocx($out);
         rewind($out);
 
-        expect($fromFile)->toBe('<p>Hello <strong>world</strong></p>')
+        expect(markup($fromFile))->toBe('<p>Hello <strong>world</strong></p>')
             ->and($fromStream)->toBe($fromFile)
             ->and(file_get_contents($htmlPath))->toBe($fromFile)
             ->and($converter->fromDocx((string) stream_get_contents($out))->toHtml())->toBe($fromFile);

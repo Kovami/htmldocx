@@ -193,7 +193,7 @@ it('writes header and footer parts and points the section at them', function () 
 });
 
 it('writes headers first and footers last in the HTML', function () {
-    $html = converter()->fromDocument(furnishedDocument())->toHtml();
+    $html = markup(converter()->fromDocument(furnishedDocument())->toHtml());
 
     // SunEditor keeps a classed div only as a line of text: one div per line.
     expect($html)->toStartWith('<div class="se-header">Running head</div>' . "\n" . '<div class="se-header" data-type="first">Title page</div>')

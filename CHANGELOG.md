@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In plain HTML and the profiles built on it, a bookmark at the start of a
   paragraph becomes the paragraph's `id`, which editors keep, and tables say
   `border: none` so an editor's CSS draws no frame Word does not.
+- The CKEditor profile writes tables in CKEditor's `<figure class="table">`,
+  which carries the width and none of its stylesheet's margins. The SunEditor
+  profile marks tables `se-table-layout-fixed` so SunEditor keeps Word's column
+  widths, rules no rows or header of its own, and places image components
+  where Word placed the picture.
 - The SunEditor profile writes each line of a page header or footer as a
   `div.se-header` (or `se-footer`) of its own, since SunEditor keeps a classed
   div only as a line of text; the reader joins consecutive lines into one.
@@ -60,6 +65,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `saveDocx()` or `streamDocx()`; `document()` returns the model.
   `new HtmlDocx`, `htmlToDocx()`, `docxToHtml()`, `readHtml()`, `writeDocx()`
   and the rest of the 1.x methods are gone.
+- **Breaking:** every profile writes self-contained HTML: each block spells
+  out its font, size, colour, margins and line height, whatever the editor's
+  stylesheet already says, so content looks like the document wherever it is
+  shown. The SunEditor profile keeps its own components (image components,
+  KaTeX formulas, headers, footers, comments, fields) on top.
+  `Options::$keepDocumentDefaults`, which chose between the document's and the
+  editor's base formatting, is gone.
+- HTML line heights are read as Word's: a multiple of the font size becomes
+  the matching multiple of the font's own single line (Calibri's is 1.22 times
+  its size), so a paragraph keeps the height the browser showed.
 - Paragraph spacing collapses the way Word does it: between two paragraphs
   Word leaves the larger of space after and space before, exactly as CSS
   margins collapse. Both directions used to add the two, which made every

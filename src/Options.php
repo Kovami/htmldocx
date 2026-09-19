@@ -24,10 +24,6 @@ final readonly class Options
      * @param  string  $extraStylesheet  applied above the defaults and below the document's own CSS
      * @param  DateTimeImmutable|null  $createdAt  fixed timestamp for reproducible output; defaults to now
      * @param  string  $cssUnit  DOCX → HTML: "px" (SunEditor's unit) or "pt" for lengths and font sizes
-     * @param  bool  $keepDocumentDefaults  DOCX → HTML: spell out the document's base formatting (Normal
-     *                                      style font, size, spacing) wherever it differs from the editor
-     *                                      environment, so the HTML looks like the document; false adopts
-     *                                      the editor's defaults and keeps only deliberate formatting
      * @param  bool  $includeHiddenText  DOCX → HTML: keep text formatted as hidden
      * @param  bool  $includeHeadersFooters  DOCX → HTML: keep page headers and footers
      * @param  bool  $includeComments  DOCX → HTML: keep reviewers' comments and the text they are anchored to
@@ -48,7 +44,6 @@ final readonly class Options
         public ?string $author = null,
         public ?DateTimeImmutable $createdAt = null,
         public string $cssUnit = 'px',
-        public bool $keepDocumentDefaults = true,
         public bool $includeHiddenText = false,
         public string $idPrefix = '',
         public bool $fullHtmlDocument = false,

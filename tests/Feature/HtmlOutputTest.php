@@ -8,29 +8,30 @@ use Kovami\HtmlDocx\Model\ImageData;
 use Kovami\HtmlDocx\Tests\Support\TestImage;
 
 it('writes paragraphs and headings', function () {
-    expect(html('<h1>Title</h1><p>Body</p>'))
+    expect(markup(html('<h1>Title</h1><p>Body</p>')))
         ->toBe("<h1>Title</h1>\n<p>Body</p>");
 });
 
 it('keeps each paragraph\'s own spacing, which Word collapses the way CSS does', function () {
     // Between two paragraphs Word leaves the larger of space after and space before.
     expect(html('<p style="margin-bottom: 20px">a</p><p style="margin-top: 30px">b</p>'))
-        ->toContain('<p style="margin-bottom: 20px;">a</p>')
-        ->toContain('<p style="margin-top: 30px;">b</p>');
+        ->toContain('margin: 0 0 20px 0; line-height: 1.5;">a</p>')
+        ->toContain('margin: 30px 0 10px 0; line-height: 1.5;">b</p>');
 });
 
-it('writes nothing the editor stylesheet already says', function () {
+it('spells out every block\'s formatting, even what the editor\'s stylesheet already says', function () {
+    // Content leaves the editor: shown elsewhere, it keeps looking like the document.
     expect(html('<p style="margin: 0 0 10px; line-height: 1.5">plain</p>'))
-        ->toBe('<p>plain</p>');
+        ->toBe('<p style="font-family: Calibri, Carlito, sans-serif; font-size: 14.67px; color: #000000; margin: 0 0 10px 0; line-height: 1.5;">plain</p>');
 });
 
 it('keeps an empty paragraph visible and as tall as its paragraph mark', function () {
-    expect(html('<p>a</p><p><br></p>'))
+    expect(markup(html('<p>a</p><p><br></p>')))
         ->toBe("<p>a</p>\n<p><br></p>");
 });
 
 it('doubles a trailing line break, which HTML would otherwise drop', function () {
-    expect(html('<p>line<br><br></p>'))->toBe('<p>line<br><br></p>');
+    expect(markup(html('<p>line<br><br></p>')))->toBe('<p>line<br><br></p>');
 });
 
 it('preserves tabs and runs of spaces', function () {
@@ -45,13 +46,13 @@ it('does not preserve whitespace around inline content', function () {
 });
 
 it('writes inline formatting the way the editor produces it', function () {
-    expect(html('<p><strong>b</strong><em>i</em><u>u</u><del>s</del><sup>up</sup><sub>down</sub></p>'))
+    expect(markup(html('<p><strong>b</strong><em>i</em><u>u</u><del>s</del><sup>up</sup><sub>down</sub></p>')))
         ->toBe('<p><strong>b</strong><em>i</em><u>u</u><del>s</del><sup>up</sup><sub>down</sub></p>');
 });
 
 it('writes character formatting as one span per run', function () {
     expect(html('<p><span style="color: #ff0000; background-color: #ffff00; font-size: 20px">x</span></p>'))
-        ->toBe('<p><span style="font-size: 20px; color: #ff0000; background-color: #ffff00;">x</span></p>');
+        ->toEndWith('"><span style="font-size: 20px; color: #ff0000; background-color: #ffff00;">x</span></p>');
 });
 
 it('breaks a page before the paragraph that starts one', function () {
@@ -60,15 +61,13 @@ it('breaks a page before the paragraph that starts one', function () {
 });
 
 it('writes lists as nested ul and ol elements', function () {
-    expect(html('<ul><li>outer<ul><li>inner</li></ul></li></ul>'))
-        ->toBe('<ul style="margin-bottom: 0;"><li>outer<ul><li style="margin-bottom: 10px;">inner</li></ul></li></ul>');
+    expect(markup(html('<ul><li>outer<ul><li>inner</li></ul></li></ul>')))
+        ->toBe('<ul><li>outer<ul><li>inner</li></ul></li></ul>');
 });
 
 it('keeps the numbering an ordered list starts and continues at', function () {
-    expect(html('<ol start="5"><li>five</li><li value="9">nine</li><li>ten</li></ol>'))
-        ->toContain('<ol start="5"')
-        ->toContain('<li value="9">nine</li>')
-        ->toContain('<li style="margin-bottom: 10px;">ten</li>');
+    expect(markup(html('<ol start="5"><li>five</li><li value="9">nine</li><li>ten</li></ol>')))
+        ->toBe('<ol start="5"><li>five</li><li value="9">nine</li><li>ten</li></ol>');
 });
 
 it('spells out markers CSS has no counter style for', function () {
@@ -105,21 +104,21 @@ it('keeps a formula through Word as an equation, not as its source text', functi
 });
 
 it('keeps a second paragraph of a list item inside the item', function () {
-    expect(html('<ol><li>first<p>second</p></li></ol>'))
+    expect(markup(html('<ol><li>first<p>second</p></li></ol>')))
         ->toContain('<li>first<p>second</p></li>');
 });
 
 it('indents a list whose items sit further in than the editor indents them', function () {
     expect(html('<ul style="padding-left: 80px"><li>far</li></ul>'))
-        ->toContain('padding-left: 80px;');
+        ->toContain('padding: 0 0 0 80px;');
 });
 
 it('writes tables in the shape SunEditor expects', function () {
     $html = html('<table><thead><tr><th>head</th></tr></thead><tbody><tr><td>body</td></tr></tbody></table>');
 
-    expect($html)
-        ->toContain('<table class="se-table-size-100"')
-        ->toContain('<colgroup><col style="width: 100%;"></colgroup>')
+    expect($html)->toContain('<colgroup><col style="width: 100%;"></colgroup>')
+        ->and(markup($html))
+        ->toContain('<table class="se-table-size-100 se-table-layout-fixed">')
         ->toContain('<thead><tr><th><div>head</div></th></tr></thead>')
         ->toContain('<tbody><tr><td><div>body</div></td></tr></tbody>');
 });
@@ -127,7 +126,7 @@ it('writes tables in the shape SunEditor expects', function () {
 it('writes merged cells as colspan and rowspan', function () {
     $html = html('<table><tr><td rowspan="2">tall</td><td colspan="2">wide</td></tr><tr><td>a</td><td>b</td></tr></table>');
 
-    expect($html)->toContain('<td rowspan="2">')->toContain('<td colspan="2">');
+    expect(markup($html))->toContain('<td rowspan="2">')->toContain('<td colspan="2">');
 });
 
 it('writes a picture-only paragraph as an image component', function () {
@@ -135,7 +134,7 @@ it('writes a picture-only paragraph as an image component', function () {
 
     expect($html)
         ->toContain('<div class="se-component se-image-container __se__float-right" contenteditable="false">')
-        ->toContain('<figure style="margin: auto; width: 40px;">')
+        ->toContain('<figure style="margin: 0 0 0 auto; width: 40px;">')
         ->toContain('data-size="40px,20px"')
         ->toContain('alt="chart"');
 });
@@ -173,7 +172,7 @@ it('prefixes generated ids so several documents can share a page', function () {
 
 it('writes lengths in the configured unit', function () {
     expect(html('<p style="margin-top: 30px">x</p>', testOptions(['cssUnit' => 'pt'])))
-        ->toContain('margin-top: 22.5pt;');
+        ->toContain('margin: 22.5pt 0 7.5pt 0;');
 });
 
 it('wraps the content in a full document when asked', function () {
@@ -190,9 +189,9 @@ it('wraps the content in a full document when asked', function () {
 it('converts a whole editor document back and forth', function () {
     $once = roundTrip(sunEditorFixture());
 
-    expect($once)
+    expect(markup($once))
         ->toContain('<h1>Квартальный отчёт</h1>')
-        ->toContain('<table class="se-table-size-100"')
+        ->toContain('<table class="se-table-size-100 se-table-layout-fixed"')
         ->toContain('se-image-container')
         ->toContain('<li')
         ->toContain('href="#table"');
@@ -203,5 +202,5 @@ it('converts a whole editor document back and forth', function () {
 
 it('draws a styled underline on the element that draws the line', function () {
     expect(roundTrip('<p><u style="text-decoration-style: double">twice</u></p>'))
-        ->toBe('<p><u style="text-decoration-style: double;">twice</u></p>');
+        ->toEndWith('"><u style="text-decoration-style: double;">twice</u></p>');
 });

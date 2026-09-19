@@ -103,12 +103,6 @@ final class WriterContext
         return $this->resolver->resolve($element, $parent);
     }
 
-    /** Whether a value equals the document's own default and the editor's default should be used instead. */
-    public function adoptsEditorDefault(mixed $value, mixed $documentDefault): bool
-    {
-        return ! $this->plain && ! $this->options->keepDocumentDefaults && $value === $documentDefault;
-    }
-
     public function id(string $name): string
     {
         return $this->options->idPrefix . $name;

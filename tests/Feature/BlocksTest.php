@@ -65,15 +65,17 @@ it('maps text-indent to first-line and hanging indentation', function () {
         ->and(Docx::attr($docx->first('w:pPr/w:ind', $docx->paragraph('hanging')), 'hanging'))->toBe('360');
 });
 
-it('maps line-height', function (string $css, string $line, string $rule) {
-    $spacing = docx("<p style=\"line-height: {$css}\">lh</p>")->first('//w:p/w:pPr/w:spacing');
+it('maps line-height to the line Word draws, a multiple of the font\'s own single line', function (string $css, string $line, string $rule) {
+    $spacing = docx("<p style=\"{$css}\">lh</p>")->first('//w:p/w:pPr/w:spacing');
 
     expect(Docx::attr($spacing, 'line'))->toBe($line)
         ->and(Docx::attr($spacing, 'lineRule'))->toBe($rule);
 })->with([
-    'unitless' => ['2', '480', 'auto'],
-    'percent' => ['150%', '360', 'auto'],
-    'length' => ['20pt', '400', 'atLeast'],
+    // Calibri's single line is 1.2207 times its size: 2 × size is 1.64 lines.
+    'unitless' => ['line-height: 2', '393', 'auto'],
+    'percent' => ['line-height: 150%', '295', 'auto'],
+    'a font without metrics' => ['font-family: Fancy; line-height: 2', '480', 'auto'],
+    'length' => ['line-height: 20pt', '400', 'atLeast'],
 ]);
 
 it('maps vertical margins to spacing, which Word collapses the way CSS does', function () {

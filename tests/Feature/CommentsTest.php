@@ -172,11 +172,11 @@ it('writes comment ranges, the comments part and the threads', function () {
 });
 
 it('marks commented text with spans and lists the comments after the body', function () {
-    $html = converter()->fromDocument(reviewedDocument())->toHtml();
+    $html = markup(converter()->fromDocument(reviewedDocument())->toHtml());
 
     expect($html)
-        ->toContain('<p style="margin-bottom: 0;">Plain <span class="se-comment" data-comment="1 3">first </span><span class="se-comment" data-comment="1 3 2">word</span></p>')
-        ->toContain('<p style="margin-bottom: 0;"><span class="se-comment" data-comment="1 3">second</span> after</p>')
+        ->toContain('<p>Plain <span class="se-comment" data-comment="1 3">first </span><span class="se-comment" data-comment="1 3 2">word</span></p>')
+        ->toContain('<p><span class="se-comment" data-comment="1 3">second</span> after</p>')
         ->toContain('<ol class="se-comments">')
         ->toContain('<li id="comment-1" data-comment="1" data-author="Ann Reviewer" data-initials="AR" data-date="2026-05-06T07:08:00Z" data-resolved="true">')
         ->toContain('<li id="comment-3" data-comment="3" data-author="Ann Reviewer" data-initials="AR" data-parent="1" data-resolved="true">');

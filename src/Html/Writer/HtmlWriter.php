@@ -304,7 +304,6 @@ final class HtmlWriter
         bool $isItem,
         ?RunProperties $mark,
     ): array {
-        $defaults = $this->context->document->defaultParagraphProperties;
         $css = [];
 
         $alignment = match ($properties->alignment) {
@@ -321,10 +320,6 @@ final class HtmlWriter
             $css['text-align'] = $properties->bidi ? 'right' : 'left';
         }
 
-        $adoptsSpacing = $this->context->adoptsEditorDefault($properties->spacingBefore, $defaults->spacingBefore)
-            && $this->context->adoptsEditorDefault($properties->spacingAfter, $defaults->spacingAfter)
-            && $this->context->adoptsEditorDefault($properties->lineSpacing, $defaults->lineSpacing);
-
         // Word indents to the text edge; CSS margins sit outside the border
         // and the padding the border's spacing becomes.
         $frame = [];
@@ -334,47 +329,22 @@ final class HtmlWriter
             $frame[$side] = $border === null ? 0 : Length::pointsToTwips($border->space + $border->size / 8);
         }
 
-        $lengths = [
-            'margin-left' => $properties->indentLeft - $indentBase - $frame['left'],
-            'margin-right' => $properties->indentRight - $frame['right'],
-        ];
-
-        if (! $adoptsSpacing) {
-            $lengths['margin-top'] = $top;
-            $lengths['margin-bottom'] = $bottom;
-        }
-
-        if ($this->context->plain) {
-            // Any editor's CSS may move a block, so every edge is spelled out.
-            $css += $this->blockFont($properties, $editor);
-            $css['margin'] = implode(' ', array_map(
-                fn(int $twips): string => $this->context->css->twips($twips),
-                [$top, $lengths['margin-right'], $bottom, $lengths['margin-left']],
-            ));
-            $lengths = [];
-        }
+        // Any editor's CSS may move a block, so every edge is spelled out.
+        $css += $this->blockFont($properties, $editor);
+        $css['margin'] = implode(' ', array_map(
+            fn(int $twips): string => $this->context->css->twips($twips),
+            [$top, $properties->indentRight - $frame['right'], $bottom, $properties->indentLeft - $indentBase - $frame['left']],
+        ));
 
         if (! $isItem) {
-            $lengths['text-indent'] = $properties->firstLine;
-        }
+            $indent = $this->context->css->length($properties->firstLine, $editor->textIndentPt);
 
-        foreach ($lengths as $property => $twips) {
-            $value = $this->context->css->length($twips, $property === 'text-indent' ? $editor->textIndentPt : $editor->lengthPt($property));
-
-            if ($value !== null) {
-                $css[$property] = $value;
+            if ($indent !== null) {
+                $css['text-indent'] = $indent;
             }
         }
 
-        if ($this->context->plain) {
-            $css['line-height'] = $this->plainLineHeight($properties->lineSpacing ?? 240, $properties->lineRule ?? 'auto', $this->blockFamily($properties));
-        } elseif ($properties->lineSpacing !== null && ! $adoptsSpacing) {
-            $lineHeight = $this->lineHeight($properties->lineSpacing, $properties->lineRule ?? 'auto', $editor);
-
-            if ($lineHeight !== null) {
-                $css['line-height'] = $lineHeight;
-            }
-        }
+        $css['line-height'] = $this->lineHeight($properties->lineSpacing ?? 240, $properties->lineRule ?? 'auto', $this->blockFamily($properties));
 
         $background = $editor->backgroundColor();
 
@@ -403,11 +373,11 @@ final class HtmlWriter
         }
 
         // Word's "keep with next" and "keep lines together" decide where its pages break.
-        if ($this->context->plain && $properties->keepNext) {
+        if ($properties->keepNext) {
             $css['break-after'] = 'avoid';
         }
 
-        if ($this->context->plain && $properties->keepLines) {
+        if ($properties->keepLines) {
             $css['break-inside'] = 'avoid';
         }
 
@@ -415,13 +385,10 @@ final class HtmlWriter
             $css['white-space'] = 'pre-wrap';
 
             // Word's default tab stops, rather than eight spaces.
-            if ($this->context->plain) {
-                $css['tab-size'] = $this->context->css->twips(self::WORD_TAB_STOP);
-            }
+            $css['tab-size'] = $this->context->css->twips(self::WORD_TAB_STOP);
         }
 
-        if ($mark?->size !== null && abs($mark->size / 2 - $editor->fontSizePt) > 0.01
-            && ! $this->context->adoptsEditorDefault($mark->size, $this->context->document->defaultRunProperties->size)) {
+        if ($mark?->size !== null && abs($mark->size / 2 - $editor->fontSizePt) > 0.01) {
             $css['font-size'] = $this->context->css->points($mark->size / 2);
         }
 
@@ -447,30 +414,13 @@ final class HtmlWriter
             'color' => CssFormatter::color($mark->color ?? $defaults->color ?? ltrim($options->textColor, '#')),
         ];
 
-        // Headings are bold in a browser, and seldom are in Word.
-        if (($mark->bold ?? false) !== $editor->bold) {
-            $css['font-weight'] = ($mark->bold ?? false) ? 'bold' : 'normal';
+        // Headings are bold in a browser, and seldom are in Word. Bold text itself
+        // stays in <strong>, which an editor's bold button recognises.
+        if ($editor->bold && ! ($mark->bold ?? false)) {
+            $css['font-weight'] = 'normal';
         }
 
         return $css;
-    }
-
-    /**
-     * @param  string  $rule  ST_LineSpacingRule: auto, atLeast or exact
-     */
-    private function lineHeight(int $lineSpacing, string $rule, ComputedStyle $editor): ?string
-    {
-        if ($rule === 'auto') {
-            $multiple = $lineSpacing / 240;
-            $current = $editor->lineHeight?->multiple;
-
-            return $current !== null && abs($current - $multiple) < 0.005 ? null : CssFormatter::number($multiple);
-        }
-
-        $value = $this->context->css->twips($lineSpacing);
-        $current = $editor->lineHeight?->points;
-
-        return $current !== null && $this->context->css->points($current) === $value ? null : $value;
     }
 
     /** The formatting of a paragraph's mark, which carries its style's font. */
@@ -487,13 +437,13 @@ final class HtmlWriter
     }
 
     /**
-     * Word's line pitch, for plain HTML. Word multiplies the font's own single
+     * Word's line pitch. Word multiplies the font's own single
      * line, CSS the font size, so a multiple is scaled by the font's metrics;
      * a font without them keeps `normal` for single spacing.
      *
      * @param  string  $rule  ST_LineSpacingRule: auto, atLeast or exact
      */
-    private function plainLineHeight(int $lineSpacing, string $rule, string $family): string
+    private function lineHeight(int $lineSpacing, string $rule, string $family): string
     {
         if ($rule !== 'auto') {
             return $this->context->css->twips($lineSpacing);
@@ -560,7 +510,13 @@ final class HtmlWriter
 
         [$width, $height] = InlineWriter::pixelSize($image);
         $figure = $this->context->element('figure', $container);
-        $figure->setAttribute('style', "margin: auto; width: {$width}px;");
+        // The figure sits where Word puts the picture; SunEditor keeps its margin.
+        $margin = match ($float) {
+            'center' => 'auto',
+            'right' => '0 0 0 auto',
+            default => '0',
+        };
+        $figure->setAttribute('style', "margin: {$margin}; width: {$width}px;");
 
         $element = $this->inlines->imageElement($image, $figure);
 
@@ -669,24 +625,12 @@ final class HtmlWriter
         $style = $this->context->style($list, $hostStyle, function (ComputedStyle $editor) use ($marker, $padding): array {
             $css = [];
 
-            if ($marker !== null && ($marker !== $editor->listStyleType || $this->context->plain)) {
+            if ($marker !== null) {
                 $css['list-style-type'] = $marker;
             }
 
-            if ($this->context->plain) {
-                return $css + ['margin' => '0', 'padding' => '0 0 0 ' . $this->context->css->twips($padding)];
-            }
-
             // The items carry Word's spacing themselves; the list box adds none.
-            foreach (['margin-top' => 0, 'margin-bottom' => 0, 'padding-left' => $padding] as $property => $twips) {
-                $value = $this->context->css->length($twips, $editor->lengthPt($property));
-
-                if ($value !== null) {
-                    $css[$property] = $value;
-                }
-            }
-
-            return $css;
+            return $css + ['margin' => '0', 'padding' => '0 0 0 ' . $this->context->css->twips($padding)];
         });
 
         $this->lists->open(new ListFrame($level, $tag, $marker, $numId, $start, $indent, $list, $style));
@@ -722,7 +666,7 @@ final class HtmlWriter
             }
 
             $style = $this->context->style($list, $parentStyle, fn(): array => ['list-style-type' => $marker]
-                + ($this->context->plain ? ['margin' => '0', 'padding' => '0 0 0 ' . $this->context->css->twips(360)] : []));
+                + ['margin' => '0', 'padding' => '0 0 0 ' . $this->context->css->twips(360)]);
             $expected = 1;
 
             foreach ($notes as $note) {
@@ -747,6 +691,7 @@ final class HtmlWriter
                 if ($this->context->plain) {
                     $backlink->setAttribute('role', 'doc-backlink');
                 }
+
                 $backlink->append(" \u{21A9}");
             }
         }

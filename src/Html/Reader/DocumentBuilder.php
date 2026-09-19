@@ -130,8 +130,6 @@ final class DocumentBuilder
         private readonly PropertyMapper $mapper,
         private readonly ImageFactory $images,
         private readonly Options $options,
-        /** Whether the HTML is plain, the base of every profile but SunEditor's; see WriterContext. */
-        private readonly bool $plain = false,
     ) {
         $this->numbering = new NumberingRegistry();
         $this->bookmarks = new BookmarkRegistry();
@@ -221,7 +219,7 @@ final class DocumentBuilder
 
         if ($furniture !== null && ! $this->hasHeaderFooter($furniture['kind'], $furniture['type'])) {
             $this->flushParagraph($flow, $sink);
-            $this->headersFooters[] = new HeaderFooter($furniture['kind'], $furniture['type'], $this->renderApart($node, $style));
+            $this->headersFooters[] = new HeaderFooter($furniture['kind'], $furniture['type'], $this->renderLine($node, $style));
             $this->lastFurniture = $node;
 
             return;
@@ -236,7 +234,7 @@ final class DocumentBuilder
             $this->flushParagraph($flow, $sink);
             $this->lastFurniture = $node;
             $last = array_pop($this->headersFooters);
-            $this->headersFooters[] = new HeaderFooter($furniture['kind'], $furniture['type'], [...$last->blocks ?? [], ...$this->renderApart($node, $style)]);
+            $this->headersFooters[] = new HeaderFooter($furniture['kind'], $furniture['type'], [...$last->blocks ?? [], ...$this->renderLine($node, $style)]);
 
             return;
         }
@@ -597,11 +595,8 @@ final class DocumentBuilder
         }
 
         if ($properties === null) {
-            // Plain HTML writes Word's line pitch in the font's own terms; see HtmlWriter.
-            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing(
-                $style->lineHeight,
-                ($this->plain ? FontMetrics::singleLine($style->fontFamily) : null) ?? 1.0,
-            );
+            // A multiple of the font size is Word's multiple of the font's own single line; see HtmlWriter.
+            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0);
 
             $properties = new ParagraphProperties(
                 styleId: $context->styleId,
@@ -718,8 +713,11 @@ final class DocumentBuilder
 
             $width = preg_match('/(?:^|;)\s*width\s*:\s*([^;]+)/i', (string) $figure->getAttribute('style'), $match) === 1 ? trim($match[1]) : null;
 
-            if ($width !== null && preg_match('/(?:^|;)\s*width\s*:/i', (string) $table->getAttribute('style')) !== 1) {
-                $table->setAttribute('style', rtrim("width: {$width}; " . $table->getAttribute('style'), '; ') . ';');
+            // The figure has the width; a table filling it has the same.
+            $style = (string) preg_replace('/(?:^|;)\s*width\s*:\s*100%\s*(?=;|$)/i', '', (string) $table->getAttribute('style'));
+
+            if ($width !== null && preg_match('/(?:^|;)\s*width\s*:/i', $style) !== 1) {
+                $table->setAttribute('style', rtrim("width: {$width}; " . ltrim($style, '; '), '; ') . ';');
             }
 
             $figure->replaceWith($table);
@@ -890,8 +888,24 @@ final class DocumentBuilder
     }
 
     /**
-     * Content kept apart from the body — a header, a footer, a comment — laid
-     * out on the page's own text column.
+     * A header or footer line: SunEditor's div is the line itself, with its own
+     * margins; the 1.x div around paragraphs has none.
+     *
+     * @return list<Block>
+     */
+    private function renderLine(Element $element, ComputedStyle $style): array
+    {
+        $sink = new BlockSink();
+        $flow = new InlineFlow($style, new BlockContext($this->pageContentWidth));
+        $this->renderBlock($element, $style, $flow, $sink);
+        $this->flushParagraph($flow, $sink);
+
+        return BlockNormalizer::normalize($sink->blocks);
+    }
+
+    /**
+     * Content kept apart from the body — a comment — laid out on the page's
+     * own text column.
      *
      * @return list<Block>
      */

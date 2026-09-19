@@ -38,37 +38,37 @@ final readonly class TableWriter
      */
     public function write(Table $table, Element $parent, ComputedStyle $parentStyle, int $availableWidth, int $marginTop = 0, int $marginBottom = 0): ComputedStyle
     {
-        $element = $this->context->element('table', $parent);
         $percent = $availableWidth > 0 ? $table->properties->width / $availableWidth * 100 : 100;
         $fullWidth = $percent >= 99.5;
-        $plain = $this->context->plain;
+        $figure = null;
 
-        if (! $plain) {
-            $element->setAttribute('class', $fullWidth ? 'se-table-size-100' : 'se-table-size-auto');
+        // CKEditor keeps a table in a figure of its own, which carries the width
+        // and would otherwise add its content stylesheet's margins.
+        if ($this->context->editor === Editor::CKEditor) {
+            $figure = $this->context->element('figure', $parent);
+            $figure->setAttribute('class', 'table');
+            $parent = $figure;
         }
 
-        $tableStyle = $this->context->style($element, $parentStyle, function (ComputedStyle $baseline) use ($table, $fullWidth, $percent, $marginTop, $marginBottom, $plain): array {
-            $css = [];
+        $element = $this->context->element('table', $parent);
 
-            if (! $fullWidth || $plain) {
-                $css['width'] = CssFormatter::number(min(100, $percent)) . '%';
-            }
+        if (! $this->context->plain) {
+            // SunEditor's content stylesheet sizes tables automatically unless told
+            // otherwise, and forces any table classed `se-table-size-auto` to shrink.
+            $element->setAttribute('class', ($fullWidth ? 'se-table-size-100 ' : '') . 'se-table-layout-fixed');
+        }
 
-            if ($plain) {
-                // Word draws one line between neighbouring cells, at the widths it was given,
-                // and no frame around the table but the cells' own.
-                $css['border'] = 'none';
-                $css['border-collapse'] = 'collapse';
-                $css['table-layout'] = 'fixed';
-            }
-
-            foreach (['margin-top' => $marginTop, 'margin-bottom' => $marginBottom] as $property => $twips) {
-                $value = $plain ? $this->context->css->twips($twips) : $this->context->css->length($twips, $baseline->lengthPt($property));
-
-                if ($value !== null) {
-                    $css[$property] = $value;
-                }
-            }
+        $tableStyle = $this->context->style($element, $parentStyle, function () use ($table, $percent, $marginTop, $marginBottom): array {
+            // Word draws one line between neighbouring cells, at the widths it was given,
+            // and no frame around the table but the cells' own.
+            $css = [
+                'width' => CssFormatter::number(min(100, $percent)) . '%',
+                'border' => 'none',
+                'border-collapse' => 'collapse',
+                'table-layout' => 'fixed',
+                'margin-top' => $this->context->css->twips($marginTop),
+                'margin-bottom' => $this->context->css->twips($marginBottom),
+            ];
 
             if ($table->properties->alignment === 'center') {
                 $css['margin-left'] = 'auto';
@@ -90,6 +90,14 @@ final readonly class TableWriter
             return $css;
         });
 
+        if ($figure !== null) {
+            $figure->setAttribute('style', CssFormatter::declarations([
+                'width' => $tableStyle->value('width') ?? '100%',
+                'margin' => implode(' ', ['0', $tableStyle->value('margin-right') ?? '0', '0', $tableStyle->value('margin-left') ?? '0']),
+            ]));
+            $element->setAttribute('style', (string) preg_replace('/^width: [^;]+;/', 'width: 100%;', (string) $element->getAttribute('style')));
+        }
+
         $total = max(1, array_sum($table->gridColumns));
         $colgroup = $this->context->element('colgroup', $element);
 
@@ -104,14 +112,21 @@ final readonly class TableWriter
         foreach ($table->rows as $r => $row) {
             $isHead = $row->isHeader && ($sectionIsHead ?? true);
 
+            // SunEditor's content stylesheet rules rows and the header off; Word draws only cells.
+            $rules = $this->context->plain ? [] : ['border' => 'none'];
+
             if ($section === null || $sectionIsHead !== $isHead) {
                 $section = $this->context->element($isHead ? 'thead' : 'tbody', $element);
                 $sectionIsHead = $isHead;
+
+                if ($isHead && $rules !== []) {
+                    $section->setAttribute('style', CssFormatter::declarations($rules));
+                }
             }
 
             $sectionStyle = $this->context->resolver->resolve($section, $tableStyle);
             $tr = $this->context->element('tr', $section);
-            $rowStyle = $this->context->style($tr, $sectionStyle, fn(): array => $row->minHeight === null ? [] : ['height' => $this->context->css->twips($row->minHeight)]);
+            $rowStyle = $this->context->style($tr, $sectionStyle, fn(): array => $rules + ($row->minHeight === null ? [] : ['height' => $this->context->css->twips($row->minHeight)]));
 
             $column = 0;
 
@@ -149,8 +164,8 @@ final readonly class TableWriter
         }
 
         $style = $this->context->style($element, $rowStyle, function (ComputedStyle $baseline) use ($properties): array {
-            // Editors draw their own cell borders, which plain HTML overrides.
-            $css = $this->context->css->sides($properties->borders, $baseline, $this->context->plain);
+            // Editors draw their own cell borders, which Word's override.
+            $css = $this->context->css->sides($properties->borders, $baseline, true);
 
             $background = $baseline->backgroundColor();
 
@@ -163,29 +178,11 @@ final readonly class TableWriter
                 'bottom' => 'bottom',
                 default => 'top',
             };
-            $baselineAlign = $baseline->value('vertical-align') ?? 'baseline';
-
-            if (($align !== $baselineAlign || $this->context->plain) && ! ($this->adoptsWordDefaults() && $properties->verticalAlign === null)) {
-                $css['vertical-align'] = $align;
-            }
+            $css['vertical-align'] = $align;
 
             $margins = $properties->margins === null ? self::WORD_CELL_MARGINS
                 : [$properties->margins->top, $properties->margins->right, $properties->margins->bottom, $properties->margins->left];
-
-            if (! ($this->adoptsWordDefaults() && $margins === self::WORD_CELL_MARGINS)) {
-                $paddings = array_map(
-                    fn(int $twips): string => $this->context->css->twips($twips),
-                    $margins,
-                );
-                $baselinePaddings = array_map(
-                    fn(string $side): string => $this->context->css->points($baseline->lengthPt("padding-{$side}") ?? 0),
-                    ['top', 'right', 'bottom', 'left'],
-                );
-
-                if ($paddings !== $baselinePaddings || $this->context->plain) {
-                    $css['padding'] = implode(' ', $paddings);
-                }
-            }
+            $css['padding'] = implode(' ', array_map(fn(int $twips): string => $this->context->css->twips($twips), $margins));
 
             if ($properties->noWrap) {
                 $css['white-space'] = 'nowrap';
@@ -199,11 +196,6 @@ final readonly class TableWriter
         ($this->writeBlocks)($cell->blocks, $element, $style, $this->context->plain ? 'p' : 'div', $contentWidth);
 
         return $element;
-    }
-
-    private function adoptsWordDefaults(): bool
-    {
-        return ! $this->context->plain && ! $this->context->options->keepDocumentDefaults;
     }
 
     /**

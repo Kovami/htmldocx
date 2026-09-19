@@ -175,7 +175,10 @@ function countFeatures(html) {
 /** The editor's HTML as a page shows it: the library's head, the editor's content stylesheet and class. */
 function shown(editor, html, output) {
     const { content } = EDITORS[editor];
-    const link = content ? `<link rel="stylesheet" href="${pathToFileURL(join(here, content.css)).href}">\n` : '';
+    // The container's padding frames the editor, not the document: the page margins do that.
+    const link = content
+        ? `<link rel="stylesheet" href="${pathToFileURL(join(here, content.css)).href}">\n<style>body.${content.className} { padding: 0; margin: 0; }</style>\n`
+        : '';
     const open = content ? `<body class="${content.className}">` : '<body>';
 
     return html

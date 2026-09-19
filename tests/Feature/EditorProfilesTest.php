@@ -109,3 +109,10 @@ it('recognises a note\'s back link whose mark lost its id', function () {
         ->toContain('<a href="#footnote-ref-1" role="doc-backlink"> ↩</a></p></li>')
         ->not->toContain('footnote_ref');
 });
+
+it('writes a CKEditor table in its figure, which carries the width and no margins', function () {
+    $html = profileHtml(Editor::CKEditor, '<table style="width: 50%; margin-left: auto; margin-right: auto"><tr><td>a</td></tr></table>');
+
+    expect($html)->toStartWith('<figure class="table" style="width: 50%; margin: 0 auto 0 auto;"><table style="width: 100%; ')
+        ->and(profileHtml(Editor::CKEditor, $html))->toBe($html);
+});

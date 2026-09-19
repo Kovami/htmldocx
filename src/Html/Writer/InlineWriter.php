@@ -187,22 +187,18 @@ final readonly class InlineWriter
      */
     private function spec(RunProperties $run, ComputedStyle $parent): array
     {
-        $defaults = $this->context->document->defaultRunProperties;
         $css = [];
         $tags = [];
 
-        if ($run->fontFamily !== null && strcasecmp($run->fontFamily, $parent->fontFamily) !== 0
-            && ! $this->context->adoptsEditorDefault($run->fontFamily, $defaults->fontFamily)) {
-            $css['font-family'] = $this->context->plain ? CssFormatter::fontStack($run->fontFamily) : CssFormatter::fontFamily($run->fontFamily);
+        if ($run->fontFamily !== null && strcasecmp($run->fontFamily, $parent->fontFamily) !== 0) {
+            $css['font-family'] = CssFormatter::fontStack($run->fontFamily);
         }
 
-        if ($run->size !== null && abs($run->size / 2 - $parent->fontSizePt) > 0.01
-            && ! $this->context->adoptsEditorDefault($run->size, $defaults->size)) {
+        if ($run->size !== null && abs($run->size / 2 - $parent->fontSizePt) > 0.01) {
             $css['font-size'] = $this->context->css->points($run->size / 2);
         }
 
-        if ($run->color !== null && strcasecmp($run->color, $parent->color) !== 0
-            && ! $this->context->adoptsEditorDefault($run->color, $defaults->color)) {
+        if ($run->color !== null && strcasecmp($run->color, $parent->color) !== 0) {
             $css['color'] = CssFormatter::color($run->color);
         }
 
