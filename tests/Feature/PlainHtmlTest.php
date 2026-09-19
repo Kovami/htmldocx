@@ -23,7 +23,7 @@ it('spells out the font, colour, margins and line height of every block', functi
     ));
 
     expect($html)->toBe(
-        '<p style="font-family: &quot;Times New Roman&quot;, &quot;Liberation Serif&quot;, Tinos, serif; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322;">'
+        '<p style="font-family: &quot;Times New Roman&quot;, &quot;Liberation Serif&quot;, Tinos, serif; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322; position: relative; top: -1.15px;">'
         . '<span style="font-family: Aptos, sans-serif; font-size: 16px;">Body</span></p>',
     );
 });
@@ -65,6 +65,17 @@ it('narrows the spaces of justified text, as Word squeezes them to fit a word', 
 
     expect($html)->toStartWith('<p style="text-align: justify; word-spacing: -0.065em;')
         ->and(substr_count($html, 'word-spacing'))->toBe(1);
+});
+
+it('raises multi-spaced text to where Word sets it, once for nested items', function () {
+    // Word adds the extra space of a multiple below each line, CSS half above it.
+    $html = HtmlDocx::plain(testOptions())
+        ->fromHtml('<ol><li style="line-height: 2">a<ol><li style="line-height: 2">b</li><li style="line-height: 3">c</li></ol></li></ol>')
+        ->toHtml();
+
+    expect($html)->toContain('line-height: 1.999; position: relative; top: -5.71px;">a')
+        ->and($html)->toContain('line-height: 1.999;">b')
+        ->and($html)->toContain('line-height: 3.001; position: relative; top: -7.35px;">c');
 });
 
 it('draws table cells itself, over whatever borders an editor gives them', function () {

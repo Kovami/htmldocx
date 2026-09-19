@@ -29,7 +29,7 @@ it('paints a table styled from Word\'s gallery', function () {
     expect($html)
         // The header row: white text on the accent colour the style names.
         ->toContain('<th style="border: 0.67px solid #8eaadb; background-color: #4472c4;')
-        ->toContain('color: #ffffff; margin: 0 0 10.67px 0; line-height: 1.317;">Показатель</div>')
+        ->toContain('color: #ffffff; margin: 0 0 10.67px 0; line-height: 1.317; position: relative; top: -0.71px;">Показатель</div>')
         // The first body row is banded, the one after it is not.
         ->toContain('background-color: #dae3f3;')
         // The first column is bold, the last row has the style's double rule.

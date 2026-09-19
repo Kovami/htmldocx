@@ -69,6 +69,14 @@ final class HtmlWriter
     private readonly TableWriter $tables;
 
     /**
+     * How far each block's text is raised to sit where Word sets it, in
+     * points (see leadingAbove()); a nested block is raised with its parent.
+     *
+     * @var \WeakMap<Element, float>
+     */
+    private \WeakMap $raised;
+
+    /**
      * @param  Editor|null  $editor  the editor the HTML is written for; null for plain HTML
      * @param  Closure(string): void|null  $warn  receives a message for every piece of content that could not be converted
      */
@@ -89,6 +97,7 @@ final class HtmlWriter
         $this->inlines = new InlineWriter($this->context);
         $this->tables = new TableWriter($this->context, $this->writeBlocks(...));
         $this->lists = new ListStack();
+        $this->raised = new \WeakMap();
     }
 
     public function toHtml(): string
@@ -231,7 +240,8 @@ final class HtmlWriter
             $style = $this->context->style(
                 $element,
                 $baseline ?? $parentStyle,
-                fn(ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark),
+                fn(ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark)
+                    + $this->raise($element, $this->leadingAbove($properties, $mark)),
             );
 
             // A bookmark at the start of a paragraph is the paragraph's id: editors drop empty anchors.
@@ -465,6 +475,51 @@ final class HtmlWriter
 
         // Three decimals, so the multiple Word stored comes back to the twip.
         return rtrim(rtrim(number_format($lineSpacing / 240 * $single, 3, '.', ''), '0'), '.');
+    }
+
+    /**
+     * Raises a block's text by `$points`, less what its ancestors already
+     * raise it by: `top` of a relatively positioned block moves what it holds.
+     *
+     * @return array<string, string>
+     */
+    private function raise(Element $element, float $points): array
+    {
+        $inherited = 0.0;
+
+        for ($node = $element->parentElement; $node !== null; $node = $node->parentElement) {
+            if (isset($this->raised[$node])) {
+                $inherited = $this->raised[$node];
+
+                break;
+            }
+        }
+
+        $this->raised[$element] = $points;
+        $top = $this->context->css->points($inherited - $points);
+
+        return $top === '0' ? [] : ['position' => 'relative', 'top' => $top];
+    }
+
+    /**
+     * How much lower than Word a browser sets the text of a paragraph with
+     * more than single spacing, in points: Word adds the extra space of a
+     * multiple below each line, CSS splits it above and below.
+     */
+    private function leadingAbove(ParagraphProperties $properties, ?RunProperties $mark): float
+    {
+        $single = FontMetrics::singleLine($this->blockFamily($properties));
+        $spacing = $properties->lineSpacing ?? 240;
+
+        if ($single === null || ($properties->lineRule ?? 'auto') !== 'auto' || $spacing <= 240) {
+            return 0;
+        }
+
+        // ponytail: measured from the paragraph's own font; Word takes the tallest font on each line.
+        $size = $mark->size ?? $this->blockRun($properties)->size ?? $this->context->document->defaultRunProperties->size;
+        $points = $size === null ? $this->context->options->fontSizePt : $size / 2;
+
+        return ($spacing / 240 - 1) * $single * $points / 2;
     }
 
     /**

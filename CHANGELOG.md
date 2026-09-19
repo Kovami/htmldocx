@@ -83,6 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   squeezes the spaces of a justified line to fit one more word, a browser
   only stretches them, so long justified text broke its lines (and pages)
   later than Word.
+- Text with more than single line spacing is raised (`position: relative`
+  with a negative `top`) to where Word sets it: Word adds the extra space of
+  a multiple below each line, CSS half above and half below.
 - `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
   defaults: a browser's for plain HTML, SunEditor's for an editor profile.
 
