@@ -159,5 +159,15 @@ final class DefaultStylesheet
         td, th { border: 1px solid #bfbfbf; padding: 0.4em; vertical-align: middle; }
         th { background-color: #f2f2f2; }
         blockquote { margin-left: 0; margin-right: 0; padding-left: 1.5em; padding-right: 1.5em; font-style: italic; border-left: 5px solid #cccccc; }
+        .image { display: table; clear: both; text-align: center; margin: 0.9em auto; }
+        .image img { display: block; margin: 0 auto; max-width: 100%; }
+        .image_resized { max-width: 100%; display: block; }
+        .image_resized img { width: 100%; }
+        .image-style-align-left { float: left; margin-right: 1.5em; }
+        .image-style-align-right { float: right; margin-left: 1.5em; }
+        .image-style-side { float: right; margin-left: 1.5em; max-width: 50%; }
+        .image-style-align-center { margin-left: auto; margin-right: auto; }
+        .image-style-block-align-left { margin-left: 0; margin-right: auto; }
+        .image-style-block-align-right { margin-left: auto; margin-right: 0; }
         CSS;
 }

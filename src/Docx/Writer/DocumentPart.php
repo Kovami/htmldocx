@@ -362,11 +362,30 @@ final class DocumentPart
         $relationshipId = $this->media->register($image->image, $this->relationships);
         $name = "Picture {$id}";
 
-        $xml->open('w:drawing')
-            ->open('wp:inline', ['distT' => 0, 'distB' => 0, 'distL' => 0, 'distR' => 0])
-            ->leaf('wp:extent', ['cx' => $image->width, 'cy' => $image->height])
-            ->leaf('wp:effectExtent', ['l' => 0, 't' => 0, 'r' => 0, 'b' => 0])
-            ->leaf('wp:docPr', ['id' => $id, 'name' => $name, 'descr' => $image->description === '' ? null : $image->description])
+        $xml->open('w:drawing');
+
+        if ($image->float === null) {
+            $xml->open('wp:inline', ['distT' => 0, 'distB' => 0, 'distL' => 0, 'distR' => 0]);
+        } else {
+            // Floated: anchored to its paragraph at one side of the column, the
+            // text wrapping around it an eighth of an inch away.
+            $xml->open('wp:anchor', [
+                'distT' => 0, 'distB' => 0, 'distL' => 114300, 'distR' => 114300, 'simplePos' => 0, 'relativeHeight' => $id,
+                'behindDoc' => 0, 'locked' => 0, 'layoutInCell' => 1, 'allowOverlap' => 1,
+            ])
+                ->leaf('wp:simplePos', ['x' => 0, 'y' => 0])
+                ->open('wp:positionH', ['relativeFrom' => 'column'])->text('wp:align', $image->float)->close()
+                ->open('wp:positionV', ['relativeFrom' => 'paragraph'])->text('wp:posOffset', '0')->close();
+        }
+
+        $xml->leaf('wp:extent', ['cx' => $image->width, 'cy' => $image->height])
+            ->leaf('wp:effectExtent', ['l' => 0, 't' => 0, 'r' => 0, 'b' => 0]);
+
+        if ($image->float !== null) {
+            $xml->leaf('wp:wrapSquare', ['wrapText' => 'bothSides']);
+        }
+
+        $xml->leaf('wp:docPr', ['id' => $id, 'name' => $name, 'descr' => $image->description === '' ? null : $image->description])
             ->open('wp:cNvGraphicFramePr')->leaf('a:graphicFrameLocks', ['noChangeAspect' => 1])->close()
             ->open('a:graphic')
             ->open('a:graphicData', ['uri' => Namespaces::PIC])

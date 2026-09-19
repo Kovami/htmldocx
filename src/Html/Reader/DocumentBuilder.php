@@ -26,6 +26,7 @@ use Kovami\HtmlDocx\Model\DocumentMetadata;
 use Kovami\HtmlDocx\Model\Field;
 use Kovami\HtmlDocx\Model\Formula;
 use Kovami\HtmlDocx\Model\HeaderFooter;
+use Kovami\HtmlDocx\Model\ImageRun;
 use Kovami\HtmlDocx\Model\Inline;
 use Kovami\HtmlDocx\Model\Note;
 use Kovami\HtmlDocx\Model\NoteReference;
@@ -360,8 +361,18 @@ final class DocumentBuilder
         $horizontal = self::fitIndents($horizontal, $parent->availableWidth);
         $tag = $element->localName;
 
+        // A box of its own width holds its pictures and tables to it.
+        $available = $parent->availableWidth - $horizontal['left'] - $horizontal['right'];
+        foreach (['width', 'max-width'] as $property) {
+            $width = $style->lengthPt($property, $percentBase);
+
+            if ($width !== null && $width > 0) {
+                $available = min($available, Length::pointsToTwips($width));
+            }
+        }
+
         $context = $parent->with([
-            'availableWidth' => max(Length::TWIPS_PER_POINT, $parent->availableWidth - $horizontal['left'] - $horizontal['right']),
+            'availableWidth' => max(Length::TWIPS_PER_POINT, $available),
             'indentLeft' => $parent->indentLeft + $horizontal['left'],
             'indentRight' => $parent->indentRight + $horizontal['right'],
             'borders' => $parent->borders->mergedWith(new BorderSet($edges['top'], $edges['left'], $edges['bottom'], $edges['right'])),
@@ -539,7 +550,20 @@ final class DocumentBuilder
         $image = $this->images->create($element, $style, $flow->context->availableWidth, $this->mapper->run($style));
 
         if ($image !== null) {
+            // Text wraps around a floated picture, or around the figure holding it.
+            $float = self::float($style) ?? self::float($flow->style);
+
+            if ($float !== null) {
+                $image = new ImageRun(...[...get_object_vars($image), 'float' => $float]);
+            }
+
             $flow->buffer()->appendImage($image, $flow->link);
+
+            // A picture in a figure set apart by auto margins, or set apart
+            // itself, sits where they put it: Word aligns its paragraph instead.
+            if ($float === null) {
+                $flow->buffer()->alignment ??= self::autoMarginAlignment($flow->style) ?? ($style->isBlockLevel() ? self::autoMarginAlignment($style) : null);
+            }
 
             return;
         }
@@ -593,8 +617,31 @@ final class DocumentBuilder
         $inlines = $buffer?->finish();
 
         if ($inlines !== null) {
-            $sink->add($this->createParagraph($flow, $inlines));
+            $paragraph = $this->createParagraph($flow, $inlines);
+
+            if ($buffer->alignment !== null) {
+                $paragraph->properties->alignment = $buffer->alignment;
+            }
+
+            $sink->add($paragraph);
         }
+    }
+
+    private static function float(ComputedStyle $style): ?string
+    {
+        $float = strtolower(trim((string) $style->value('float')));
+
+        return in_array($float, ['left', 'right'], true) ? $float : null;
+    }
+
+    /** Where auto margins put a box: centred between two, to the right of one on the left. */
+    private static function autoMarginAlignment(ComputedStyle $style): ?string
+    {
+        return match (true) {
+            $style->isAuto('margin-left') && $style->isAuto('margin-right') => 'center',
+            $style->isAuto('margin-left') => 'right',
+            default => null,
+        };
     }
 
     /**

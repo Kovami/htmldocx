@@ -30,6 +30,9 @@ final class InlineBuffer
     /** @var list<array{run: TextRun|BreakRun|TabRun|ImageRun|Formula|NoteReference|Field, link: LinkTarget|null, collapsible: bool}> */
     private array $items = [];
 
+    /** The paragraph's alignment when its content sets it (a picture between auto margins), else null. */
+    public ?string $alignment = null;
+
     /** @var array<int, list<CommentStart|CommentEnd>> comment boundaries, by the index of the item they come before */
     private array $boundaries = [];
 

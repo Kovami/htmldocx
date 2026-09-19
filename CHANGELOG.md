@@ -100,6 +100,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A floated picture keeps text wrapping around it on the way to Word: the
+  HTML reader reads `float` (on the `img` or its figure) and the DOCX writer
+  anchors the picture to that side of the column with square wrapping. It
+  used to become an inline picture, even in a DOCX → HTML → DOCX round trip.
+- A picture set apart by auto margins (TinyMCE's centred image, CKEditor's
+  figures) aligns its paragraph the same way, and a box with its own `width`
+  or `max-width` holds its pictures and tables to it. The CKEditor profile
+  reads CKEditor's image classes: resized, side, wrapped and block-aligned.
 - Table columns HTML leaves unsized share the table the way a browser shares
   it, by how wide their content is, instead of equally; a table without a
   width is as wide as its content (up to the page) rather than the page.

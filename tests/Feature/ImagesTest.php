@@ -192,3 +192,50 @@ it('keeps fixed padding around embedded players', function () {
     expect(Docx::attr($spacing, 'before'))->toBe('400')
         ->and(Docx::attr($spacing, 'after'))->toBe('400');
 });
+
+/** The first picture of HTML read with a profile, and the paragraph holding it. */
+function pictureOf(string $html, ?Kovami\HtmlDocx\Editor $editor = null): array
+{
+    $converter = $editor === null ? HtmlDocx::plain(testOptions()) : HtmlDocx::for($editor, testOptions());
+    $src = TestImage::pngDataUri(400, 200);
+
+    foreach ($converter->fromHtml(str_replace('SRC', $src, $html))->document()->blocks as $block) {
+        foreach ($block instanceof Kovami\HtmlDocx\Model\Paragraph ? $block->children : [] as $child) {
+            if ($child instanceof Kovami\HtmlDocx\Model\ImageRun) {
+                return [$child, $block->properties, testOptions()->page()->contentWidthTwips() * 635];
+            }
+        }
+    }
+
+    throw new RuntimeException('no picture');
+}
+
+it('lets text wrap around a floated picture, and keeps it floated through Word', function () {
+    [$image] = pictureOf('<p><img src="SRC" width="100" style="float: right">Text beside it.</p>');
+    $html = HtmlDocx::plain(testOptions())->fromDocx(HtmlDocx::plain(testOptions())->fromHtml('<p><img src="' . TestImage::pngDataUri(400, 200) . '" width="100" style="float: left">Text.</p>')->toDocx())->toHtml();
+
+    expect($image->float)->toBe('right')
+        ->and($html)->toContain('float: left;');
+});
+
+it('aligns a picture set apart by auto margins, as TinyMCE centres one', function () {
+    [, $paragraph] = pictureOf('<p><img src="SRC" width="100" style="display: block; margin-left: auto; margin-right: auto"></p>');
+
+    expect($paragraph->alignment)->toBe('center');
+});
+
+it('sizes and places CKEditor\'s pictures by their figure', function (string $classes, string $style, float $share, ?string $float, ?string $alignment) {
+    [$image, $paragraph, $page] = pictureOf("<figure class=\"image {$classes}\" style=\"{$style}\"><img src=\"SRC\"></figure>", Kovami\HtmlDocx\Editor::CKEditor);
+
+    expect($image->width / $page)->toEqualWithDelta($share, 0.01)
+        ->and($image->float)->toBe($float);
+
+    if ($float === null) {
+        expect($paragraph->alignment)->toBe($alignment);
+    }
+})->with([
+    'resized, centred' => ['image_resized', 'width: 25%', 0.25, null, 'center'],
+    'block, aligned right' => ['image-style-block-align-right image_resized', 'width: 30%', 0.30, null, 'right'],
+    'side' => ['image-style-side', '', 0.5, 'right', null],
+    'wrapped on the left' => ['image-style-align-left image_resized', 'width: 40%', 0.40, 'left', null],
+]);
