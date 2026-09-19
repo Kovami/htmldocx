@@ -10,7 +10,8 @@
 //  - survival: every tag, attribute and CSS property (by element) of the
 //    library's HTML is counted before and after; what the editor dropped or
 //    added is listed;
-//  - fidelity: the editor's HTML is printed and compared with Word's PDF, as
+//  - fidelity: the editor's HTML is printed, the way the editor's docs say to
+//    show it (with its content stylesheet), and compared with Word's PDF, as
 //    run.mjs does for the library's own HTML.
 //
 // Usage: npm run editors [-- editor|name ...]
@@ -31,16 +32,26 @@ const profile = process.env.PROFILE ?? null;
 const CATEGORIES = ['blocks', 'runs', 'lists', 'tables', 'notes', 'math', 'images', 'links'];
 mkdirSync(report, { recursive: true });
 
-/** How each editor is put on a page: scripts in order, stylesheets, and the element it takes over. */
+/**
+ * How each editor is put on a page (scripts in order, stylesheets, the
+ * element it takes over) and how its HTML is shown outside it: the content
+ * stylesheet and the class its docs put around saved content.
+ */
 const EDITORS = {
     ckeditor: {
         scripts: ['node_modules/ckeditor5/dist/browser/ckeditor5.umd.js', 'editors/ckeditor.js'],
         styles: ['node_modules/ckeditor5/dist/browser/ckeditor5.css'],
         element: 'div',
+        content: { css: 'node_modules/ckeditor5/dist/browser/ckeditor5-content.css', className: 'ck-content' },
     },
     tinymce: { scripts: ['node_modules/tinymce/tinymce.min.js', 'editors/tinymce.js'], styles: [], element: 'textarea' },
     tiptap: { bundle: 'editors/tiptap.js', styles: [], element: 'div' },
-    suneditor: { bundle: 'editors/suneditor.js', styles: ['node_modules/suneditor/dist/css/suneditor.min.css'], element: 'textarea' },
+    suneditor: {
+        bundle: 'editors/suneditor.js',
+        styles: ['node_modules/suneditor/dist/css/suneditor.min.css'],
+        element: 'textarea',
+        content: { css: 'node_modules/suneditor/src/assets/css/suneditor-contents.css', className: 'sun-editor-editable' },
+    },
 };
 
 const args = process.argv.slice(2);
@@ -89,7 +100,7 @@ for (const [editor, config] of editors.flatMap((editor) => ['default', 'recommen
 
         const reference = join(here, 'reference', `${name}.pdf`);
         const scores = existsSync(reference)
-            ? await measure(browser, html.replace(/<body>[\s\S]*<\/body>/, `<body>\n${output}\n</body>`), geometry, new Uint8Array(readFileSync(reference)), dir, `${name}.printed`)
+            ? await measure(browser, shown(editor, html, output), geometry, new Uint8Array(readFileSync(reference)), dir, `${name}.printed`)
             : null;
 
         const result = { editor: run, name, before, after, pixels: scores?.pixelSimilarity ?? null, errors };
@@ -159,6 +170,17 @@ function countFeatures(html) {
     }
 
     return counts;
+}
+
+/** The editor's HTML as a page shows it: the library's head, the editor's content stylesheet and class. */
+function shown(editor, html, output) {
+    const { content } = EDITORS[editor];
+    const link = content ? `<link rel="stylesheet" href="${pathToFileURL(join(here, content.css)).href}">\n` : '';
+    const open = content ? `<body class="${content.className}">` : '<body>';
+
+    return html
+        .replace('</head>', `${link}</head>`)
+        .replace(/<body[^>]*>[\s\S]*<\/body>/, () => `${open}\n${output}\n</body>`);
 }
 
 function body(html) {

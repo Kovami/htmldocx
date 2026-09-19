@@ -63,7 +63,7 @@ it('draws table cells itself, over whatever borders an editor gives them', funct
         . '<w:tr><w:tc><w:p><w:r><w:t>cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl>',
     ));
 
-    expect($html)->toContain('<table style="width: 100%; border-collapse: collapse; table-layout: fixed;')
+    expect($html)->toContain('<table style="width: 100%; border: none; border-collapse: collapse; table-layout: fixed;')
         ->and($html)->toContain('<td style="border: none; vertical-align: top; padding: 0 7.2px 0 7.2px;">');
 });
 

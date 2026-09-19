@@ -38,8 +38,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which editors keep, and give pictures `width` and `height` attributes as well
   as their style. The TipTap profile keeps a list item's text in a paragraph
   of its own and sizes columns with TipTap's `colwidth`.
-- The HTML reader finds a note list whose section and classes an editor
-  dropped by the ids of its items.
+- The HTML reader understands what editors make of the library's HTML: a note
+  list stripped of its section (found by its items' ids), a note mark stripped
+  of its id, `<p>&nbsp;</p>` as an empty paragraph, and CKEditor's
+  `<figure class="table">`. HTML of the CKEditor profile is read against the
+  table borders CKEditor's content stylesheet draws.
+- In plain HTML and the profiles built on it, a bookmark at the start of a
+  paragraph becomes the paragraph's `id`, which editors keep, and tables say
+  `border: none` so an editor's CSS draws no frame Word does not.
+- The SunEditor profile writes each line of a page header or footer as a
+  `div.se-header` (or `se-footer`) of its own, since SunEditor keeps a classed
+  div only as a line of text; the reader joins consecutive lines into one.
 
 ### Changed
 

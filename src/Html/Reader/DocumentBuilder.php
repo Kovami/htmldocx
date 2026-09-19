@@ -33,6 +33,7 @@ use Kovami\HtmlDocx\Model\Paragraph;
 use Kovami\HtmlDocx\Model\ParagraphProperties;
 use Kovami\HtmlDocx\Model\RunProperties;
 use Kovami\HtmlDocx\Model\Table;
+use Kovami\HtmlDocx\Model\TextRun;
 use Kovami\HtmlDocx\Options;
 use Throwable;
 
@@ -96,6 +97,9 @@ final class DocumentBuilder
     /** @var array<int, array{kind: string, type: string, element: Element}> the header and footer `div`s, by object id */
     private array $furnitureSections = [];
 
+    /** The header or footer line read last, which the next line of the same one follows. */
+    private ?Element $lastFurniture = null;
+
     /** @var list<HeaderFooter> */
     private array $headersFooters = [];
 
@@ -141,6 +145,7 @@ final class DocumentBuilder
         $root = ComputedStyle::root($this->options->fontFamily, $this->options->fontSizePt, strtoupper(ltrim($this->options->textColor, '#')));
         $body = $html->body();
         $this->pageContentWidth = $pageLayout->contentWidthTwips();
+        self::unwrapTableFigures($html);
         $this->collectNotes($html);
         $this->collectHeadersFooters($html);
         $this->collectComments($html);
@@ -217,6 +222,21 @@ final class DocumentBuilder
         if ($furniture !== null && ! $this->hasHeaderFooter($furniture['kind'], $furniture['type'])) {
             $this->flushParagraph($flow, $sink);
             $this->headersFooters[] = new HeaderFooter($furniture['kind'], $furniture['type'], $this->renderApart($node, $style));
+            $this->lastFurniture = $node;
+
+            return;
+        }
+
+        // The next line of the header just read: SunEditor keeps one line per div.
+        $previous = $node->previousElementSibling;
+
+        if ($furniture !== null && $previous !== null && $previous === $this->lastFurniture
+            && $this->furnitureSections[spl_object_id($previous)]['kind'] === $furniture['kind']
+            && $this->furnitureSections[spl_object_id($previous)]['type'] === $furniture['type']) {
+            $this->flushParagraph($flow, $sink);
+            $this->lastFurniture = $node;
+            $last = array_pop($this->headersFooters);
+            $this->headersFooters[] = new HeaderFooter($furniture['kind'], $furniture['type'], [...$last->blocks ?? [], ...$this->renderApart($node, $style)]);
 
             return;
         }
@@ -571,6 +591,11 @@ final class DocumentBuilder
         $style = $flow->style;
         $context = $flow->context;
 
+        // Editors write an empty paragraph as `<p>&nbsp;</p>`.
+        if (count($children) === 1 && $children[0] instanceof TextRun && $children[0]->text === "\u{00A0}") {
+            $children = [];
+        }
+
         if ($properties === null) {
             // Plain HTML writes Word's line pitch in the font's own terms; see HtmlWriter.
             [$lineSpacing, $lineRule] = $this->mapper->lineSpacing(
@@ -679,6 +704,29 @@ final class DocumentBuilder
     }
 
     /**
+     * CKEditor wraps a table in `<figure class="table">` and moves its width
+     * there; the table goes back in the figure's place, with the width.
+     */
+    private static function unwrapTableFigures(HtmlDocument $html): void
+    {
+        foreach ($html->body()->querySelectorAll('figure.table') as $figure) {
+            $table = $figure->firstElementChild;
+
+            if ($table?->localName !== 'table' || $table->nextElementSibling !== null) {
+                continue;
+            }
+
+            $width = preg_match('/(?:^|;)\s*width\s*:\s*([^;]+)/i', (string) $figure->getAttribute('style'), $match) === 1 ? trim($match[1]) : null;
+
+            if ($width !== null && preg_match('/(?:^|;)\s*width\s*:/i', (string) $table->getAttribute('style')) !== 1) {
+                $table->setAttribute('style', rtrim("width: {$width}; " . $table->getAttribute('style'), '; ') . ';');
+            }
+
+            $figure->replaceWith($table);
+        }
+    }
+
+    /**
      * Note lists an editor stripped of their section and classes, found by
      * the ids this library gives their items (`footnote-1`, `endnote-1`).
      *
@@ -710,7 +758,10 @@ final class DocumentBuilder
             $fragment = self::fragment($anchor);
             $target = $fragment === null ? null : $html->native()->getElementById($fragment);
 
-            if ($target?->localName === 'a' && self::fragment($target) === $itemId) {
+            // The mark's own id may be gone (TipTap keeps none on links); its name still tells.
+            $mark = preg_replace('/-(\\d+)$/', '-ref-$1', $itemId);
+
+            if ($target?->localName === 'a' && self::fragment($target) === $itemId || $target === null && $fragment === $mark) {
                 $this->noteDecorations[spl_object_id($anchor)] = $anchor;
                 unset($this->linkedFragments[$fragment]);
             }

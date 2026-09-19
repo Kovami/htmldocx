@@ -234,6 +234,14 @@ final class HtmlWriter
                 fn(ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark),
             );
 
+            // A bookmark at the start of a paragraph is the paragraph's id: editors drop empty anchors.
+            $first = $children[0] ?? null;
+
+            if ($this->context->plain && $first instanceof Bookmark && ! $element->hasAttribute('id')) {
+                $element->setAttribute('id', $this->context->bookmarkId($first->name));
+                $children = array_slice($children, 1);
+            }
+
             $this->inlines->write($children, $element, $style);
             $this->closeParagraph($children, $element);
         }
@@ -764,7 +772,12 @@ final class HtmlWriter
         }
     }
 
-    /** The headers or the footers, each in a `div` of its own. */
+    /**
+     * The headers or the footers. SunEditor keeps a classed `div` only as a
+     * line of text, so each line is a `div.se-header` (or `se-footer`) of its
+     * own, and the lines of one header follow each other; a table or list
+     * keeps a wrapping `div`.
+     */
     private function headersFooters(string $kind, Element $parent, ComputedStyle $parentStyle): void
     {
         if ($this->context->plain) {
@@ -784,7 +797,24 @@ final class HtmlWriter
             }
 
             $style = $this->context->resolver->resolve($container, $parentStyle);
-            $this->writeBlocks($headerFooter->blocks, $container, $style, 'p', $this->context->document->pageLayout->contentWidthTwips());
+            $this->writeBlocks($headerFooter->blocks, $container, $style, 'div', $this->context->document->pageLayout->contentWidthTwips());
+
+            foreach (iterator_to_array($container->children) as $child) {
+                $line = $child;
+
+                if ($child->localName !== 'div') {
+                    $line = $this->context->dom->createElement('div');
+                    $line->append($child);
+                }
+
+                foreach ($container->attributes as $attribute) {
+                    $line->setAttribute($attribute->name, $attribute->value);
+                }
+
+                $container->before($line);
+            }
+
+            $container->remove();
         }
     }
 

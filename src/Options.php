@@ -18,8 +18,9 @@ final readonly class Options
      *
      * @param  string  $textColor  RRGGBB
      * @param  string|null  $language  BCP 47 tag used for proofing, e.g. "ru-RU"
-     * @param  string|null  $defaultStylesheet  replaces the built-in defaults: SunEditor's for its profile,
-     *                                          a browser's for the others and plain HTML
+     * @param  string|null  $defaultStylesheet  replaces the built-in defaults: SunEditor's and CKEditor's
+     *                                          content CSS for their profiles, a browser's for the
+     *                                          others and plain HTML
      * @param  string  $extraStylesheet  applied above the defaults and below the document's own CSS
      * @param  DateTimeImmutable|null  $createdAt  fixed timestamp for reproducible output; defaults to now
      * @param  string  $cssUnit  DOCX → HTML: "px" (SunEditor's unit) or "pt" for lengths and font sizes
@@ -72,7 +73,11 @@ final readonly class Options
     /** The defaults HTML is read and written against, for an editor or (null) for plain HTML. */
     public function stylesheet(?Editor $editor): string
     {
-        return $this->defaultStylesheet ?? ($editor === Editor::SunEditor ? DefaultStylesheet::CSS : DefaultStylesheet::BROWSER);
+        return $this->defaultStylesheet ?? match ($editor) {
+            Editor::SunEditor => DefaultStylesheet::CSS,
+            Editor::CKEditor => DefaultStylesheet::CKEDITOR,
+            default => DefaultStylesheet::BROWSER,
+        };
     }
 
     public function page(): PageLayout

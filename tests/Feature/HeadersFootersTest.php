@@ -195,11 +195,10 @@ it('writes header and footer parts and points the section at them', function () 
 it('writes headers first and footers last in the HTML', function () {
     $html = converter()->fromDocument(furnishedDocument())->toHtml();
 
-    $p = '<p style="margin-bottom: 0;">';
-
-    expect($html)->toStartWith('<div class="se-header">' . $p . 'Running head</p></div>' . "\n" . '<div class="se-header" data-type="first">' . $p . 'Title page</p></div>')
-        ->toContain($p . 'Page <span class="se-field" data-field="PAGE">1</span> of <span class="se-field" data-field="NUMPAGES">3</span></p>')
-        ->toEndWith('<div class="se-footer" data-type="even">' . $p . 'Even footer</p></div>')
+    // SunEditor keeps a classed div only as a line of text: one div per line.
+    expect($html)->toStartWith('<div class="se-header">Running head</div>' . "\n" . '<div class="se-header" data-type="first">Title page</div>')
+        ->toContain('<div class="se-footer">Page <span class="se-field" data-field="PAGE">1</span> of <span class="se-field" data-field="NUMPAGES">3</span></div>')
+        ->toEndWith('<div class="se-footer" data-type="even">Even footer</div>')
         ->and(strpos($html, 'Body text'))->toBeLessThan(strpos($html, 'se-footer'));
 });
 
@@ -225,11 +224,18 @@ it('keeps headers and footers through DOCX to HTML and back', function () {
         ->and($converter->fromDocx($bytes)->toHtml())->toBe($html);
 });
 
+it('reads the lines of one header, one div each, as one header', function () {
+    $document = converter()->fromHtml('<div class="se-header">One</div><div class="se-header">Two</div><p>Body</p>')->document();
+
+    expect(furniture($document))->toBe(['header/default' => "One\nTwo"])
+        ->and(furnitureText($document->blocks))->toBe('Body');
+});
+
 it('reads a second header of one type as ordinary content', function () {
     $document = converter()->fromHtml(
-        '<div class="se-header"><p>One</p></div><div class="se-header"><p>Two</p></div><p>Body</p>',
+        '<div class="se-header"><p>One</p></div><p>Body</p><div class="se-header"><p>Two</p></div>',
     )->document();
 
     expect(furniture($document))->toBe(['header/default' => 'One'])
-        ->and(furnitureText($document->blocks))->toBe("Two\nBody");
+        ->and(furnitureText($document->blocks))->toBe("Body\nTwo");
 });

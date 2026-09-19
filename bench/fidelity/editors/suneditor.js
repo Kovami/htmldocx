@@ -14,7 +14,7 @@ window.roundTrip = async (html, recommended) => {
             // A plugin only starts when a button uses it.
             buttonList: [['font', 'fontSize', 'formatBlock', 'bold', 'underline', 'italic', 'strike', 'subscript', 'superscript',
                 'fontColor', 'hiliteColor', 'align', 'list', 'lineHeight', 'table', 'link', 'image', 'math']],
-            attributesWhitelist: { all: 'style|id|role|data-.+' },
+            attributesWhitelist: { all: 'style|id|role|start|value|data-.+' },
             addTagsWhitelist: 'section|colgroup|col',
         }
         : { plugins: rest });

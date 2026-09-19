@@ -14,6 +14,9 @@ namespace Kovami\HtmlDocx\Css;
  * rules are re-applied during conversion.
  *
  * {@see self::BROWSER}: a browser's defaults alone, for plain HTML.
+ *
+ * {@see self::CKEDITOR}: a browser's defaults plus what CKEditor's content
+ * stylesheet gives tables, which its HTML leaves out wherever it matches.
  */
 final class DefaultStylesheet
 {
@@ -138,8 +141,14 @@ final class DefaultStylesheet
         ul ul ul, ul ol ul, ol ul ul, ol ol ul { list-style-type: square; }
 
         hr { border: 1px inset; margin: 0.5em 0; }
+        thead, tbody, tfoot, tr { vertical-align: middle; }
         td, th { padding: 1px; vertical-align: inherit; }
         th { font-weight: bold; text-align: center; }
         figure { margin: 1em 40px; }
+        CSS;
+
+    public const string CKEDITOR = self::BROWSER . <<<'CSS'
+        table { border: 1px double #b3b3b3; border-collapse: collapse; }
+        td, th { border: 1px solid #bfbfbf; padding: 0.4em; }
         CSS;
 }

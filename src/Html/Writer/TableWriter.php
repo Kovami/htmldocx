@@ -55,7 +55,9 @@ final readonly class TableWriter
             }
 
             if ($plain) {
-                // Word draws one line between neighbouring cells, at the widths it was given.
+                // Word draws one line between neighbouring cells, at the widths it was given,
+                // and no frame around the table but the cells' own.
+                $css['border'] = 'none';
                 $css['border-collapse'] = 'collapse';
                 $css['table-layout'] = 'fixed';
             }

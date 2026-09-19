@@ -67,3 +67,45 @@ it('finds a note list an editor stripped of its section by the ids of its items'
         ->and($document->notes[0]->type)->toBe('footnote')
         ->and($document->blocks)->toHaveCount(1);
 });
+
+it('reads an editor\'s empty paragraph as empty', function () {
+    $blocks = HtmlDocx::for(Editor::TinyMce, testOptions())->fromHtml('<p>a</p><p>&nbsp;</p><p>b</p>')->document()->blocks;
+
+    expect($blocks[1]->children)->toBe([]);
+});
+
+it('reads a CKEditor table figure as the table, with the figure\'s width', function () {
+    $document = HtmlDocx::for(Editor::CKEditor, testOptions())->fromHtml(
+        '<p>Before</p><figure class="table" style="width: 50%;"><table><tbody><tr><td>cell</td></tr></tbody></table></figure>',
+    )->document();
+    $table = $document->blocks[1];
+
+    expect($table)->toBeInstanceOf(Kovami\HtmlDocx\Model\Table::class)
+        ->and($table->properties->width)->toBe(intdiv($document->pageLayout->contentWidthTwips(), 2))
+        ->and($table->marginTop)->toBe(0);
+});
+
+it('reads CKEditor\'s cells with the borders its content stylesheet draws', function () {
+    $cell = HtmlDocx::for(Editor::CKEditor, testOptions())
+        ->fromHtml('<figure class="table"><table><tbody><tr><td style="border-color: #000000; border-width: 2px;">cell</td></tr></tbody></table></figure>')
+        ->document()->blocks[0]->rows[0]->cells[0];
+
+    expect($cell->properties->borders->top?->style)->toBe('single')
+        ->and($cell->properties->borders->top?->color)->toBe('000000');
+});
+
+it('keeps a bookmark at the start of a paragraph as the paragraph\'s id, which editors keep', function () {
+    expect(profileHtml(Editor::CKEditor, '<h2 id="table">Table</h2><p><a href="#table">see</a></p>'))
+        ->toContain(' id="table">Table</h2>')
+        ->not->toContain('<a id=');
+});
+
+it('recognises a note\'s back link whose mark lost its id', function () {
+    $document = HtmlDocx::plain(testOptions())->fromHtml(
+        '<p>Text<sup><a href="#footnote-1">1</a></sup></p><ol><li id="footnote-1"><p>A note.<a href="#footnote-ref-1"> ↩</a></p></li></ol>',
+    )->document();
+
+    expect(HtmlDocx::plain(testOptions())->fromDocument($document)->toHtml())
+        ->toContain('<a href="#footnote-ref-1" role="doc-backlink"> ↩</a></p></li>')
+        ->not->toContain('footnote_ref');
+});
