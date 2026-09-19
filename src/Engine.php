@@ -56,7 +56,7 @@ final readonly class Engine
             new PropertyMapper(),
             new ImageFactory($this->imageResolver, new ImageInspector()),
             $this->options,
-            $this->editor === null,
+            $this->editor !== Editor::SunEditor,
         );
 
         return $builder->build($document, $pageLayout ?? $this->options->page());

@@ -2,9 +2,10 @@
 // by kovami/htmldocx and saves it again?
 //
 // For every corpus/<name>.docx and every editor: the library converts the
-// document to HTML, the editor (in headless Chromium, with the plugins an
-// application editing Word-like documents enables) loads it and hands it
-// back, and two things are measured:
+// document to the editor's profile of HTML, the editor (in headless Chromium,
+// with the plugins an application editing Word-like documents enables, in
+// their default configuration and in the one the README recommends) loads it
+// and hands it back, and two things are measured:
 //
 //  - survival: every tag, attribute and CSS property (by element) of the
 //    library's HTML is counted before and after; what the editor dropped or
@@ -13,7 +14,7 @@
 //    run.mjs does for the library's own HTML.
 //
 // Usage: npm run editors [-- editor|name ...]
-//        PROFILE=suneditor npm run editors   (another profile's HTML)
+//        PROFILE=plain npm run editors   (one profile's HTML for every editor)
 // report/editors/ gets each editor's HTML, the page images and summary.md.
 
 import { execFileSync } from 'node:child_process';
@@ -26,7 +27,7 @@ import { measure } from './measure.mjs';
 
 const here = resolve(import.meta.dirname);
 const report = join(here, 'report', 'editors');
-const profile = process.env.PROFILE ?? 'plain';
+const profile = process.env.PROFILE ?? null;
 const CATEGORIES = ['blocks', 'runs', 'lists', 'tables', 'notes', 'math', 'images', 'links'];
 mkdirSync(report, { recursive: true });
 
@@ -52,21 +53,20 @@ const names = Object.keys(sources)
     .filter((name) => !args.some((arg) => !(arg in EDITORS)) || args.includes(name))
     .sort();
 
-const converted = Object.fromEntries(names.map((name) => [
-    name,
-    JSON.parse(execFileSync('php', [join(here, 'convert.php'), sources[name], profile], { maxBuffer: 256 << 20 }).toString()),
-]));
+const converted = {};
+const convert = (name, as) => (converted[`${as} ${name}`] ??= JSON.parse(execFileSync('php', [join(here, 'convert.php'), sources[name], as], { maxBuffer: 256 << 20 }).toString()));
 
 const browser = await chromium.launch();
 const results = [];
 
-for (const editor of editors) {
+for (const [editor, config] of editors.flatMap((editor) => ['default', 'recommended'].map((config) => [editor, config]))) {
     const harness = await harnessFor(editor);
-    const dir = join(report, editor);
+    const run = `${editor} ${config}`;
+    const dir = join(report, `${editor}-${config}`);
     mkdirSync(dir, { recursive: true });
 
     for (const name of names) {
-        const { html, page: geometry } = converted[name];
+        const { html, page: geometry } = convert(name, profile ?? editor);
         const input = body(html);
         const page = await browser.newPage();
         const errors = [];
@@ -76,9 +76,9 @@ for (const editor of editors) {
         let output;
 
         try {
-            output = await page.evaluate((fragment) => window.roundTrip(fragment), input);
+            output = await page.evaluate(([fragment, recommended]) => window.roundTrip(fragment, recommended), [input, config === 'recommended']);
         } catch (error) {
-            console.warn(`${editor} ${name}: ${error.message.split('\n')[0]}`);
+            console.warn(`${run} ${name}: ${error.message.split('\n')[0]}`);
             await page.close();
             continue;
         }
@@ -92,9 +92,9 @@ for (const editor of editors) {
             ? await measure(browser, html.replace(/<body>[\s\S]*<\/body>/, `<body>\n${output}\n</body>`), geometry, new Uint8Array(readFileSync(reference)), dir, `${name}.printed`)
             : null;
 
-        const result = { editor, name, before, after, pixels: scores?.pixelSimilarity ?? null, errors };
+        const result = { editor: run, name, before, after, pixels: scores?.pixelSimilarity ?? null, errors };
         results.push(result);
-        console.log(`${editor} ${name}: survived ${percent(survival([result]).rate)}, pixels ${scores ? percent(scores.pixelSimilarity) : '—'}${errors.length ? `, ${errors.length} page error(s)` : ''}`);
+        console.log(`${run} ${name}: survived ${percent(survival([result]).rate)}, pixels ${scores ? percent(scores.pixelSimilarity) : '—'}${errors.length ? `, ${errors.length} page error(s)` : ''}`);
     }
 }
 
@@ -225,7 +225,7 @@ function percent(value) {
 function summary(entries) {
     const byEditor = Object.groupBy(entries, (entry) => entry.editor);
     const lines = [
-        `Profile: ${profile}. Survival: share of the library's tags, attributes and CSS properties still there after the editor. Pixels: the editor's HTML printed and compared with Word.`,
+        `Profile: ${profile ?? 'each editor\'s own'}. Survival: share of the library's tags, attributes and CSS properties still there after the editor. Pixels: the editor's HTML printed and compared with Word.`,
         '',
         `| Editor | Survived | ${CATEGORIES.join(' | ')} | Pixels |`,
         `| --- | --- | ${CATEGORIES.map(() => '---').join(' | ')} | --- |`,

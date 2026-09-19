@@ -126,6 +126,7 @@ final class DocumentBuilder
         private readonly PropertyMapper $mapper,
         private readonly ImageFactory $images,
         private readonly Options $options,
+        /** Whether the HTML is plain, the base of every profile but SunEditor's; see WriterContext. */
         private readonly bool $plain = false,
     ) {
         $this->numbering = new NumberingRegistry();

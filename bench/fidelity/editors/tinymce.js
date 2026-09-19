@@ -1,5 +1,6 @@
 // TinyMCE with the plugins an application that edits Word-like documents
-// enables, in their default configuration. Loaded after tinymce.min.js.
+// enables. It keeps the library's HTML as it is, so the recommended
+// configuration is the default one. Loaded after tinymce.min.js.
 window.roundTrip = async (html) => {
     const [editor] = await window.tinymce.init({
         target: document.querySelector('#editor'),

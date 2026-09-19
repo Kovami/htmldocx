@@ -33,7 +33,10 @@ final class WriterContext
 
     public readonly OpenComments $comments;
 
-    /** Whether the HTML is plain, written for no editor in particular. */
+    /**
+     * Whether the HTML is plain: self-contained, standard markup. Every
+     * profile builds on it but SunEditor's, which has markup of its own.
+     */
     public readonly bool $plain;
 
     /** @var array<string, true> messages already given by {@see self::warnOnce()} */
@@ -50,7 +53,7 @@ final class WriterContext
         public readonly ImageHandler $images,
         private readonly Closure $warn,
     ) {
-        $this->plain = $editor === null;
+        $this->plain = $editor !== Editor::SunEditor;
         $this->dom = HTMLDocument::createEmpty();
         $this->resolver = StyleResolver::fromStylesheets($options->stylesheet($editor), $options->extraStylesheet, []);
         $this->css = new CssFormatter($options->cssUnit);
