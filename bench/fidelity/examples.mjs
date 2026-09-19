@@ -4,7 +4,8 @@
 //    library's plain HTML and SunEditor-profile HTML printed by Chromium;
 //  - roundtrip-p<n>.png: Word's print of the original next to Word's print
 //    of roundtrip.docx (DOCX → HTML → DOCX);
-//  - editor-p1.png: Word's print of editor.docx, written from editor HTML.
+//  - editor-p1.png: editor.html in a browser next to Word's print of the
+//    editor.docx the library wrote from it.
 //
 // It also prints the ink match of the plain HTML for the README.
 //
@@ -53,7 +54,14 @@ word.forEach((_, index) => save(`roundtrip-p${index + 1}.png`, [
     ['DOCX → HTML → DOCX', roundtrip[index]],
 ]));
 
-save('editor-p1.png', [['editor.docx in Word', (await pdf('editor.pdf'))[0]]]);
+// The editor HTML as a browser shows it, on the page the DOCX got, in the
+// base font the library assumes for text the HTML leaves unstyled.
+const editorPage = JSON.parse(execFileSync('php', [join(import.meta.dirname, 'convert.php'), join(examples, 'editor.docx'), 'plain']).toString()).page;
+const editorBrowser = await chromium.launch();
+const fragment = readFileSync(join(examples, 'editor.html'), 'utf8');
+const inBrowser = await rasterize(await print(editorBrowser, `<!DOCTYPE html><html><head><meta charset="utf-8"><base href="${pathToFileURL(examples).href}/"><style>body { font-family: Calibri; font-size: 11pt; }</style></head><body>${fragment}</body></html>`, editorPage, work, 'editor'));
+await editorBrowser.close();
+save('editor-p1.png', [['editor.html in a browser (Calibri 11pt)', inBrowser[0]], ['editor.docx in Word', (await pdf('editor.pdf'))[0]]]);
 
 /** Pages side by side under their labels, as one PNG in examples/images. */
 function save(file, columns) {
