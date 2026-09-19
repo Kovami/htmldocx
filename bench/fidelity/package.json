@@ -6,7 +6,8 @@
   "scripts": {
     "bench": "node run.mjs",
     "editors": "node editors.mjs",
-    "examples": "node examples.mjs"
+    "examples": "node examples.mjs",
+    "html": "node html.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^0.1.80",
