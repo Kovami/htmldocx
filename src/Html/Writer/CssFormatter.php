@@ -12,6 +12,19 @@ use Kovami\HtmlDocx\Model\BorderSet;
 /** Serializes model values as CSS in the unit the output is configured for. */
 final readonly class CssFormatter
 {
+    /** Fonts Word documents use, followed by free ones with the same metrics and a generic family. */
+    private const array FALLBACKS = [
+        'calibri' => ['Carlito', 'sans-serif'], 'calibri light' => ['Carlito', 'sans-serif'],
+        'cambria' => ['Caladea', 'serif'],
+        'arial' => ['Liberation Sans', 'Arimo', 'sans-serif'], 'helvetica' => ['Liberation Sans', 'Arimo', 'sans-serif'],
+        'times new roman' => ['Liberation Serif', 'Tinos', 'serif'],
+        'courier new' => ['Liberation Mono', 'Cousine', 'monospace'],
+        'aptos' => ['sans-serif'], 'aptos display' => ['sans-serif'], 'aptos narrow' => ['sans-serif'],
+        'segoe ui' => ['sans-serif'], 'verdana' => ['sans-serif'], 'tahoma' => ['sans-serif'], 'trebuchet ms' => ['sans-serif'],
+        'georgia' => ['serif'], 'garamond' => ['serif'], 'book antiqua' => ['serif'], 'palatino linotype' => ['serif'],
+        'consolas' => ['monospace'], 'lucida console' => ['monospace'],
+    ];
+
     /**
      * @param  string  $unit  "px" or "pt"
      */
@@ -117,6 +130,17 @@ final readonly class CssFormatter
         return preg_match('/^[A-Za-z][A-Za-z0-9-]*$/', $family) === 1 && ! in_array(strtolower($family), ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'inherit', 'initial'], true)
             ? $family
             : '"' . str_replace(['\\', '"'], ['\\\\', '\"'], $family) . '"';
+    }
+
+    /** A font and what may stand in for it where it is not installed. */
+    public static function fontStack(string $family): string
+    {
+        $fallbacks = array_map(
+            static fn(string $fallback): string => in_array($fallback, ['serif', 'sans-serif', 'monospace'], true) ? $fallback : self::fontFamily($fallback),
+            self::FALLBACKS[strtolower(trim($family))] ?? [],
+        );
+
+        return implode(', ', [self::fontFamily($family), ...$fallbacks]);
     }
 
     /** A CSS string, e.g. for `list-style-type: "1.2. "`. */

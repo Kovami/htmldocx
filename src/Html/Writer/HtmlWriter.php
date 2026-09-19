@@ -56,6 +56,9 @@ use Kovami\HtmlDocx\Options;
  */
 final class HtmlWriter
 {
+    /** Word's default tab stop interval, in twips. */
+    private const int WORD_TAB_STOP = 720;
+
     /** Lists open around the block currently being written, outermost first. */
     private ListStack $lists;
 
@@ -386,6 +389,11 @@ final class HtmlWriter
 
         if ($preserve && ! $editor->preservesWhitespace()) {
             $css['white-space'] = 'pre-wrap';
+
+            // Word's default tab stops, rather than eight spaces.
+            if ($this->context->plain) {
+                $css['tab-size'] = $this->context->css->twips(self::WORD_TAB_STOP);
+            }
         }
 
         if ($mark?->size !== null && abs($mark->size / 2 - $editor->fontSizePt) > 0.01
@@ -410,7 +418,7 @@ final class HtmlWriter
         $size = $mark->size ?? $defaults->size;
 
         $css = [
-            'font-family' => CssFormatter::fontFamily($this->blockFamily($properties)),
+            'font-family' => CssFormatter::fontStack($this->blockFamily($properties)),
             'font-size' => $this->context->css->points($size === null ? $options->fontSizePt : $size / 2),
             'color' => CssFormatter::color($mark->color ?? $defaults->color ?? ltrim($options->textColor, '#')),
         ];

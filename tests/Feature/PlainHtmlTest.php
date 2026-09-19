@@ -23,8 +23,8 @@ it('spells out the font, colour, margins and line height of every block', functi
     ));
 
     expect($html)->toBe(
-        '<p style="font-family: &quot;Times New Roman&quot;; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322;">'
-        . '<span style="font-family: Aptos; font-size: 16px;">Body</span></p>',
+        '<p style="font-family: &quot;Times New Roman&quot;, &quot;Liberation Serif&quot;, Tinos, serif; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322;">'
+        . '<span style="font-family: Aptos, sans-serif; font-size: 16px;">Body</span></p>',
     );
 });
 
@@ -175,3 +175,20 @@ it('writes each kind of formula node as MathML', function (string $latex, string
     'text' => ['\text{if } x', '<mtext>if </mtext><mi>x</mi>'],
     'matrix' => ['\begin{pmatrix} 1 & 0 \end{pmatrix}', '<mo>(</mo><mrow><mtable><mtr><mtd><mrow><mn>1</mn></mrow></mtd><mtd><mrow><mn>0</mn></mrow></mtd></mtr></mtable></mrow><mo>)</mo>'],
 ]);
+
+it('names free fonts with the same metrics, for systems without Word\'s', function () {
+    $html = plainHtml(DocxBuilder::make()->body(
+        '<w:p><w:pPr><w:rPr><w:rFonts w:ascii="Calibri"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Calibri"/></w:rPr><w:t>a</w:t></w:r>'
+        . '<w:r><w:rPr><w:rFonts w:ascii="Cambria"/></w:rPr><w:t>b</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Fancy Script"/></w:rPr><w:t>c</w:t></w:r></w:p>',
+    ));
+
+    expect($html)->toContain('font-family: Calibri, Carlito, sans-serif;')
+        ->and($html)->toContain('<span style="font-family: Cambria, Caladea, serif;">b</span>')
+        ->and($html)->toContain('<span style="font-family: &quot;Fancy Script&quot;;">c</span>');
+});
+
+it('keeps Word\'s tab stops in text that needs its tabs', function () {
+    $html = plainHtml(DocxBuilder::make()->body('<w:p><w:r><w:t>a</w:t></w:r><w:r><w:tab/></w:r><w:r><w:t>b</w:t></w:r></w:p>'));
+
+    expect($html)->toContain('white-space: pre-wrap; tab-size: 48px;');
+});

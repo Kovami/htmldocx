@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as SunEditor's.
 - Plain HTML writes Word's line spacing in Word's terms: a multiple of the
   font's own single line (from a table of common fonts), not of its size.
+- Plain HTML names free fonts with the same metrics after Word's own (Calibri,
+  Carlito, sans-serif; Cambria, Caladea, serif; Arial and Times New Roman with
+  their Liberation equivalents) and keeps Word's 36 pt tab stops.
 
 ### Changed
 

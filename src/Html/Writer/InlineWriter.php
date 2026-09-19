@@ -186,7 +186,7 @@ final readonly class InlineWriter
 
         if ($run->fontFamily !== null && strcasecmp($run->fontFamily, $parent->fontFamily) !== 0
             && ! $this->context->adoptsEditorDefault($run->fontFamily, $defaults->fontFamily)) {
-            $css['font-family'] = CssFormatter::fontFamily($run->fontFamily);
+            $css['font-family'] = $this->context->plain ? CssFormatter::fontStack($run->fontFamily) : CssFormatter::fontFamily($run->fontFamily);
         }
 
         if ($run->size !== null && abs($run->size / 2 - $parent->fontSizePt) > 0.01
