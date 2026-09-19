@@ -100,6 +100,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A table cell without its own vertical alignment takes its row's, as in a
+  browser, where rows are middle-aligned; `inherit` used to fall back to top.
 - A floated picture keeps text wrapping around it on the way to Word: the
   HTML reader reads `float` (on the `img` or its figure) and the DOCX writer
   anchors the picture to that side of the column with square wrapping. It

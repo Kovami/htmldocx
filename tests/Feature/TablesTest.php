@@ -240,3 +240,12 @@ it('keeps a table without a width as narrow as its content', function () {
     expect($width($table[0]))->toBeLessThan(1000)
         ->and($width($table[1]))->toBe(testOptions()->page()->contentWidthTwips());
 });
+
+it('centres cells vertically as a browser does, unless a cell says otherwise', function () {
+    $table = Kovami\HtmlDocx\HtmlDocx::plain(testOptions())
+        ->fromHtml('<table><tr><td>middle</td><td style="vertical-align: top">top</td></tr></table>')
+        ->document()->blocks[0];
+
+    expect($table->rows[0]->cells[0]->properties->verticalAlign)->toBe('center')
+        ->and($table->rows[0]->cells[1]->properties->verticalAlign)->toBe('top');
+});

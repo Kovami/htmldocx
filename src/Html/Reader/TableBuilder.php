@@ -394,6 +394,13 @@ final class TableBuilder
         return false;
     }
 
+    private static function declared(?string $value): ?string
+    {
+        $value = strtolower(trim((string) $value));
+
+        return $value === '' || $value === 'inherit' ? null : $value;
+    }
+
     private function positiveTwips(?float $points): ?int
     {
         return $points !== null && $points > 0 ? Length::pointsToTwips($points) : null;
@@ -418,7 +425,8 @@ final class TableBuilder
                 default => null,
             },
             shading: $style->backgroundColor() ?? $row['background'],
-            verticalAlign: match ($style->value('vertical-align') ?? $row['style']->value('vertical-align')) {
+            // A cell inherits its row's: a browser's rows are middle-aligned.
+            verticalAlign: match (self::declared($style->value('vertical-align')) ?? self::declared($row['style']->value('vertical-align'))) {
                 'top' => 'top',
                 'middle' => 'center',
                 'bottom' => 'bottom',
