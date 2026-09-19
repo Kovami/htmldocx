@@ -200,17 +200,23 @@ final class HtmlWriter
             }
         }
 
+        // TipTap keeps a list item's text in a paragraph of its own; the item
+        // keeps the font, which its marker is drawn in.
+        if ($item !== null && $this->context->editor === Editor::TipTap) {
+            $this->context->style($item, $parentStyle, fn(ComputedStyle $editor): array => $this->blockFont($properties, $editor));
+        }
+
         $itemStyle = $item === null ? null : $this->context->resolver->resolve($item, $parentStyle);
         $last = count($segments) - 1;
 
         foreach ($segments as $index => $children) {
-            $fills = $item !== null && $index === 0 && $heading === null;
+            $fills = $item !== null && $index === 0 && $heading === null && $this->context->editor !== Editor::TipTap;
 
             if ($fills) {
                 $element = $item;
                 $baseline = $parentStyle;
             } else {
-                $element = $this->context->element($heading ?? ($item === null ? $tag : 'div'), $item ?? $parent);
+                $element = $this->context->element($heading ?? ($item === null || $this->context->plain ? $tag : 'div'), $item ?? $parent);
                 $baseline = $item === null ? $parentStyle : $itemStyle;
             }
 

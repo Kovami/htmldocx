@@ -642,7 +642,11 @@ final class DocumentBuilder
     private function collectNotes(HtmlDocument $html): void
     {
         foreach (self::NOTE_LISTS as $type => $selector) {
-            foreach ($html->body()->querySelectorAll($selector) as $list) {
+            foreach ([...$html->body()->querySelectorAll($selector), ...self::listsOfNotes($html, $type)] as $list) {
+                if (isset($this->noteLists[spl_object_id($list)])) {
+                    continue;
+                }
+
                 $this->noteLists[spl_object_id($list)] = ['type' => $type, 'list' => $list];
                 $separator = $list->previousElementSibling;
 
@@ -672,6 +676,27 @@ final class DocumentBuilder
                 }
             }
         }
+    }
+
+    /**
+     * Note lists an editor stripped of their section and classes, found by
+     * the ids this library gives their items (`footnote-1`, `endnote-1`).
+     *
+     * @return list<Element>
+     */
+    private static function listsOfNotes(HtmlDocument $html, string $type): array
+    {
+        $lists = [];
+
+        foreach ($html->body()->querySelectorAll('ol') as $list) {
+            $first = $list->firstElementChild;
+
+            if ($first?->localName === 'li' && preg_match('/(^|[-_])' . $type . '-\\d+$/', (string) $first->getAttribute('id')) === 1) {
+                $lists[] = $list;
+            }
+        }
+
+        return $lists;
     }
 
     /** Marks the "back to the mark" links of one note body, which the mark itself replaces. */

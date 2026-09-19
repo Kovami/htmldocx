@@ -160,6 +160,12 @@ final readonly class InlineWriter
         $element->setAttribute('alt', $image->description);
         $element->setAttribute('style', "width: {$width}px; height: {$height}px;");
 
+        // Editors that drop a picture's style keep these.
+        if ($this->context->plain) {
+            $element->setAttribute('width', (string) (int) round((float) $width));
+            $element->setAttribute('height', (string) (int) round((float) $height));
+        }
+
         return $element;
     }
 

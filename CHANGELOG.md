@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `math-tex` span for CKEditor (ckeditor5-math) and TinyMCE (MathJax), TipTap's
   `inline-math` node for TipTap. Without a plugin the LaTeX stays readable
   text. The HTML reader reads all of these back as formulas.
+- Plain HTML and the profiles built on it write table cell lines as `<p>`,
+  which editors keep, and give pictures `width` and `height` attributes as well
+  as their style. The TipTap profile keeps a list item's text in a paragraph
+  of its own and sizes columns with TipTap's `colwidth`.
+- The HTML reader finds a note list whose section and classes an editor
+  dropped by the ids of its items.
 
 ### Changed
 

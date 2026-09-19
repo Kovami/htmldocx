@@ -13,19 +13,17 @@ import TextAlign from '@tiptap/extension-text-align';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import StarterKit from '@tiptap/starter-kit';
 
-/** Keeps the inline style of blocks, which TipTap drops unless a node declares it. */
+/** Keeps the inline style and id of blocks, which TipTap drops unless a node declares them. */
 const KeepBlockStyles = Extension.create({
     name: 'keepBlockStyles',
     addGlobalAttributes() {
         return [{
             types: ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'table', 'tableRow', 'tableCell', 'tableHeader', 'blockquote'],
-            attributes: {
-                style: {
-                    default: null,
-                    parseHTML: (element) => element.getAttribute('style'),
-                    renderHTML: (attributes) => (attributes.style ? { style: attributes.style } : {}),
-                },
-            },
+            attributes: Object.fromEntries(['style', 'id'].map((name) => [name, {
+                default: null,
+                parseHTML: (element) => element.getAttribute(name),
+                renderHTML: (attributes) => (attributes[name] ? { [name]: attributes[name] } : {}),
+            }])),
         }];
     },
 });
@@ -38,7 +36,7 @@ window.roundTrip = async (html, recommended) => {
             TableKit,
             TextStyleKit,
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
-            Image.configure({ inline: recommended }),
+            Image.configure({ inline: recommended, allowBase64: recommended }),
             Subscript,
             Superscript,
             Highlight.configure({ multicolor: true }),

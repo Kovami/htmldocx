@@ -8,6 +8,7 @@ use Closure;
 use Dom\Element;
 use Kovami\HtmlDocx\Css\ComputedStyle;
 use Kovami\HtmlDocx\Css\Length;
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\Model\Block;
 use Kovami\HtmlDocx\Model\CellProperties;
 use Kovami\HtmlDocx\Model\Table;
@@ -114,7 +115,15 @@ final readonly class TableWriter
 
             foreach ($row->cells as $cell) {
                 if ($cell->properties->verticalMerge !== CellProperties::MERGE_CONTINUE) {
-                    $this->cell($cell, $tr, $rowStyle, $isHead ? 'th' : 'td', $rowSpans[$r][$column] ?? 1);
+                    $written = $this->cell($cell, $tr, $rowStyle, $isHead ? 'th' : 'td', $rowSpans[$r][$column] ?? 1);
+
+                    // TipTap sizes its columns from the cells, in pixels, one per column spanned.
+                    if ($this->context->editor === Editor::TipTap) {
+                        $written->setAttribute('colwidth', implode(',', array_map(
+                            static fn(int $twips): string => (string) (int) round(Length::twipsToPixels($twips)),
+                            array_slice($table->gridColumns, $column, $cell->properties->gridSpan),
+                        )));
+                    }
                 }
 
                 $column += $cell->properties->gridSpan;
@@ -124,7 +133,7 @@ final readonly class TableWriter
         return $tableStyle;
     }
 
-    private function cell(TableCell $cell, Element $row, ComputedStyle $rowStyle, string $tag, int $rowSpan): void
+    private function cell(TableCell $cell, Element $row, ComputedStyle $rowStyle, string $tag, int $rowSpan): Element
     {
         $properties = $cell->properties;
         $element = $this->context->element($tag, $row);
@@ -184,7 +193,10 @@ final readonly class TableWriter
         });
 
         $contentWidth = max(Length::TWIPS_PER_POINT, $properties->width - ($properties->margins === null ? 216 : $properties->margins->left + $properties->margins->right));
-        ($this->writeBlocks)($cell->blocks, $element, $style, 'div', $contentWidth);
+        // Plain HTML's cell lines are paragraphs, which editors keep; SunEditor's are divs.
+        ($this->writeBlocks)($cell->blocks, $element, $style, $this->context->plain ? 'p' : 'div', $contentWidth);
+
+        return $element;
     }
 
     private function adoptsWordDefaults(): bool
