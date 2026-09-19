@@ -86,6 +86,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text with more than single line spacing is raised (`position: relative`
   with a negative `top`) to where Word sets it: Word adds the extra space of
   a multiple below each line, CSS half above and half below.
+- Superscripts and subscripts are drawn as Word draws them: `<sup>` and
+  `<sub>` get `font-size: 65%; line-height: 0`, where a browser's are larger
+  and make their line taller. A `sub` or `super` element sized relatively
+  (`%`, `em`, `smaller`) is read back at its text's size, so Word does not
+  shrink it twice.
 - `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
   defaults: a browser's for plain HTML, SunEditor's for an editor profile.
 

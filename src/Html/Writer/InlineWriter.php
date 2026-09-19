@@ -285,6 +285,12 @@ final readonly class InlineWriter
         foreach ($spec['tags'] as $tag) {
             $current = $this->context->element($tag, $current);
 
+            // Word draws them at about two thirds of the size, without
+            // making the line taller; a browser's are larger and push it.
+            if ($tag === 'sup' || $tag === 'sub') {
+                $current->setAttribute('style', 'font-size: 65%; line-height: 0;');
+            }
+
             if ($tag === 'u' && $decoration['text-decoration-style'] !== null) {
                 $current->setAttribute('style', CssFormatter::declarations(array_filter($decoration)));
             }

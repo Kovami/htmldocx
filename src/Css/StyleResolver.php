@@ -75,9 +75,13 @@ final class StyleResolver
         $display = strtolower(trim($d['display'] ?? 'inline'));
         $isInline = ! in_array($display, ComputedStyle::BLOCK_DISPLAYS, true);
 
-        $fontSize = $this->fontSize($d['font-size'] ?? null, $parent);
         $lines = strtolower($d['text-decoration-line'] ?? '');
         $verticalAlign = strtolower(trim($d['vertical-align'] ?? ''));
+        // A superscript drawn smaller keeps its text's size: in Word the
+        // smaller glyphs are what superscript is, not a size of their own.
+        $shrinks = in_array($verticalAlign, ['sub', 'super'], true)
+            && preg_match('/^\s*(smaller|[\d.]+\s*(%|em))\s*$/i', $d['font-size'] ?? '') === 1;
+        $fontSize = $shrinks ? $parent->fontSizePt : $this->fontSize($d['font-size'] ?? null, $parent);
 
         return new ComputedStyle(
             display: $display,

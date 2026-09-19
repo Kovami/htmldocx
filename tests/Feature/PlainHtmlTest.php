@@ -78,6 +78,17 @@ it('raises multi-spaced text to where Word sets it, once for nested items', func
         ->and($html)->toContain('line-height: 3.001; position: relative; top: -7.35px;">c');
 });
 
+it('draws superscripts at Word\'s size and reads them back at their text\'s', function () {
+    $html = plainHtml(DocxBuilder::make()->body(
+        '<w:p><w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>E = mc</w:t></w:r><w:r><w:rPr><w:sz w:val="24"/><w:vertAlign w:val="superscript"/></w:rPr><w:t>2</w:t></w:r></w:p>',
+    ));
+    $run = HtmlDocx::plain(testOptions())->fromHtml($html)->document()->blocks[0]->children[1];
+
+    expect($html)->toContain('<sup style="font-size: 65%; line-height: 0;">2</sup>')
+        ->and($run->properties->verticalAlign)->toBe('superscript')
+        ->and($run->properties->size)->toBe(24);
+});
+
 it('draws table cells itself, over whatever borders an editor gives them', function () {
     $html = plainHtml(DocxBuilder::make()->body(
         '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/></w:tblPr><w:tblGrid><w:gridCol w:w="9355"/></w:tblGrid>'
