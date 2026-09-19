@@ -22,6 +22,7 @@ function numberingLevel(Docx $docx, string $text): array
         'level' => (int) $level,
         'format' => $docx->val('w:numFmt', $lvl, 'word/numbering.xml'),
         'text' => $docx->val('w:lvlText', $lvl, 'word/numbering.xml'),
+        'font' => Docx::attr($docx->first('w:rPr/w:rFonts', $lvl, 'word/numbering.xml'), 'ascii'),
         'start' => $docx->val("//w:num[@w:numId='{$numId}']/w:lvlOverride/w:startOverride", null, 'word/numbering.xml'),
     ];
 }
@@ -29,7 +30,7 @@ function numberingLevel(Docx $docx, string $text): array
 it('renders unordered and ordered lists', function () {
     $docx = docx('<ul><li>bullet one</li><li>bullet two</li></ul><ol><li>number one</li><li>number two</li></ol>');
 
-    expect(numberingLevel($docx, 'bullet one'))->toMatchArray(['level' => 0, 'format' => 'bullet', 'text' => "\u{2022}"])
+    expect(numberingLevel($docx, 'bullet one'))->toMatchArray(['level' => 0, 'format' => 'bullet', 'text' => "\u{F0B7}", 'font' => 'Symbol'])
         ->and(numberingLevel($docx, 'number two'))->toMatchArray(['level' => 0, 'format' => 'decimal', 'text' => '%1.', 'start' => '1'])
         ->and(numberingLevel($docx, 'bullet one')['numId'])->toBe(numberingLevel($docx, 'bullet two')['numId']);
 });
@@ -38,7 +39,7 @@ it('nests lists one level deeper per nesting depth', function () {
     $docx = docx('<ol><li>L0<ul><li>L1<ol><li>L2</li></ol></li></ul></li><li>back to L0</li></ol>');
 
     expect(numberingLevel($docx, 'L0'))->toMatchArray(['level' => 0, 'format' => 'decimal'])
-        ->and(numberingLevel($docx, 'L1'))->toMatchArray(['level' => 1, 'format' => 'bullet', 'text' => "\u{25E6}"])
+        ->and(numberingLevel($docx, 'L1'))->toMatchArray(['level' => 1, 'format' => 'bullet', 'text' => 'o', 'font' => 'Courier New'])
         ->and(numberingLevel($docx, 'L2'))->toMatchArray(['level' => 2, 'format' => 'decimal', 'text' => '%3.'])
         ->and(numberingLevel($docx, 'back to L0')['numId'])->toBe(numberingLevel($docx, 'L0')['numId']);
 
@@ -54,9 +55,10 @@ it('nests lists one level deeper per nesting depth', function () {
 it('uses the browser bullet sequence for nested unordered lists', function () {
     $docx = docx('<ul><li>disc<ul><li>circle<ul><li>square</li></ul></li></ul></li></ul>');
 
-    expect(numberingLevel($docx, 'disc')['text'])->toBe("\u{2022}")
-        ->and(numberingLevel($docx, 'circle')['text'])->toBe("\u{25E6}")
-        ->and(numberingLevel($docx, 'square')['text'])->toBe("\u{25AA}");
+    // Word's own bullets, from its symbol fonts.
+    expect(numberingLevel($docx, 'disc'))->toMatchArray(['text' => "\u{F0B7}", 'font' => 'Symbol'])
+        ->and(numberingLevel($docx, 'circle'))->toMatchArray(['text' => 'o', 'font' => 'Courier New'])
+        ->and(numberingLevel($docx, 'square'))->toMatchArray(['text' => "\u{F0A7}", 'font' => 'Wingdings']);
 });
 
 it('maps list-style-type', function (string $type, string $format) {
@@ -136,7 +138,7 @@ it('maps the type attribute of lists and items', function (string $html, string 
     ['<ol type="A"><li>item</li></ol>', 'upperLetter', '%1.'],
     ['<ol type="i"><li>item</li></ol>', 'lowerRoman', '%1.'],
     ['<ol type="I"><li>item</li></ol>', 'upperRoman', '%1.'],
-    ['<ul type="square"><li>item</li></ul>', 'bullet', "\u{25AA}"],
+    ['<ul type="square"><li>item</li></ul>', 'bullet', "\u{F0A7}"],
     ['<ol><li type="I">item</li></ol>', 'upperRoman', '%1.'],
     ['<ol type="I" style="list-style-type: lower-alpha"><li>item</li></ol>', 'lowerLetter', '%1.'],
 ]);

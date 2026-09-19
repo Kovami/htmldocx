@@ -11,6 +11,16 @@ use Kovami\HtmlDocx\Model\ListDefinition;
 final class NumberingPart
 {
     /**
+     * Word's own bullets, drawn from symbol fonts: a list Word makes looks
+     * like this, and so does one from HTML.
+     */
+    private const array WORD_BULLETS = [
+        "\u{2022}" => ["\u{F0B7}", 'Symbol'],
+        "\u{25E6}" => ['o', 'Courier New'],
+        "\u{25AA}" => ["\u{F0A7}", 'Wingdings'],
+    ];
+
+    /**
      * @param  list<ListDefinition>  $lists
      */
     public static function toXml(array $lists): string
@@ -23,15 +33,24 @@ final class NumberingPart
                 ->leaf('w:multiLevelType', ['w:val' => 'hybridMultilevel']);
 
             foreach ($list->levels as $level) {
+                [$text, $font] = $level->format === 'bullet' ? self::WORD_BULLETS[$level->text] ?? [$level->text, null] : [$level->text, null];
+
                 $xml->open('w:lvl', ['w:ilvl' => $level->level])
                     ->leaf('w:start', ['w:val' => $level->start])
                     ->leaf('w:numFmt', ['w:val' => $level->format])
-                    ->leaf('w:lvlText', ['w:val' => $level->text])
+                    ->leaf('w:lvlText', ['w:val' => $text])
                     ->leaf('w:lvlJc', ['w:val' => 'left'])
                     ->open('w:pPr')
                     ->leaf('w:ind', ['w:left' => $level->indentLeft, 'w:hanging' => $level->hanging])
-                    ->close()
                     ->close();
+
+                if ($font !== null) {
+                    $xml->open('w:rPr')
+                        ->leaf('w:rFonts', ['w:ascii' => $font, 'w:hAnsi' => $font, 'w:hint' => 'default'])
+                        ->close();
+                }
+
+                $xml->close();
             }
 
             $xml->close();

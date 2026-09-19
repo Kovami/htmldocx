@@ -91,6 +91,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bullets from HTML are Word's own: `disc`, `circle` and `square` become the
+  Symbol, Courier New and Wingdings bullets Word draws, instead of the
+  Unicode characters in the text font, which Word drew smaller and lower.
 - A formula on a line of its own (Word's display math) stays one: plain HTML
   writes `<math display="block">`, CKEditor and TinyMCE get `\[…\]`, and the
   HTML reader reads those and TipTap's `block-math` back as display math.
