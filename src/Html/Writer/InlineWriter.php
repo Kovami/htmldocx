@@ -50,7 +50,10 @@ final readonly class InlineWriter
 
         foreach ($inlines as $inline) {
             if ($inline instanceof CommentStart || $inline instanceof CommentEnd) {
-                $this->commentBoundary($inline, $parent);
+                if (! $this->context->plain) {
+                    $this->commentBoundary($inline, $parent);
+                }
+
                 $open = null;
                 $commented = null;
 
@@ -125,6 +128,14 @@ final readonly class InlineWriter
 
     private function field(Field $field, Element $parent): void
     {
+        // Plain HTML has no pages to count: the value Word last showed stays, as text.
+        if ($this->context->plain) {
+            $this->context->warnOnce("The {$field->name} field became the text \"{$field->result}\": plain HTML has no pages");
+            $parent->append($field->result);
+
+            return;
+        }
+
         $span = $this->context->element('span', $parent);
         $span->setAttribute('class', self::FIELD_CLASS);
         $span->setAttribute('data-field', $field->name);

@@ -108,6 +108,7 @@ final class HtmlWriter
         $this->notes($body, $style);
         $this->comments($body, $style);
         $this->headersFooters(HeaderFooter::FOOTER, $body, $style);
+        $this->reportCuts();
 
         $fragment = [];
 
@@ -673,9 +674,33 @@ final class HtmlWriter
         }
     }
 
+    /** Plain HTML has no pages and no margin notes: what only those carry is left out, and said so. */
+    private function reportCuts(): void
+    {
+        if (! $this->context->plain) {
+            return;
+        }
+
+        $document = $this->context->document;
+        $headersFooters = count($document->headersFooters);
+        $comments = count($document->comments);
+
+        if ($headersFooters > 0) {
+            $this->context->warn("{$headersFooters} page header(s) and footer(s) were left out: plain HTML has no pages");
+        }
+
+        if ($comments > 0) {
+            $this->context->warn("{$comments} comment(s) were left out: plain HTML has no place for them");
+        }
+    }
+
     /** The headers or the footers, each in a `div` of its own. */
     private function headersFooters(string $kind, Element $parent, ComputedStyle $parentStyle): void
     {
+        if ($this->context->plain) {
+            return;
+        }
+
         foreach ($this->context->document->headersFooters as $headerFooter) {
             if ($headerFooter->kind !== $kind) {
                 continue;
@@ -701,7 +726,7 @@ final class HtmlWriter
     {
         $comments = $this->context->document->comments;
 
-        if ($comments === []) {
+        if ($comments === [] || $this->context->plain) {
             return;
         }
 

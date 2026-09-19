@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   editor's CSS: every block spells out its font, size, colour, margins and line
   height, tables draw their own borders at Word's column widths, and no editor
   classes or stylesheet are needed.
+- Plain HTML leaves out what has no HTML equivalent and reports each through
+  the warning handler: page headers and footers, comments, and page-number
+  fields (which keep the value Word last showed, as text).
 
 ### Changed
 

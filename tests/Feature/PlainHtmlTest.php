@@ -79,3 +79,38 @@ it('reads its own plain HTML back to the same document', function () {
 
     expect($converter->fromDocx($converter->fromHtml($first)->toDocx())->toHtml())->toBe($first);
 });
+
+it('leaves out headers, footers and comments, and says so', function () {
+    $warnings = [];
+    $html = plainHtml(
+        DocxBuilder::make()
+            ->headerFooter('header', 'rIdH1', 'header1.xml', '<w:p><w:r><w:t>Running head</w:t></w:r></w:p>')
+            ->comments('<w:comment w:id="1" w:author="Ann"><w:p><w:r><w:t>Rephrase this.</w:t></w:r></w:p></w:comment>')
+            ->body(
+                '<w:p><w:commentRangeStart w:id="1"/><w:r><w:t>Body</w:t></w:r><w:commentRangeEnd w:id="1"/>'
+                . '<w:r><w:commentReference w:id="1"/></w:r></w:p>',
+            )
+            ->section('<w:headerReference w:type="default" r:id="rIdH1"/><w:pgSz w:w="11906" w:h="16838"/>'),
+        $warnings,
+    );
+
+    expect($html)->toContain('>Body</p>')
+        ->and($html)->not->toContain('Running head')
+        ->and($html)->not->toContain('Rephrase')
+        ->and($html)->not->toContain('data-comment')
+        ->and($warnings)->toBe([
+            '1 page header(s) and footer(s) were left out: plain HTML has no pages',
+            '1 comment(s) were left out: plain HTML has no place for them',
+        ]);
+});
+
+it('keeps the value a page field last showed, as text', function () {
+    $warnings = [];
+    $html = plainHtml(DocxBuilder::make()->body(
+        '<w:p><w:r><w:t xml:space="preserve">Page </w:t></w:r><w:fldSimple w:instr=" PAGE "><w:r><w:t>4</w:t></w:r></w:fldSimple>'
+        . '<w:r><w:t xml:space="preserve"> and </w:t></w:r><w:fldSimple w:instr=" PAGE "><w:r><w:t>4</w:t></w:r></w:fldSimple></w:p>',
+    ), $warnings);
+
+    expect($html)->toContain('>Page 4 and 4</p>')
+        ->and($warnings)->toBe(['The PAGE field became the text "4": plain HTML has no pages']);
+});

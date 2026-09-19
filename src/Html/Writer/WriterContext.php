@@ -23,29 +23,32 @@ use Kovami\HtmlDocx\Options;
  * browser gives HTML by default, and every block spells out its font, size,
  * colour, margins and line height, since any editor's CSS may change them.
  */
-final readonly class WriterContext
+final class WriterContext
 {
-    public HTMLDocument $dom;
+    public readonly HTMLDocument $dom;
 
-    public StyleResolver $resolver;
+    public readonly StyleResolver $resolver;
 
-    public CssFormatter $css;
+    public readonly CssFormatter $css;
 
-    public OpenComments $comments;
+    public readonly OpenComments $comments;
 
     /** Whether the HTML is plain, written for no editor in particular. */
-    public bool $plain;
+    public readonly bool $plain;
+
+    /** @var array<string, true> messages already given by {@see self::warnOnce()} */
+    private array $warned = [];
 
     /**
      * @param  Editor|null  $editor  the editor the HTML is written for; null for plain HTML
      * @param  Closure(string): void  $warn
      */
     public function __construct(
-        public Document $document,
-        public ?Editor $editor,
-        public Options $options,
-        public ImageHandler $images,
-        private Closure $warn,
+        public readonly Document $document,
+        public readonly ?Editor $editor,
+        public readonly Options $options,
+        public readonly ImageHandler $images,
+        private readonly Closure $warn,
     ) {
         $this->plain = $editor === null;
         $this->dom = HTMLDocument::createEmpty();
@@ -57,6 +60,14 @@ final readonly class WriterContext
     public function warn(string $message): void
     {
         ($this->warn)($message);
+    }
+
+    public function warnOnce(string $message): void
+    {
+        if (! isset($this->warned[$message])) {
+            $this->warned[$message] = true;
+            $this->warn($message);
+        }
     }
 
     public function element(string $tag, Element $parent): Element
