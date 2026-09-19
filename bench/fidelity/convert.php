@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 // Converts one .docx with the library under test and prints JSON: the full
 // HTML document and the page geometry the document asks for, in points.
+// argv[3] "body": convert the body-only variant (body.php) instead.
 
 use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Options;
 
 require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/body.php';
 
 // argv[2]: an editor name, or "plain" (the default).
 $profile = $argv[2] ?? 'plain';
@@ -20,7 +22,15 @@ $converter = $converter->withWarningHandler(static function (string $message) us
     $warnings[] = $message;
 });
 
-$conversion = $converter->fromDocxFile($argv[1]);
+$file = $argv[1];
+
+if (($argv[3] ?? '') === 'body') {
+    $body = sys_get_temp_dir() . '/htmldocx-body-' . getmypid() . '.docx';
+    register_shutdown_function(static fn() => @unlink($body));
+    $file = bodyOnly($file, $body) ? $body : $file;
+}
+
+$conversion = $converter->fromDocxFile($file);
 $document = $conversion->document();
 $page = $document->pageLayout;
 $points = static fn(int $twips): float => $twips / 20;

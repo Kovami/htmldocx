@@ -269,20 +269,20 @@ export function format(r) {
     const pt = (value) => (value === null ? '—' : `${value.toFixed(1)}pt`);
     const pct = (value) => `${(value * 100).toFixed(1)}%`;
 
-    return `${r.name}: pages ${r.htmlPages}/${r.wordPages}, ink ${pct(r.pixelSimilarity)}, words matched ${pct(r.matched)}, same page ${pct(r.samePage)}, dx ${pt(r.dxMedian)}, dy ${pt(r.dyMedian)} (p90 ${pt(r.dyP90)})`;
+    return `${r.name}: pages ${r.htmlPages}/${r.wordPages}, ink ${pct(r.pixelSimilarity)}${r.bodyInk === undefined ? '' : ` (body ${pct(r.bodyInk)})`}, words matched ${pct(r.matched)}, same page ${pct(r.samePage)}, dx ${pt(r.dxMedian)}, dy ${pt(r.dyMedian)} (p90 ${pt(r.dyP90)})`;
 }
 
 export function summary(results) {
     const pt = (value) => (value === null ? '—' : value.toFixed(1));
     const pct = (value) => (value * 100).toFixed(1);
-    const rows = results.map((r) => `| ${r.name} | ${r.htmlPages}/${r.wordPages} | ${pct(r.pixelSimilarity)} | ${pct(r.matched)} | ${pct(r.samePage)} | ${pt(r.dxMedian)} | ${pt(r.dyMedian)} | ${pt(r.dyP90)} |`);
+    const rows = results.map((r) => `| ${r.name} | ${r.htmlPages}/${r.wordPages} | ${pct(r.pixelSimilarity)} | ${pct(r.bodyInk)} | ${pct(r.matched)} | ${pct(r.samePage)} | ${pt(r.dxMedian)} | ${pt(r.dyMedian)} | ${pt(r.dyP90)} |`);
     const mean = (key) => results.reduce((sum, r) => sum + r[key], 0) / Math.max(1, results.length);
 
     return [
-        '| Document | Pages (HTML/Word) | Ink match % | Words matched % | Same page % | dx median pt | dy median pt | dy p90 pt |',
-        '| --- | --- | --- | --- | --- | --- | --- | --- |',
+        '| Document | Pages (HTML/Word) | Ink match % | Body ink match % | Words matched % | Same page % | dx median pt | dy median pt | dy p90 pt |',
+        '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',
         ...rows,
-        `| **Mean** | | **${pct(mean('pixelSimilarity'))}** | **${pct(mean('matched'))}** | **${pct(mean('samePage'))}** | | | |`,
+        `| **Mean** | | **${pct(mean('pixelSimilarity'))}** | **${pct(mean('bodyInk'))}** | **${pct(mean('matched'))}** | **${pct(mean('samePage'))}** | | | |`,
         '',
     ].join('\n');
 }

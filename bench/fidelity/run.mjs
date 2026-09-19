@@ -9,6 +9,9 @@
 //  - ink match: pages rendered to images; the share of the ink on either
 //    side that has ink on the other side within 2 px (1.33 pt), so a slight
 //    shift costs little and a wrong font, size or layout costs what it moves;
+//  - body ink match: the same for the body alone, without headers, footers
+//    and notes, which differ from Word by design (body.php; Word's print of
+//    it is reference/<name>.body.pdf) — the score the release is judged on;
 //  - word placement: every word of Word's PDF is matched with the same word
 //    in ours, and we report how many sit on the same page and how far they
 //    moved, in points.
@@ -45,9 +48,17 @@ for (const name of names) {
         continue;
     }
 
-    const converted = JSON.parse(execFileSync('php', [join(here, 'convert.php'), join(here, 'corpus', `${name}.docx`), profile], { maxBuffer: 256 << 20 }).toString());
+    const converted = convert(name);
     const scores = await measure(browser, converted.html, converted.page, new Uint8Array(readFileSync(reference)), report, name);
-    const result = { ...scores, warnings: converted.warnings.length };
+    const bodyReference = join(here, 'reference', `${name}.body.pdf`);
+    let bodyInk = scores.pixelSimilarity;
+
+    if (existsSync(bodyReference)) {
+        const body = convert(name, 'body');
+        bodyInk = (await measure(browser, body.html, body.page, new Uint8Array(readFileSync(bodyReference)), report, `${name}.body`)).pixelSimilarity;
+    }
+
+    const result = { ...scores, bodyInk, warnings: converted.warnings.length };
     results.push(result);
     console.log(format(result));
 }
@@ -56,3 +67,9 @@ await browser.close();
 writeFileSync(join(report, 'summary.json'), JSON.stringify(results, null, 2));
 writeFileSync(join(report, 'summary.md'), summary(results));
 console.log(`\n${summary(results)}`);
+
+function convert(name, variant = 'full') {
+    const args = [join(here, 'convert.php'), join(here, 'corpus', `${name}.docx`), profile, variant];
+
+    return JSON.parse(execFileSync('php', args, { maxBuffer: 256 << 20 }).toString());
+}
