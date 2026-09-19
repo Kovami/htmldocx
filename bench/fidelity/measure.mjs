@@ -194,25 +194,34 @@ async function words_(bytes) {
         const page = await pdf.getPage(number);
         const height = page.getViewport({ scale: 1 }).height;
         const content = await page.getTextContent();
+        // Where the previous run ended, when it ended inside a word: a
+        // browser draws a ligature as a run of its own ("o", "ffi", "ces").
+        let open = null;
 
         for (const item of content.items) {
             const text = item.str ?? '';
+            const x = item.transform[4];
+            const y = height - item.transform[5];
 
             if (text.trim() === '') {
+                open = null;
                 continue;
             }
 
+            const glued = open !== null && /^\S/.test(text) && Math.abs(open.x - x) < 0.5 && Math.abs(open.y - y) < 0.5;
             // Split runs into words, placing each proportionally along the run.
             const perChar = text.length === 0 ? 0 : item.width / text.length;
 
             for (const match of text.matchAll(/\S+/g)) {
-                words.push({
-                    text: match[0].normalize('NFC'),
-                    page: number,
-                    x: item.transform[4] + perChar * match.index,
-                    y: height - item.transform[5],
-                });
+                if (glued && match.index === 0) {
+                    words[words.length - 1].text += match[0].normalize('NFC');
+                    continue;
+                }
+
+                words.push({ text: match[0].normalize('NFC'), page: number, x: x + perChar * match.index, y });
             }
+
+            open = /\S$/.test(text) ? { x: x + item.width, y } : null;
         }
     }
 
