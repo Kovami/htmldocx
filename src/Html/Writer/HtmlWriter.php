@@ -649,15 +649,33 @@ final class HtmlWriter
                 continue;
             }
 
-            $this->context->element('hr', $parent)->setAttribute('style', 'width: 30%; margin-left: 0;');
-            $list = $this->context->element('ol', $parent);
-            $list->setAttribute('class', "se-{$type}s");
-            $style = $this->context->style($list, $parentStyle, static fn(): array => ['list-style-type' => $marker]);
+            $host = $parent;
+
+            // Plain HTML marks its notes the way DPUB-ARIA does, and names the kind in a class.
+            if ($this->context->plain) {
+                $host = $this->context->element('section', $parent);
+                $host->setAttribute('class', "{$type}s");
+                $host->setAttribute('role', 'doc-endnotes');
+            }
+
+            $this->context->element('hr', $host)->setAttribute('style', 'width: 30%; margin-left: 0;');
+            $list = $this->context->element('ol', $host);
+
+            if (! $this->context->plain) {
+                $list->setAttribute('class', "se-{$type}s");
+            }
+
+            $style = $this->context->style($list, $parentStyle, fn(): array => ['list-style-type' => $marker]
+                + ($this->context->plain ? ['margin' => '0', 'padding' => '0 0 0 ' . $this->context->css->twips(360)] : []));
             $expected = 1;
 
             foreach ($notes as $note) {
                 $item = $this->context->element('li', $list);
                 $item->setAttribute('id', $this->context->id("{$type}-{$note->number}"));
+
+                if ($this->context->plain) {
+                    $item->setAttribute('role', 'doc-endnote');
+                }
 
                 if ($note->number !== $expected) {
                     $item->setAttribute('value', (string) $note->number);
@@ -669,6 +687,10 @@ final class HtmlWriter
 
                 $backlink = $this->context->element('a', $item->lastElementChild ?? $item);
                 $backlink->setAttribute('href', '#' . $this->context->id("{$type}-ref-{$note->number}"));
+
+                if ($this->context->plain) {
+                    $backlink->setAttribute('role', 'doc-backlink');
+                }
                 $backlink->append(" \u{21A9}");
             }
         }

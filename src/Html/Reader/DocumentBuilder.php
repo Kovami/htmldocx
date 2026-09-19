@@ -54,7 +54,11 @@ final class DocumentBuilder
     private const int MIN_CONTENT_WIDTH = 1440;
 
     /** The note sections this library's HTML writer emits, by note type. */
-    private const array NOTE_LIST_CLASSES = [Note::FOOTNOTE => 'se-footnotes', Note::ENDNOTE => 'se-endnotes'];
+    /** The note lists of SunEditor HTML, and of plain HTML, where a DPUB-ARIA section holds them. */
+    private const array NOTE_LISTS = [
+        Note::FOOTNOTE => 'ol.se-footnotes, section.footnotes > ol',
+        Note::ENDNOTE => 'ol.se-endnotes, section.endnotes > ol',
+    ];
 
     private readonly NumberingRegistry $numbering;
 
@@ -250,8 +254,12 @@ final class DocumentBuilder
 
     private function renderInline(Element $element, ComputedStyle $style, InlineFlow $flow, BlockSink $sink): void
     {
-        if ($element->hasAttribute('data-exp') && str_contains((string) $element->getAttribute('class'), 'katex')) {
-            $latex = trim((string) $element->getAttribute('data-exp'));
+        // SunEditor keeps a formula's LaTeX on a KaTeX span, MathML in an annotation.
+        if ($element->hasAttribute('data-exp') && str_contains((string) $element->getAttribute('class'), 'katex')
+            || $element->localName === 'math') {
+            $latex = trim((string) ($element->localName === 'math'
+                ? $element->querySelector('annotation[encoding="application/x-tex"]')?->textContent
+                : $element->getAttribute('data-exp')));
 
             if ($latex !== '') {
                 $flow->buffer()->appendFormula(new Formula($latex, properties: $this->mapper->run($style)), $flow->link);
@@ -601,13 +609,14 @@ final class DocumentBuilder
 
     /**
      * Finds the note sections this library's HTML writer emits — `<ol class="se-footnotes">`
-     * and `<ol class="se-endnotes">`, the rule above each and the links back to the marks —
+     * and `<ol class="se-endnotes">`, or in plain HTML the list in `<section class="footnotes">`
+     * and `<section class="endnotes">`, the rule above each and the links back to the marks —
      * so a document that came from a DOCX keeps its notes as notes on the way back.
      */
     private function collectNotes(HtmlDocument $html): void
     {
-        foreach (self::NOTE_LIST_CLASSES as $type => $class) {
-            foreach ($html->body()->querySelectorAll('ol.' . $class) as $list) {
+        foreach (self::NOTE_LISTS as $type => $selector) {
+            foreach ($html->body()->querySelectorAll($selector) as $list) {
                 $this->noteLists[spl_object_id($list)] = ['type' => $type, 'list' => $list];
                 $separator = $list->previousElementSibling;
 

@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plain HTML leaves out what has no HTML equivalent and reports each through
   the warning handler: page headers and footers, comments, and page-number
   fields (which keep the value Word last showed, as text).
+- Plain HTML uses standard markup: notes as DPUB-ARIA sections
+  (`role="doc-noteref"`, `<section class="footnotes" role="doc-endnotes">`),
+  formulas as MathML with the LaTeX in an `application/x-tex` annotation, and
+  pictures as ordinary `<img>`. The HTML reader understands this markup as well
+  as SunEditor's.
 
 ### Changed
 

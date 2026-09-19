@@ -114,3 +114,56 @@ it('keeps the value a page field last showed, as text', function () {
     expect($html)->toContain('>Page 4 and 4</p>')
         ->and($warnings)->toBe(['The PAGE field became the text "4": plain HTML has no pages']);
 });
+
+it('marks notes the way DPUB-ARIA does and reads them back as notes', function () {
+    $converter = HtmlDocx::plain(testOptions());
+    $html = plainHtml(
+        DocxBuilder::make()
+            ->notes('footnote', '<w:footnote w:id="1"><w:p><w:r><w:t>A note.</w:t></w:r></w:p></w:footnote>')
+            ->body('<w:p><w:r><w:t>Text</w:t></w:r><w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:footnoteReference w:id="1"/></w:r></w:p>'),
+    );
+
+    expect($html)->toContain('<a href="#footnote-1" id="footnote-ref-1" role="doc-noteref">1</a>')
+        ->and($html)->toContain('<section class="footnotes" role="doc-endnotes"><hr')
+        ->and($html)->toContain('<li id="footnote-1" role="doc-endnote">')
+        ->and($html)->toContain('<a href="#footnote-ref-1" role="doc-backlink"> ↩</a>')
+        ->and($html)->not->toContain('se-footnotes');
+
+    $document = $converter->fromHtml($html)->document();
+
+    expect($document->notes)->toHaveCount(1)
+        ->and($document->notes[0]->type)->toBe('footnote');
+});
+
+it('writes formulas as MathML with their LaTeX, and reads the LaTeX back', function () {
+    $converter = HtmlDocx::plain(testOptions());
+    $html = $converter->fromHtml('<p><span class="__se__katex katex" data-exp="x^2 + \frac{1}{2} = 3.14">x</span></p>')->toHtml();
+
+    expect($html)->toContain(
+        '<math><semantics><mrow><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo>'
+        . '<mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>3.14</mn></mrow>'
+        . '<annotation encoding="application/x-tex">x^2 + \frac{1}{2} = 3.14</annotation></semantics></math>',
+    )->and($html)->not->toContain('katex');
+
+    $formula = $converter->fromHtml($html)->document()->blocks[0]->children[0];
+
+    expect($formula)->toBeInstanceOf(Kovami\HtmlDocx\Model\Formula::class)
+        ->and($formula->latex)->toBe('x^2 + \frac{1}{2} = 3.14');
+});
+
+it('writes each kind of formula node as MathML', function (string $latex, string $mathMl) {
+    $html = HtmlDocx::plain(testOptions())
+        ->fromHtml('<p><span class="__se__katex katex" data-exp="' . htmlspecialchars($latex) . '">x</span></p>')
+        ->toHtml();
+
+    preg_match('~<semantics>(.*)<annotation~', $html, $match);
+
+    expect($match[1])->toBe("<mrow>{$mathMl}</mrow>");
+})->with([
+    'root' => ['\sqrt[3]{y}', '<mroot><mrow><mi>y</mi></mrow><mrow><mn>3</mn></mrow></mroot>'],
+    'sum' => ['\sum_{i=1}^{n} i', '<munderover><mrow><mo>∑</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>n</mi></mrow></munderover><mi>i</mi>'],
+    'function' => ['\sin x', '<mi>sin</mi><mo>⁡</mo><mi>x</mi>'],
+    'accent' => ['\hat{a}', '<mover accent="true"><mrow><mi>a</mi></mrow><mrow><mo>^</mo></mrow></mover>'],
+    'text' => ['\text{if } x', '<mtext>if </mtext><mi>x</mi>'],
+    'matrix' => ['\begin{pmatrix} 1 & 0 \end{pmatrix}', '<mo>(</mo><mrow><mtable><mtr><mtd><mrow><mn>1</mn></mrow></mtd><mtd><mrow><mn>0</mn></mrow></mtd></mtr></mtable></mrow><mo>)</mo>'],
+]);

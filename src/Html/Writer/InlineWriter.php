@@ -313,11 +313,21 @@ final readonly class InlineWriter
         $link = $this->context->element('a', $sup);
         $link->setAttribute('href', '#' . $this->context->id("{$reference->type}-{$reference->number}"));
         $link->setAttribute('id', $this->context->id("{$reference->type}-ref-{$reference->number}"));
+
+        if ($this->context->plain) {
+            $link->setAttribute('role', 'doc-noteref');
+        }
         $link->append(self::noteLabel($reference->type, $reference->number));
     }
 
     private function formula(Formula $formula, Element $parent): void
     {
+        if ($this->context->plain) {
+            (new MathMlWriter($this->context->dom))->write($formula->latex, $parent);
+
+            return;
+        }
+
         $span = $this->context->element('span', $parent);
         $span->setAttribute('class', '__se__katex katex');
         $span->setAttribute('contenteditable', 'false');
