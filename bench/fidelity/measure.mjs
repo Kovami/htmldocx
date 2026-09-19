@@ -31,7 +31,7 @@ export async function measure(browser, html, page, reference, dir, name) {
 }
 
 /** Prints the converted HTML to PDF the way the document asks to be printed. */
-async function print(browser, html, geometry, dir, name) {
+export async function print(browser, html, geometry, dir, name) {
     // The page box and margins are print setup, which a document fragment
     // cannot carry; fonts are what Word has and a browser usually does not.
     const setup = `<style>${fontCss}

@@ -13,3 +13,4 @@
 /phpunit.xml export-ignore
 /CONTRIBUTING.md export-ignore
 /bench export-ignore
+/examples export-ignore

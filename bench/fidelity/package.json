@@ -5,7 +5,8 @@
   "description": "Measures how closely the HTML written by kovami/htmldocx looks like the same document in Microsoft Word.",
   "scripts": {
     "bench": "node run.mjs",
-    "editors": "node editors.mjs"
+    "editors": "node editors.mjs",
+    "examples": "node examples.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^0.1.80",
