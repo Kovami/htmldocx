@@ -40,17 +40,27 @@ final readonly class TableWriter
         $element = $this->context->element('table', $parent);
         $percent = $availableWidth > 0 ? $table->properties->width / $availableWidth * 100 : 100;
         $fullWidth = $percent >= 99.5;
-        $element->setAttribute('class', $fullWidth ? 'se-table-size-100' : 'se-table-size-auto');
+        $plain = $this->context->plain;
 
-        $tableStyle = $this->context->style($element, $parentStyle, function (ComputedStyle $baseline) use ($table, $fullWidth, $percent, $marginTop, $marginBottom): array {
+        if (! $plain) {
+            $element->setAttribute('class', $fullWidth ? 'se-table-size-100' : 'se-table-size-auto');
+        }
+
+        $tableStyle = $this->context->style($element, $parentStyle, function (ComputedStyle $baseline) use ($table, $fullWidth, $percent, $marginTop, $marginBottom, $plain): array {
             $css = [];
 
-            if (! $fullWidth) {
+            if (! $fullWidth || $plain) {
                 $css['width'] = CssFormatter::number(min(100, $percent)) . '%';
             }
 
+            if ($plain) {
+                // Word draws one line between neighbouring cells, at the widths it was given.
+                $css['border-collapse'] = 'collapse';
+                $css['table-layout'] = 'fixed';
+            }
+
             foreach (['margin-top' => $marginTop, 'margin-bottom' => $marginBottom] as $property => $twips) {
-                $value = $this->context->css->length($twips, $baseline->lengthPt($property));
+                $value = $plain ? $this->context->css->twips($twips) : $this->context->css->length($twips, $baseline->lengthPt($property));
 
                 if ($value !== null) {
                     $css[$property] = $value;
@@ -128,7 +138,8 @@ final readonly class TableWriter
         }
 
         $style = $this->context->style($element, $rowStyle, function (ComputedStyle $baseline) use ($properties): array {
-            $css = $this->context->css->sides($properties->borders, $baseline);
+            // Editors draw their own cell borders, which plain HTML overrides.
+            $css = $this->context->css->sides($properties->borders, $baseline, $this->context->plain);
 
             $background = $baseline->backgroundColor();
 
@@ -143,7 +154,7 @@ final readonly class TableWriter
             };
             $baselineAlign = $baseline->value('vertical-align') ?? 'baseline';
 
-            if ($align !== $baselineAlign && ! ($this->adoptsWordDefaults() && $properties->verticalAlign === null)) {
+            if (($align !== $baselineAlign || $this->context->plain) && ! ($this->adoptsWordDefaults() && $properties->verticalAlign === null)) {
                 $css['vertical-align'] = $align;
             }
 
@@ -160,7 +171,7 @@ final readonly class TableWriter
                     ['top', 'right', 'bottom', 'left'],
                 );
 
-                if ($paddings !== $baselinePaddings) {
+                if ($paddings !== $baselinePaddings || $this->context->plain) {
                     $css['padding'] = implode(' ', $paddings);
                 }
             }
@@ -178,7 +189,7 @@ final readonly class TableWriter
 
     private function adoptsWordDefaults(): bool
     {
-        return ! $this->context->options->keepDocumentDefaults;
+        return ! $this->context->plain && ! $this->context->options->keepDocumentDefaults;
     }
 
     /**

@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace Kovami\HtmlDocx\Css;
 
 /**
- * The built-in stylesheet: browser defaults for structural HTML plus the
- * rules SunEditor's own editor CSS applies to its content (`.sun-editor-editable`
+ * The built-in stylesheets HTML is read and written against.
+ *
+ * {@see self::CSS}: browser defaults for structural HTML plus the rules
+ * SunEditor's own editor CSS applies to its content (`.sun-editor-editable`
  * and its `__se__*` classes). Because SunEditor emits bare HTML without its
  * stylesheet, the document only looks like it did in the editor if these
  * rules are re-applied during conversion.
+ *
+ * {@see self::BROWSER}: a browser's defaults alone, for plain HTML.
  */
 final class DefaultStylesheet
 {
-    public const string CSS = <<<'CSS'
+    private const string DISPLAY = <<<'CSS'
         html, body, div, p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, dl, dt, dd,
         address, article, aside, footer, header, main, nav, section, figure, figcaption,
         details, summary, fieldset, legend, form, hr, center, hgroup, search { display: block; }
@@ -28,6 +32,9 @@ final class DefaultStylesheet
         head, script, style, template, title, meta, link, base, noscript, rp, colgroup, col,
         datalist, param, source, track, [hidden] { display: none; }
 
+        CSS;
+
+    public const string CSS = self::DISPLAY . "\n" . <<<'CSS'
         body { line-height: 1.5; }
 
         p { margin: 0 0 10px 0; }
@@ -94,5 +101,45 @@ final class DefaultStylesheet
         }
         .__se__t-shadow { text-shadow: -0.2rem -0.2rem 1rem #fff, 0.2rem 0.2rem 1rem #fff, 0 0 0.2rem #999; }
         .__se__t-code { font-family: monospace; color: #666; background-color: rgba(27, 31, 35, 0.05); }
+        CSS;
+
+    /**
+     * What a browser gives HTML before any editor or site CSS: the baseline
+     * plain HTML is written against, which spells out everything else.
+     * Scripts keep their size: Word already shrinks superscript and subscript.
+     */
+    public const string BROWSER = self::DISPLAY . <<<'CSS'
+        p { margin: 1em 0; }
+        h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; }
+        h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
+        h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; }
+        h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; }
+        h5 { font-size: 0.83em; font-weight: bold; margin: 1.67em 0; }
+        h6 { font-size: 0.67em; font-weight: bold; margin: 2.33em 0; }
+
+        b, strong { font-weight: bold; }
+        i, em, cite, dfn, var, address { font-style: italic; }
+        u, ins { text-decoration: underline; }
+        s, strike, del { text-decoration: line-through; }
+        sub { vertical-align: sub; }
+        sup { vertical-align: super; }
+        small { font-size: smaller; }
+        big { font-size: larger; }
+        mark { background-color: yellow; }
+        code, kbd, samp, tt { font-family: monospace; }
+        a { color: #0000ee; text-decoration: underline; }
+        center { text-align: center; }
+
+        ul, ol { margin: 1em 0; padding-left: 40px; }
+        li ul, li ol { margin: 0; }
+        ul { list-style-type: disc; }
+        ol { list-style-type: decimal; }
+        ul ul, ol ul { list-style-type: circle; }
+        ul ul ul, ul ol ul, ol ul ul, ol ol ul { list-style-type: square; }
+
+        hr { border: 1px inset; margin: 0.5em 0; }
+        td, th { padding: 1px; vertical-align: inherit; }
+        th { font-weight: bold; text-align: center; }
+        figure { margin: 1em 40px; }
         CSS;
 }

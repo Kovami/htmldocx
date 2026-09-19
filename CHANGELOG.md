@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `HtmlDocx::plain()` writes self-contained HTML that looks the same under any
+  editor's CSS: every block spells out its font, size, colour, margins and line
+  height, tables draw their own borders at Word's column widths, and no editor
+  classes or stylesheet are needed.
+
 ### Changed
+
+- `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
+  defaults: a browser's for plain HTML, SunEditor's for an editor profile.
 
 - **Breaking:** a new entry point replaces the 1.x methods. Choose the HTML
   with `HtmlDocx::plain()` or `HtmlDocx::for(Editor::SunEditor)` (an `Editor`

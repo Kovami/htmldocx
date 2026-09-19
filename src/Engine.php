@@ -46,7 +46,7 @@ final readonly class Engine
         $document = HtmlDocument::fromString($html);
 
         $resolver = StyleResolver::fromStylesheets(
-            $this->options->defaultStylesheet,
+            $this->options->stylesheet($this->editor),
             $this->options->extraStylesheet,
             $document->stylesheets(),
         );

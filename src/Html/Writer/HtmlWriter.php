@@ -94,7 +94,11 @@ final class HtmlWriter
 
         $root = ComputedStyle::root($options->fontFamily, $options->fontSizePt, strtoupper(ltrim($options->textColor, '#')));
         $body = $this->context->dom->createElement('body');
-        $body->setAttribute('class', 'sun-editor-editable');
+
+        if (! $this->context->plain) {
+            $body->setAttribute('class', 'sun-editor-editable');
+        }
+
         $this->context->dom->append($body);
 
         $style = $this->context->resolver->resolve($body, $root);
@@ -187,7 +191,7 @@ final class HtmlWriter
         $heading = $this->headingTag($properties);
         $segments = self::splitOnPageBreaks($paragraph->children);
 
-        if ($item === null && count($segments) === 1) {
+        if ($item === null && count($segments) === 1 && ! $this->context->plain) {
             $image = self::imageOnly($segments[0]);
 
             if ($image !== null) {
@@ -326,6 +330,16 @@ final class HtmlWriter
             $lengths['margin-bottom'] = $bottom;
         }
 
+        if ($this->context->plain) {
+            // Any editor's CSS may move a block, so every edge is spelled out.
+            $css += $this->blockFont($properties, $editor);
+            $css['margin'] = implode(' ', array_map(
+                fn(int $twips): string => $this->context->css->twips($twips),
+                [$top, $lengths['margin-right'], $bottom, $lengths['margin-left']],
+            ));
+            $lengths = [];
+        }
+
         if (! $isItem) {
             $lengths['text-indent'] = $properties->firstLine;
         }
@@ -344,6 +358,8 @@ final class HtmlWriter
             if ($lineHeight !== null) {
                 $css['line-height'] = $lineHeight;
             }
+        } elseif ($this->context->plain) {
+            $css['line-height'] = 'normal';
         }
 
         $background = $editor->backgroundColor();
@@ -385,21 +401,54 @@ final class HtmlWriter
     }
 
     /**
+     * The font a plain block sets for its text: its paragraph mark's, which
+     * carries the paragraph style's font; runs formatted otherwise override it.
+     *
+     * @return array<string, string>
+     */
+    private function blockFont(ParagraphProperties $properties, ComputedStyle $editor): array
+    {
+        $document = $this->context->document;
+        $mark = $properties->markRunProperties ?? $document->style($properties->styleId)?->run;
+        $defaults = $document->defaultRunProperties;
+        $options = $this->context->options;
+        $size = $mark->size ?? $defaults->size;
+
+        $css = [
+            'font-family' => CssFormatter::fontFamily($mark->fontFamily ?? $defaults->fontFamily ?? $options->fontFamily),
+            'font-size' => $this->context->css->points($size === null ? $options->fontSizePt : $size / 2),
+            'color' => CssFormatter::color($mark->color ?? $defaults->color ?? ltrim($options->textColor, '#')),
+        ];
+
+        // Headings are bold in a browser, and seldom are in Word.
+        if (($mark->bold ?? false) !== $editor->bold) {
+            $css['font-weight'] = ($mark->bold ?? false) ? 'bold' : 'normal';
+        }
+
+        return $css;
+    }
+
+    /**
      * @param  string  $rule  ST_LineSpacingRule: auto, atLeast or exact
      */
     private function lineHeight(int $lineSpacing, string $rule, ComputedStyle $editor): ?string
     {
         if ($rule === 'auto') {
+            // Word's single spacing follows the font's own line gap, as `normal` does.
+            if ($lineSpacing === 240 && $this->context->plain) {
+                return 'normal';
+            }
+
             $multiple = $lineSpacing / 240;
             $current = $editor->lineHeight?->multiple;
 
-            return $current !== null && abs($current - $multiple) < 0.005 ? null : CssFormatter::number($multiple);
+            return $current !== null && abs($current - $multiple) < 0.005 && ! $this->context->plain ? null : CssFormatter::number($multiple);
         }
 
         $value = $this->context->css->twips($lineSpacing);
         $current = $editor->lineHeight?->points;
 
-        return $current !== null && $this->context->css->points($current) === $value ? null : $value;
+        return $current !== null && $this->context->css->points($current) === $value && ! $this->context->plain ? null : $value;
     }
 
     /**
@@ -563,8 +612,12 @@ final class HtmlWriter
         $style = $this->context->style($list, $hostStyle, function (ComputedStyle $editor) use ($marker, $padding): array {
             $css = [];
 
-            if ($marker !== null && $marker !== $editor->listStyleType) {
+            if ($marker !== null && ($marker !== $editor->listStyleType || $this->context->plain)) {
                 $css['list-style-type'] = $marker;
+            }
+
+            if ($this->context->plain) {
+                return $css + ['margin' => '0', 'padding' => '0 0 0 ' . $this->context->css->twips($padding)];
             }
 
             // The items carry Word's spacing themselves; the list box adds none.
@@ -717,19 +770,22 @@ final class HtmlWriter
             $head[] = '<meta name="author" content="' . $escape($metadata->author) . '">';
         }
 
-        $environment = CssFormatter::declarations([
-            'font-family' => CssFormatter::fontFamily($options->fontFamily),
-            'font-size' => $this->context->css->points($options->fontSizePt),
-            'color' => CssFormatter::color(ltrim($options->textColor, '#')),
-        ]);
+        // Plain HTML needs no stylesheet: every block carries its own formatting.
+        if (! $this->context->plain) {
+            $environment = CssFormatter::declarations([
+                'font-family' => CssFormatter::fontFamily($options->fontFamily),
+                'font-size' => $this->context->css->points($options->fontSizePt),
+                'color' => CssFormatter::color(ltrim($options->textColor, '#')),
+            ]);
 
-        $stylesheet = trim($options->defaultStylesheet . "\n" . $options->extraStylesheet) . "\nbody { {$environment} }";
-        $head[] = "<style>\n" . str_replace('</style', '<\/style', $stylesheet) . "\n</style>";
+            $stylesheet = trim($options->stylesheet($this->context->editor) . "\n" . $options->extraStylesheet) . "\nbody { {$environment} }";
+            $head[] = "<style>\n" . str_replace('</style', '<\/style', $stylesheet) . "\n</style>";
+        }
 
         return '<!DOCTYPE html>' . "\n"
             . '<html' . ($language === null ? '' : ' lang="' . $escape($language) . '"') . '>' . "\n"
             . '<head>' . "\n" . implode("\n", $head) . "\n" . '</head>' . "\n"
-            . '<body class="sun-editor-editable">' . "\n" . $body . "\n" . '</body>' . "\n"
+            . ($this->context->plain ? '<body>' : '<body class="sun-editor-editable">') . "\n" . $body . "\n" . '</body>' . "\n"
             . '</html>' . "\n";
     }
 

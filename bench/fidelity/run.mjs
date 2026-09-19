@@ -13,6 +13,7 @@
 //    moved, in points.
 //
 // Usage: npm run bench [-- name ...]   (report/ gets images and summary)
+//        PROFILE=suneditor npm run bench   (an editor profile instead of plain HTML)
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,6 +32,7 @@ const scale = 1.5; // 108 dpi
 mkdirSync(report, { recursive: true });
 
 const only = process.argv.slice(2);
+const profile = process.env.PROFILE ?? 'plain';
 const names = readdirSync(join(here, 'corpus'))
     .filter((file) => file.endsWith('.docx'))
     .map((file) => basename(file, '.docx'))
@@ -49,7 +51,7 @@ for (const name of names) {
         continue;
     }
 
-    const converted = JSON.parse(execFileSync('php', [join(here, 'convert.php'), join(here, 'corpus', `${name}.docx`)], { maxBuffer: 256 << 20 }).toString());
+    const converted = JSON.parse(execFileSync('php', [join(here, 'convert.php'), join(here, 'corpus', `${name}.docx`), profile], { maxBuffer: 256 << 20 }).toString());
     const ours = await print(converted, name);
     const theirs = new Uint8Array(readFileSync(reference));
 

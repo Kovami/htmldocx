@@ -77,9 +77,10 @@ final readonly class CssFormatter
      * the editor's stylesheet already draws around it: a shorthand when all
      * four sides agree, nothing at all when they already match.
      *
+     * @param  bool  $always  write the borders even where they already match
      * @return array<string, string>
      */
-    public function sides(BorderSet $borders, ComputedStyle $baseline): array
+    public function sides(BorderSet $borders, ComputedStyle $baseline, bool $always = false): array
     {
         $sides = [];
 
@@ -87,7 +88,7 @@ final readonly class CssFormatter
             $wanted = $this->border($borders->{$side});
             $edge = $baseline->border($side);
             $current = $edge === null ? 'none' : $this->points($edge->widthPt) . ' ' . $edge->style . ' ' . self::color($edge->color);
-            $sides[$side] = [$wanted, $wanted !== $current];
+            $sides[$side] = [$wanted, $always || $wanted !== $current];
         }
 
         $changed = array_filter($sides, static fn(array $side): bool => $side[1]);

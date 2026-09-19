@@ -18,6 +18,10 @@ use Kovami\HtmlDocx\Options;
  * What the HTML writers share for one document: the DOM being built, the
  * editor's stylesheet (so only formatting that differs from it is written)
  * and the output settings.
+ *
+ * Plain HTML is written for no editor in particular: its baseline is what a
+ * browser gives HTML by default, and every block spells out its font, size,
+ * colour, margins and line height, since any editor's CSS may change them.
  */
 final readonly class WriterContext
 {
@@ -28,6 +32,9 @@ final readonly class WriterContext
     public CssFormatter $css;
 
     public OpenComments $comments;
+
+    /** Whether the HTML is plain, written for no editor in particular. */
+    public bool $plain;
 
     /**
      * @param  Editor|null  $editor  the editor the HTML is written for; null for plain HTML
@@ -40,8 +47,9 @@ final readonly class WriterContext
         public ImageHandler $images,
         private Closure $warn,
     ) {
+        $this->plain = $editor === null;
         $this->dom = HTMLDocument::createEmpty();
-        $this->resolver = StyleResolver::fromStylesheets($options->defaultStylesheet, $options->extraStylesheet, []);
+        $this->resolver = StyleResolver::fromStylesheets($options->stylesheet($editor), $options->extraStylesheet, []);
         $this->css = new CssFormatter($options->cssUnit);
         $this->comments = new OpenComments();
     }
@@ -84,7 +92,7 @@ final readonly class WriterContext
     /** Whether a value equals the document's own default and the editor's default should be used instead. */
     public function adoptsEditorDefault(mixed $value, mixed $documentDefault): bool
     {
-        return ! $this->options->keepDocumentDefaults && $value === $documentDefault;
+        return ! $this->plain && ! $this->options->keepDocumentDefaults && $value === $documentDefault;
     }
 
     public function id(string $name): string

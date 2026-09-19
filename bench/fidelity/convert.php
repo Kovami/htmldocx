@@ -11,8 +11,8 @@ use Kovami\HtmlDocx\Options;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-// argv[2]: an editor name, or "plain"; SunEditor until plain HTML is the measured target.
-$profile = $argv[2] ?? 'suneditor';
+// argv[2]: an editor name, or "plain" (the default).
+$profile = $argv[2] ?? 'plain';
 $options = new Options(fullHtmlDocument: true);
 $converter = $profile === 'plain' ? HtmlDocx::plain($options) : HtmlDocx::for(Editor::fromName($profile), $options);
 $warnings = [];
