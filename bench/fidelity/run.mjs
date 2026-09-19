@@ -6,8 +6,9 @@
 // result is compared with reference/<name>.pdf, which Word printed
 // (export-references.sh). Two measures per document:
 //
-//  - pixel similarity: pages rendered to images and compared pixel by pixel,
-//    counted over the pixels that carry ink on either side;
+//  - ink match: pages rendered to images; the share of the ink on either
+//    side that has ink on the other side within 2 px (1.33 pt), so a slight
+//    shift costs little and a wrong font, size or layout costs what it moves;
 //  - word placement: every word of Word's PDF is matched with the same word
 //    in ours, and we report how many sit on the same page and how far they
 //    moved, in points.

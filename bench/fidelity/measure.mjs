@@ -11,6 +11,9 @@ import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { fontFaces } from './fonts.mjs';
 
 const scale = 1.5; // 108 dpi
+// How far ink may move and still count as in place: 2 px at 108 dpi is 1.33 pt,
+// what a baseline or a glyph edge drifts by between two layout engines.
+const reach = 2;
 const fontCss = fontFaces();
 
 /**
@@ -48,7 +51,7 @@ html, body { margin: 0; padding: 0; }
     return new Uint8Array(pdf);
 }
 
-async function rasterize(bytes) {
+export async function rasterize(bytes) {
     const pdf = await getDocument({ data: bytes.slice(), disableFontFace: true, useSystemFonts: false, verbosity: 0 }).promise;
     const pages = [];
 
@@ -66,8 +69,15 @@ async function rasterize(bytes) {
     return pages;
 }
 
-/** Mean similarity over pages; a page only one side has counts as 0. */
-function comparePages(word, html, dir, name) {
+/**
+ * Mean similarity over pages; a page only one side has counts as 0. A page's
+ * similarity is the share of the ink on either side that has ink on the other
+ * side within `reach` pixels: a slight shift costs little, a different font,
+ * size or layout costs what it moves. (Counting differing pixels instead
+ * punishes a 1 px shift as hard as wrong text, and pixelmatch's
+ * anti-aliasing filter lets thin wrong text through.)
+ */
+export function comparePages(word, html, dir, name) {
     const count = Math.max(word.length, html.length);
     let total = 0;
 
@@ -84,9 +94,8 @@ function comparePages(word, html, dir, name) {
         const left = crop(a, width, height);
         const right = crop(b, width, height);
         const diff = new PNG({ width, height });
-        const different = pixelmatch(left, right, diff.data, width, height, { threshold: 0.2, includeAA: false });
-        const ink = inkUnion(left, right);
-        total += ink === 0 ? 1 : Math.max(0, 1 - different / ink);
+        pixelmatch(left, right, diff.data, width, height, { threshold: 0.2 });
+        total += inkMatch(ink(left), ink(right), width, height);
 
         writeFileSync(join(dir, `${name}-p${index + 1}-diff.png`), PNG.sync.write(diff));
         writeFileSync(join(dir, `${name}-p${index + 1}-word.png`), toPng(left, width, height));
@@ -106,16 +115,67 @@ function crop(image, width, height) {
     return out;
 }
 
-function inkUnion(a, b) {
-    let ink = 0;
+/** Which pixels carry ink: anything visibly darker than white. */
+function ink(data) {
+    const mask = new Uint8Array(data.length / 4);
 
-    for (let i = 0; i < a.length; i += 4) {
-        if (a[i] + a[i + 1] + a[i + 2] < 720 || b[i] + b[i + 1] + b[i + 2] < 720) {
-            ink++;
+    for (let i = 0; i < mask.length; i++) {
+        mask[i] = data[i * 4] + data[i * 4 + 1] + data[i * 4 + 2] < 720 ? 1 : 0;
+    }
+
+    return mask;
+}
+
+/** Share of both sides' ink with ink on the other side within `reach` pixels. */
+function inkMatch(a, b, width, height) {
+    const near = (mask) => dilate(mask, width, height);
+    const nearA = near(a);
+    const nearB = near(b);
+    let inkA = 0;
+    let inkB = 0;
+    let matched = 0;
+
+    for (let i = 0; i < a.length; i++) {
+        inkA += a[i];
+        inkB += b[i];
+        matched += (a[i] & nearB[i]) + (b[i] & nearA[i]);
+    }
+
+    return inkA + inkB === 0 ? 1 : matched / (inkA + inkB);
+}
+
+/** A mask grown by `reach` pixels in every direction (a square), row pass then column pass. */
+function dilate(mask, width, height) {
+    const rows = new Uint8Array(mask.length);
+    const out = new Uint8Array(mask.length);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let hit = 0;
+
+            for (let dx = -reach; dx <= reach && !hit; dx++) {
+                const xx = x + dx;
+                hit = xx >= 0 && xx < width ? mask[y * width + xx] : 0;
+            }
+
+            rows[y * width + x] = hit;
         }
     }
 
-    return ink;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let hit = 0;
+
+            for (let dy = -reach; dy <= reach && !hit; dy++) {
+                const yy = y + dy;
+                hit = yy >= 0 && yy < height ? rows[yy * width + x] : 0;
+            }
+
+            out[y * width + x] = hit;
+        }
+    }
+
+    return out;
 }
 
 function toPng(data, width, height) {
@@ -209,7 +269,7 @@ export function format(r) {
     const pt = (value) => (value === null ? '—' : `${value.toFixed(1)}pt`);
     const pct = (value) => `${(value * 100).toFixed(1)}%`;
 
-    return `${r.name}: pages ${r.htmlPages}/${r.wordPages}, pixels ${pct(r.pixelSimilarity)}, words matched ${pct(r.matched)}, same page ${pct(r.samePage)}, dx ${pt(r.dxMedian)}, dy ${pt(r.dyMedian)} (p90 ${pt(r.dyP90)})`;
+    return `${r.name}: pages ${r.htmlPages}/${r.wordPages}, ink ${pct(r.pixelSimilarity)}, words matched ${pct(r.matched)}, same page ${pct(r.samePage)}, dx ${pt(r.dxMedian)}, dy ${pt(r.dyMedian)} (p90 ${pt(r.dyP90)})`;
 }
 
 export function summary(results) {
@@ -219,7 +279,7 @@ export function summary(results) {
     const mean = (key) => results.reduce((sum, r) => sum + r[key], 0) / Math.max(1, results.length);
 
     return [
-        '| Document | Pages (HTML/Word) | Pixels % | Words matched % | Same page % | dx median pt | dy median pt | dy p90 pt |',
+        '| Document | Pages (HTML/Word) | Ink match % | Words matched % | Same page % | dx median pt | dy median pt | dy p90 pt |',
         '| --- | --- | --- | --- | --- | --- | --- | --- |',
         ...rows,
         `| **Mean** | | **${pct(mean('pixelSimilarity'))}** | **${pct(mean('matched'))}** | **${pct(mean('samePage'))}** | | | |`,

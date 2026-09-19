@@ -105,7 +105,7 @@ for (const [editor, config] of editors.flatMap((editor) => ['default', 'recommen
 
         const result = { editor: run, name, before, after, pixels: scores?.pixelSimilarity ?? null, errors };
         results.push(result);
-        console.log(`${run} ${name}: survived ${percent(survival([result]).rate)}, pixels ${scores ? percent(scores.pixelSimilarity) : '—'}${errors.length ? `, ${errors.length} page error(s)` : ''}`);
+        console.log(`${run} ${name}: survived ${percent(survival([result]).rate)}, ink ${scores ? percent(scores.pixelSimilarity) : '—'}${errors.length ? `, ${errors.length} page error(s)` : ''}`);
     }
 }
 
@@ -247,9 +247,9 @@ function percent(value) {
 function summary(entries) {
     const byEditor = Object.groupBy(entries, (entry) => entry.editor);
     const lines = [
-        `Profile: ${profile ?? 'each editor\'s own'}. Survival: share of the library's tags, attributes and CSS properties still there after the editor. Pixels: the editor's HTML printed and compared with Word.`,
+        `Profile: ${profile ?? 'each editor\'s own'}. Survival: share of the library's tags, attributes and CSS properties still there after the editor. Ink match: the editor's HTML printed and compared with Word (share of ink in place within 1.33 pt).`,
         '',
-        `| Editor | Survived | ${CATEGORIES.join(' | ')} | Pixels |`,
+        `| Editor | Survived | ${CATEGORIES.join(' | ')} | Ink match |`,
         `| --- | --- | ${CATEGORIES.map(() => '---').join(' | ')} | --- |`,
     ];
 
