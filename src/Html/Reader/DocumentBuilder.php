@@ -10,6 +10,7 @@ use Dom\Node;
 use Dom\Text;
 use Kovami\HtmlDocx\Config\PageLayout;
 use Kovami\HtmlDocx\Css\ComputedStyle;
+use Kovami\HtmlDocx\Css\FontMetrics;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Css\StyleResolver;
 use Kovami\HtmlDocx\Model\Block;
@@ -125,6 +126,7 @@ final class DocumentBuilder
         private readonly PropertyMapper $mapper,
         private readonly ImageFactory $images,
         private readonly Options $options,
+        private readonly bool $plain = false,
     ) {
         $this->numbering = new NumberingRegistry();
         $this->bookmarks = new BookmarkRegistry();
@@ -573,7 +575,11 @@ final class DocumentBuilder
         $context = $flow->context;
 
         if ($properties === null) {
-            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing($style->lineHeight);
+            // Plain HTML writes Word's line pitch in the font's own terms; see HtmlWriter.
+            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing(
+                $style->lineHeight,
+                ($this->plain ? FontMetrics::singleLine($style->fontFamily) : null) ?? 1.0,
+            );
 
             $properties = new ParagraphProperties(
                 styleId: $context->styleId,

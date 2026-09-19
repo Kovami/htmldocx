@@ -21,8 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   formulas as MathML with the LaTeX in an `application/x-tex` annotation, and
   pictures as ordinary `<img>`. The HTML reader understands this markup as well
   as SunEditor's.
+- Plain HTML writes Word's line spacing in Word's terms: a multiple of the
+  font's own single line (from a table of common fonts), not of its size.
 
 ### Changed
+
+- Paragraph spacing collapses the way Word does it: between two paragraphs
+  Word leaves the larger of space after and space before, exactly as CSS
+  margins collapse. Both directions used to add the two, which made every
+  change of spacing (before each heading, for instance) too tall.
 
 - `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
   defaults: a browser's for plain HTML, SunEditor's for an editor profile.

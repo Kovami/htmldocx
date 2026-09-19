@@ -23,16 +23,24 @@ it('spells out the font, colour, margins and line height of every block', functi
     ));
 
     expect($html)->toBe(
-        '<p style="font-family: &quot;Times New Roman&quot;; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.15;">'
+        '<p style="font-family: &quot;Times New Roman&quot;; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322;">'
         . '<span style="font-family: Aptos; font-size: 16px;">Body</span></p>',
     );
 });
 
-it('writes single spacing as the font\'s own line height', function () {
-    $html = plainHtml(DocxBuilder::make()->body('<w:p><w:r><w:t>x</w:t></w:r></w:p>'));
+it('scales Word\'s line spacing by the font\'s own single line', function (string $font, string $spacing, string $lineHeight) {
+    $html = plainHtml(DocxBuilder::make()->body(
+        "<w:p><w:pPr>{$spacing}<w:rPr><w:rFonts w:ascii=\"{$font}\"/></w:rPr></w:pPr><w:r><w:t>x</w:t></w:r></w:p>",
+    ));
 
-    expect($html)->toContain('line-height: normal;');
-});
+    expect($html)->toContain("line-height: {$lineHeight};");
+})->with([
+    'Calibri, single' => ['Calibri', '', '1.221'],
+    'Calibri, 1.16' => ['Calibri', '<w:spacing w:line="278" w:lineRule="auto"/>', '1.414'],
+    'an unmeasured font, single' => ['Fancy Script', '', 'normal'],
+    'an unmeasured font, double' => ['Fancy Script', '<w:spacing w:line="480" w:lineRule="auto"/>', '2'],
+    'exactly 18 pt' => ['Calibri', '<w:spacing w:line="360" w:lineRule="exact"/>', '24px'],
+]);
 
 it('uses no editor classes and no editor stylesheet', function () {
     $html = HtmlDocx::plain(testOptions(['fullHtmlDocument' => true]))

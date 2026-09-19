@@ -80,12 +80,14 @@ final class PropertyMapper
     }
 
     /**
+     * @param  float  $singleLine  the font's single line as a multiple of its size, to read
+     *                             a multiple of the size as Word's multiple of that line
      * @return array{0: int|null, 1: string|null} line value and ST_LineSpacingRule
      */
-    public function lineSpacing(?LineHeight $lineHeight): array
+    public function lineSpacing(?LineHeight $lineHeight, float $singleLine = 1.0): array
     {
         return match (true) {
-            $lineHeight?->multiple !== null => [max(1, (int) round($lineHeight->multiple * 240)), 'auto'],
+            $lineHeight?->multiple !== null => [max(1, (int) round($lineHeight->multiple / $singleLine * 240)), 'auto'],
             $lineHeight?->points !== null => [max(1, Length::pointsToTwips($lineHeight->points)), 'atLeast'],
             default => [null, null],
         };

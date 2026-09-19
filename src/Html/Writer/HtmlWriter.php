@@ -8,6 +8,7 @@ use Closure;
 use DateTimeZone;
 use Dom\Element;
 use Kovami\HtmlDocx\Css\ComputedStyle;
+use Kovami\HtmlDocx\Css\FontMetrics;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Docx\Reader\NumberFormat;
 use Kovami\HtmlDocx\Editor;
@@ -347,14 +348,14 @@ final class HtmlWriter
             }
         }
 
-        if ($properties->lineSpacing !== null && ! $adoptsSpacing) {
+        if ($this->context->plain) {
+            $css['line-height'] = $this->plainLineHeight($properties->lineSpacing ?? 240, $properties->lineRule ?? 'auto', $this->blockFamily($properties));
+        } elseif ($properties->lineSpacing !== null && ! $adoptsSpacing) {
             $lineHeight = $this->lineHeight($properties->lineSpacing, $properties->lineRule ?? 'auto', $editor);
 
             if ($lineHeight !== null) {
                 $css['line-height'] = $lineHeight;
             }
-        } elseif ($this->context->plain) {
-            $css['line-height'] = 'normal';
         }
 
         $background = $editor->backgroundColor();
@@ -403,14 +404,13 @@ final class HtmlWriter
      */
     private function blockFont(ParagraphProperties $properties, ComputedStyle $editor): array
     {
-        $document = $this->context->document;
-        $mark = $properties->markRunProperties ?? $document->style($properties->styleId)?->run;
-        $defaults = $document->defaultRunProperties;
+        $mark = $this->blockRun($properties);
+        $defaults = $this->context->document->defaultRunProperties;
         $options = $this->context->options;
         $size = $mark->size ?? $defaults->size;
 
         $css = [
-            'font-family' => CssFormatter::fontFamily($mark->fontFamily ?? $defaults->fontFamily ?? $options->fontFamily),
+            'font-family' => CssFormatter::fontFamily($this->blockFamily($properties)),
             'font-size' => $this->context->css->points($size === null ? $options->fontSizePt : $size / 2),
             'color' => CssFormatter::color($mark->color ?? $defaults->color ?? ltrim($options->textColor, '#')),
         ];
@@ -429,21 +429,52 @@ final class HtmlWriter
     private function lineHeight(int $lineSpacing, string $rule, ComputedStyle $editor): ?string
     {
         if ($rule === 'auto') {
-            // Word's single spacing follows the font's own line gap, as `normal` does.
-            if ($lineSpacing === 240 && $this->context->plain) {
-                return 'normal';
-            }
-
             $multiple = $lineSpacing / 240;
             $current = $editor->lineHeight?->multiple;
 
-            return $current !== null && abs($current - $multiple) < 0.005 && ! $this->context->plain ? null : CssFormatter::number($multiple);
+            return $current !== null && abs($current - $multiple) < 0.005 ? null : CssFormatter::number($multiple);
         }
 
         $value = $this->context->css->twips($lineSpacing);
         $current = $editor->lineHeight?->points;
 
-        return $current !== null && $this->context->css->points($current) === $value && ! $this->context->plain ? null : $value;
+        return $current !== null && $this->context->css->points($current) === $value ? null : $value;
+    }
+
+    /** The formatting of a paragraph's mark, which carries its style's font. */
+    private function blockRun(ParagraphProperties $properties): ?RunProperties
+    {
+        return $properties->markRunProperties ?? $this->context->document->style($properties->styleId)?->run;
+    }
+
+    private function blockFamily(ParagraphProperties $properties): string
+    {
+        return $this->blockRun($properties)->fontFamily
+            ?? $this->context->document->defaultRunProperties->fontFamily
+            ?? $this->context->options->fontFamily;
+    }
+
+    /**
+     * Word's line pitch, for plain HTML. Word multiplies the font's own single
+     * line, CSS the font size, so a multiple is scaled by the font's metrics;
+     * a font without them keeps `normal` for single spacing.
+     *
+     * @param  string  $rule  ST_LineSpacingRule: auto, atLeast or exact
+     */
+    private function plainLineHeight(int $lineSpacing, string $rule, string $family): string
+    {
+        if ($rule !== 'auto') {
+            return $this->context->css->twips($lineSpacing);
+        }
+
+        $single = FontMetrics::singleLine($family);
+
+        if ($single === null) {
+            return $lineSpacing === 240 ? 'normal' : CssFormatter::number($lineSpacing / 240);
+        }
+
+        // Three decimals, so the multiple Word stored comes back to the twip.
+        return rtrim(rtrim(number_format($lineSpacing / 240 * $single, 3, '.', ''), '0'), '.');
     }
 
     /**
