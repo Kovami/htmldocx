@@ -75,7 +75,7 @@ final readonly class Engine
 
     public function writeHtml(Document $document): string
     {
-        return (new HtmlWriter($document, $this->options, $this->imageHandler, $this->warningHandler))->toHtml();
+        return (new HtmlWriter($document, $this->editor, $this->options, $this->imageHandler, $this->warningHandler))->toHtml();
     }
 
     /**

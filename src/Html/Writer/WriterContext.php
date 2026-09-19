@@ -9,6 +9,7 @@ use Dom\Element;
 use Dom\HTMLDocument;
 use Kovami\HtmlDocx\Css\ComputedStyle;
 use Kovami\HtmlDocx\Css\StyleResolver;
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\Image\ImageHandler;
 use Kovami\HtmlDocx\Model\Document;
 use Kovami\HtmlDocx\Options;
@@ -29,10 +30,12 @@ final readonly class WriterContext
     public OpenComments $comments;
 
     /**
+     * @param  Editor|null  $editor  the editor the HTML is written for; null for plain HTML
      * @param  Closure(string): void  $warn
      */
     public function __construct(
         public Document $document,
+        public ?Editor $editor,
         public Options $options,
         public ImageHandler $images,
         private Closure $warn,

@@ -10,6 +10,7 @@ use Dom\Element;
 use Kovami\HtmlDocx\Css\ComputedStyle;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Docx\Reader\NumberFormat;
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\Image\DataUriImageHandler;
 use Kovami\HtmlDocx\Image\ImageHandler;
 use Kovami\HtmlDocx\Model\Block;
@@ -64,16 +65,19 @@ final class HtmlWriter
     private readonly TableWriter $tables;
 
     /**
+     * @param  Editor|null  $editor  the editor the HTML is written for; null for plain HTML
      * @param  Closure(string): void|null  $warn  receives a message for every piece of content that could not be converted
      */
     public function __construct(
         Document $document,
+        ?Editor $editor,
         Options $options = new Options(),
         ?ImageHandler $images = null,
         ?Closure $warn = null,
     ) {
         $this->context = new WriterContext(
             $document,
+            $editor,
             $options,
             $images ?? new DataUriImageHandler(),
             $warn ?? static function (string $message): void {},
