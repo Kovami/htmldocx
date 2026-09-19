@@ -271,6 +271,7 @@ function compareWords(word, html) {
         dxMedian: quantile(dx, 0.5),
         dyMedian: quantile(dy, 0.5),
         dyP90: quantile(dy, 0.9),
+        dy,
     };
 }
 

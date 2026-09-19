@@ -11,7 +11,8 @@
 //    shift costs little and a wrong font, size or layout costs what it moves;
 //  - body ink match: the same for the body alone, without headers, footers
 //    and notes, which differ from Word by design (body.php; Word's print of
-//    it is reference/<name>.body.pdf) — the score the release is judged on;
+//    it is reference/<name>.body.pdf) — the score the release is judged on,
+//    with the median dy of every body word in the corpus;
 //  - word placement: every word of Word's PDF is matched with the same word
 //    in ours, and we report how many sit on the same page and how far they
 //    moved, in points.
@@ -39,6 +40,8 @@ const names = readdirSync(join(here, 'corpus'))
 
 const browser = await chromium.launch();
 const results = [];
+// How far every body word moved, over the whole corpus: the release criterion.
+const bodyDy = [];
 
 for (const name of names) {
     const reference = join(here, 'reference', `${name}.pdf`);
@@ -51,22 +54,25 @@ for (const name of names) {
     const converted = convert(name);
     const scores = await measure(browser, converted.html, converted.page, new Uint8Array(readFileSync(reference)), report, name);
     const bodyReference = join(here, 'reference', `${name}.body.pdf`);
-    let bodyInk = scores.pixelSimilarity;
+    let body = scores;
 
     if (existsSync(bodyReference)) {
-        const body = convert(name, 'body');
-        bodyInk = (await measure(browser, body.html, body.page, new Uint8Array(readFileSync(bodyReference)), report, `${name}.body`)).pixelSimilarity;
+        const variant = convert(name, 'body');
+        body = await measure(browser, variant.html, variant.page, new Uint8Array(readFileSync(bodyReference)), report, `${name}.body`);
     }
 
-    const result = { ...scores, bodyInk, warnings: converted.warnings.length };
+    bodyDy.push(...body.dy);
+    const { dy, ...result } = { ...scores, bodyInk: body.pixelSimilarity, warnings: converted.warnings.length };
     results.push(result);
     console.log(format(result));
 }
 
 await browser.close();
 writeFileSync(join(report, 'summary.json'), JSON.stringify(results, null, 2));
-writeFileSync(join(report, 'summary.md'), summary(results));
-console.log(`\n${summary(results)}`);
+bodyDy.sort((a, b) => a - b);
+const pooled = `Body text dy median over all ${bodyDy.length} words: ${(bodyDy[Math.floor(bodyDy.length / 2)] ?? 0).toFixed(1)}pt\n`;
+writeFileSync(join(report, 'summary.md'), `${summary(results)}\n${pooled}`);
+console.log(`\n${summary(results)}\n${pooled}`);
 
 function convert(name, variant = 'full') {
     const args = [join(here, 'convert.php'), join(here, 'corpus', `${name}.docx`), profile, variant];
