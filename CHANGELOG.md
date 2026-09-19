@@ -32,14 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Paragraph spacing collapses the way Word does it: between two paragraphs
-  Word leaves the larger of space after and space before, exactly as CSS
-  margins collapse. Both directions used to add the two, which made every
-  change of spacing (before each heading, for instance) too tall.
-
-- `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
-  defaults: a browser's for plain HTML, SunEditor's for an editor profile.
-
 - **Breaking:** a new entry point replaces the 1.x methods. Choose the HTML
   with `HtmlDocx::plain()` or `HtmlDocx::for(Editor::SunEditor)` (an `Editor`
   case or its name, e.g. `'tinymce'`), start from `fromDocxFile()`,
@@ -48,6 +40,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `saveDocx()` or `streamDocx()`; `document()` returns the model.
   `new HtmlDocx`, `htmlToDocx()`, `docxToHtml()`, `readHtml()`, `writeDocx()`
   and the rest of the 1.x methods are gone.
+- Paragraph spacing collapses the way Word does it: between two paragraphs
+  Word leaves the larger of space after and space before, exactly as CSS
+  margins collapse. Both directions used to add the two, which made every
+  change of spacing (before each heading, for instance) too tall.
+- `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
+  defaults: a browser's for plain HTML, SunEditor's for an editor profile.
+
+### Fixed
+
+- A double, dotted, dashed or wavy underline is written on the `<u>` that draws
+  it; on a span around it the style did not apply and was lost on the way back.
+- A paragraph that follows Word's default alignment inside a centred container
+  (a header cell) is written `text-align: left` rather than `start`, which the
+  HTML reader read back as an explicit left alignment.
 
 ## [1.0.0] - 2026-09-18
 

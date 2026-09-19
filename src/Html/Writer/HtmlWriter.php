@@ -302,8 +302,9 @@ final class HtmlWriter
 
         if ($alignment !== null && $alignment !== $inherited) {
             $css['text-align'] = $alignment;
-        } elseif ($alignment === null && $inherited !== null && $inherited !== 'start') {
-            $css['text-align'] = 'start';
+        } elseif ($alignment === null && $inherited !== null && $inherited !== ($properties->bidi ? 'right' : 'left')) {
+            // Word's default: the start of the line, which HTML reads back as left (or right).
+            $css['text-align'] = $properties->bidi ? 'right' : 'left';
         }
 
         $adoptsSpacing = $this->context->adoptsEditorDefault($properties->spacingBefore, $defaults->spacingBefore)

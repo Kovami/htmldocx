@@ -200,3 +200,8 @@ it('converts a whole editor document back and forth', function () {
     // A second pass changes nothing: what the writer emits is what the reader reads.
     expect(roundTrip($once))->toBe($once);
 });
+
+it('draws a styled underline on the element that draws the line', function () {
+    expect(roundTrip('<p><u style="text-decoration-style: double">twice</u></p>'))
+        ->toBe('<p><u style="text-decoration-style: double;">twice</u></p>');
+});

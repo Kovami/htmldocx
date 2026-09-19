@@ -268,15 +268,23 @@ final readonly class InlineWriter
     private function wrappers(array $spec, Element $parent, ComputedStyle $parentStyle): Element
     {
         $current = $parent;
+        $css = $spec['css'];
+        // The line's style belongs on the element that draws it: it is not inherited.
+        $decoration = ['text-decoration-style' => $css['text-decoration-style'] ?? null];
+        unset($css['text-decoration-style']);
 
-        if ($spec['css'] !== []) {
+        if ($css !== []) {
             $span = $this->context->element('span', $current);
-            $span->setAttribute('style', CssFormatter::declarations($spec['css']));
+            $span->setAttribute('style', CssFormatter::declarations($css));
             $current = $span;
         }
 
         foreach ($spec['tags'] as $tag) {
             $current = $this->context->element($tag, $current);
+
+            if ($tag === 'u' && $decoration['text-decoration-style'] !== null) {
+                $current->setAttribute('style', CssFormatter::declarations(array_filter($decoration)));
+            }
         }
 
         return $current;
