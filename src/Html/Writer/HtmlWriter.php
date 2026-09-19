@@ -744,7 +744,9 @@ final class HtmlWriter
             $style = $this->context->resolver->resolve($container, $parentStyle);
             $this->writeBlocks($headerFooter->blocks, $container, $style, 'div', $this->context->document->pageLayout->contentWidthTwips());
 
-            foreach (iterator_to_array($container->children) as $child) {
+            $children = array_filter(iterator_to_array($container->childNodes), static fn(object $node): bool => $node instanceof Element);
+
+            foreach ($children as $child) {
                 $line = $child;
 
                 if ($child->localName !== 'div') {
