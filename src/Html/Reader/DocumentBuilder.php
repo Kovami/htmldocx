@@ -386,6 +386,9 @@ final class DocumentBuilder
             $this->pendingPageBreak = true;
         }
 
+        // The writer pads the first line of a bulleted item by what Word's
+        // Symbol bullet adds to it; that is not space before the item.
+        $bullet = $context->marker !== null && ! $context->marker->consumed ? $this->bulletLine($style) : 0.0;
         $firstIndex = $sink->count();
         $this->renderChildren($element, $style, $context, $sink);
 
@@ -396,7 +399,7 @@ final class DocumentBuilder
         $this->applyVerticalMargins(
             $sink,
             $firstIndex,
-            Length::pointsToTwips($length('margin-top') + ($edges['top'] === null ? $padding('top') : 0)),
+            Length::pointsToTwips($length('margin-top') + ($edges['top'] === null ? max(0.0, $padding('top') - $bullet) : 0)),
             Length::pointsToTwips($length('margin-bottom') + ($edges['bottom'] === null ? $padding('bottom') : 0)),
         );
 
@@ -443,6 +446,19 @@ final class DocumentBuilder
         if ($marker !== null && ! $marker->consumed) {
             $sink->add($this->createParagraph(new InlineFlow($flow->style, $flow->context), []));
         }
+    }
+
+    /** What Word's Symbol bullet adds to the first line of an item in this style, in points; see HtmlWriter::bulletLine(). */
+    private function bulletLine(ComputedStyle $style): float
+    {
+        $ascent = FontMetrics::ascent($style->fontFamily);
+        [$spacing, $rule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0);
+
+        if ($style->listStyleType !== 'disc' || $ascent === null || ($rule ?? 'auto') !== 'auto') {
+            return 0.0;
+        }
+
+        return (FontMetrics::SYMBOL_ASCENT - $ascent) * $style->fontSizePt * ($spacing ?? 240) / 240;
     }
 
     private function applyVerticalMargins(BlockSink $sink, int $firstIndex, int $top, int $bottom): void

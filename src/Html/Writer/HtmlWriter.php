@@ -241,7 +241,8 @@ final class HtmlWriter
                 $element,
                 $baseline ?? $parentStyle,
                 fn(ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark)
-                    + $this->raise($element, $this->leadingAbove($properties, $mark)),
+                    + $this->raise($element, $this->leadingAbove($properties, $mark))
+                    + ($index === 0 && $item !== null ? $this->bulletLine($properties) : []),
             );
 
             // A bookmark at the start of a paragraph is the paragraph's id: editors drop empty anchors.
@@ -499,6 +500,29 @@ final class HtmlWriter
         $top = $this->context->css->points($inherited - $points);
 
         return $top === '0' ? [] : ['position' => 'relative', 'top' => $top];
+    }
+
+    /**
+     * Word draws its bullet in Symbol, whose ascent is taller than that of
+     * Calibri, Cambria, Arial or Times: a line holds the tallest ascent of its
+     * fonts, so the first line of such an item is taller by the difference.
+     *
+     * @return array<string, string>
+     */
+    private function bulletLine(ParagraphProperties $properties): array
+    {
+        $numbering = $properties->numbering;
+        $level = $numbering === null ? null : $this->context->document->list($numbering->numId)->levels[$numbering->level] ?? null;
+        $ascent = FontMetrics::ascent($this->blockFamily($properties));
+
+        if ($level?->format !== 'bullet' || $level->text !== "\u{2022}" || $ascent === null || ($properties->lineRule ?? 'auto') !== 'auto') {
+            return [];
+        }
+
+        $size = $this->blockRun($properties)->size ?? $this->context->document->defaultRunProperties->size;
+        $points = $size === null ? $this->context->options->fontSizePt : $size / 2;
+
+        return ['padding-top' => $this->context->css->points((FontMetrics::SYMBOL_ASCENT - $ascent) * $points * ($properties->lineSpacing ?? 240) / 240)];
     }
 
     /**

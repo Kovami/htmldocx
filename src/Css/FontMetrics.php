@@ -35,6 +35,27 @@ final class FontMetrics
         'microsoft sans serif' => 1.1318, 'rockwell' => 1.1743, 'tw cen mt' => 1.0889, 'perpetua' => 1.146,
     ];
 
+    /**
+     * Windows ascent, as a multiple of the font size, of the fonts whose
+     * ascent is below Symbol's, which Word's bullets are drawn in: a line
+     * holds the tallest ascent of its fonts, so Word makes a bulleted line
+     * in them taller.
+     */
+    private const array ASCENT = [
+        'calibri' => 0.9521, 'calibri light' => 0.9521, 'carlito' => 0.9521,
+        'cambria' => 0.9502, 'caladea' => 0.9502,
+        'arial' => 0.9053, 'liberation sans' => 0.9053,
+        'times new roman' => 0.8911, 'liberation serif' => 0.8911,
+    ];
+
+    public const float SYMBOL_ASCENT = 1.0054;
+
+    /** Windows ascent as a multiple of the font size; null when it is not below Symbol's or not measured. */
+    public static function ascent(string $family): ?float
+    {
+        return self::ASCENT[strtolower(trim($family))] ?? null;
+    }
+
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */
     public static function singleLine(string $family): ?float
     {

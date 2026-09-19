@@ -91,6 +91,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and make their line taller. A `sub` or `super` element sized relatively
   (`%`, `em`, `smaller`) is read back at its text's size, so Word does not
   shrink it twice.
+- The first line of a bulleted item is as tall as Word makes it: Word draws
+  its bullet in Symbol, whose ascent is taller than Calibri's, Cambria's,
+  Arial's or Times New Roman's, so the item gets the difference as
+  `padding-top`, which the HTML reader takes back off.
 - `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
   defaults: a browser's for plain HTML, SunEditor's for an editor profile.
 

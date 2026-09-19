@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Tests\Support\DocxBuilder;
 
@@ -88,6 +89,15 @@ it('draws superscripts at Word\'s size and reads them back at their text\'s', fu
         ->and($run->properties->verticalAlign)->toBe('superscript')
         ->and($run->properties->size)->toBe(24);
 });
+
+it('makes the first line of a bulleted item as tall as Word\'s Symbol bullet does, and reads it back', function (?Editor $editor) {
+    $converter = $editor === null ? HtmlDocx::plain(testOptions()) : HtmlDocx::for($editor, testOptions());
+    $html = $converter->fromHtml('<ul><li style="font-family: Calibri; font-size: 12pt">a</li></ul>')->toHtml();
+
+    // Symbol's ascent is 0.0533 em above Calibri's: 0.64pt at 12pt.
+    expect($html)->toContain('padding-top: 0.85px;')
+        ->and($converter->fromDocx($converter->fromHtml($html)->toDocx())->toHtml())->toBe($html);
+})->with([null, Editor::TipTap]);
 
 it('draws table cells itself, over whatever borders an editor gives them', function () {
     $html = plainHtml(DocxBuilder::make()->body(
