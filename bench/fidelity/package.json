@@ -4,14 +4,29 @@
   "type": "module",
   "description": "Measures how closely the HTML written by kovami/htmldocx looks like the same document in Microsoft Word.",
   "scripts": {
-    "bench": "node run.mjs"
+    "bench": "node run.mjs",
+    "editors": "node editors.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^0.1.80",
+    "@tiptap/core": "^3.31.3",
+    "@tiptap/extension-highlight": "^3.31.3",
+    "@tiptap/extension-image": "^3.31.3",
+    "@tiptap/extension-subscript": "^3.31.3",
+    "@tiptap/extension-superscript": "^3.31.3",
+    "@tiptap/extension-table": "^3.31.3",
+    "@tiptap/extension-text-align": "^3.31.3",
+    "@tiptap/extension-text-style": "^3.31.3",
+    "@tiptap/pm": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
+    "ckeditor5": "^48.5.1",
+    "esbuild": "^0.28.2",
     "fontkit": "^2.0.4",
     "pdfjs-dist": "^5.4.0",
     "pixelmatch": "^7.1.0",
     "playwright": "1.63.0",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "suneditor": "^2.47.12",
+    "tinymce": "^8.9.1"
   }
 }
