@@ -8,6 +8,7 @@ use Dom\Element;
 use Kovami\HtmlDocx\Css\ComputedStyle;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Docx\Reader\NumberFormat;
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\Model\Bookmark;
 use Kovami\HtmlDocx\Model\BreakRun;
 use Kovami\HtmlDocx\Model\CommentEnd;
@@ -328,10 +329,31 @@ final readonly class InlineWriter
         $link->append(self::noteLabel($reference->type, $reference->number));
     }
 
+    /**
+     * A formula in the shape its editor's math plugin takes: MathML for plain
+     * HTML, the LaTeX in `\(…\)` for CKEditor and TinyMCE (MathJax's and
+     * ckeditor5-math's shape), TipTap's inline-math node, SunEditor's KaTeX
+     * span. Where no plugin reads it, the LaTeX stays as text.
+     */
     private function formula(Formula $formula, Element $parent): void
     {
-        if ($this->context->plain) {
+        if ($this->context->editor === null) {
             (new MathMlWriter($this->context->dom))->write($formula->latex, $parent);
+
+            return;
+        }
+
+        if ($this->context->editor !== Editor::SunEditor) {
+            $span = $this->context->element('span', $parent);
+
+            if ($this->context->editor === Editor::TipTap) {
+                $span->setAttribute('data-type', 'inline-math');
+                $span->setAttribute('data-latex', $formula->latex);
+            } else {
+                $span->setAttribute('class', 'math-tex');
+            }
+
+            $span->append('\\(' . $formula->latex . '\\)');
 
             return;
         }

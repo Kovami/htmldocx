@@ -257,13 +257,9 @@ final class DocumentBuilder
 
     private function renderInline(Element $element, ComputedStyle $style, InlineFlow $flow, BlockSink $sink): void
     {
-        // SunEditor keeps a formula's LaTeX on a KaTeX span, MathML in an annotation.
-        if ($element->hasAttribute('data-exp') && str_contains((string) $element->getAttribute('class'), 'katex')
-            || $element->localName === 'math') {
-            $latex = trim((string) ($element->localName === 'math'
-                ? $element->querySelector('annotation[encoding="application/x-tex"]')?->textContent
-                : $element->getAttribute('data-exp')));
+        $latex = self::latex($element);
 
+        if ($latex !== null) {
             if ($latex !== '') {
                 $flow->buffer()->appendFormula(new Formula($latex, properties: $this->mapper->run($style)), $flow->link);
             }
@@ -614,6 +610,27 @@ final class DocumentBuilder
         $this->pendingBookmarks = [];
 
         return new Paragraph($properties, [...$bookmarks, ...$children]);
+    }
+
+    /**
+     * The LaTeX of a formula element, in any shape an editor keeps one:
+     * SunEditor's KaTeX span, MathML with a TeX annotation, TipTap's math
+     * nodes, and the `\(…\)` of a `math-tex` span (MathJax, ckeditor5-math).
+     */
+    private static function latex(Element $element): ?string
+    {
+        $class = ' ' . $element->getAttribute('class') . ' ';
+        $type = (string) $element->getAttribute('data-type');
+
+        $latex = match (true) {
+            $element->hasAttribute('data-exp') && str_contains($class, 'katex') => $element->getAttribute('data-exp'),
+            $element->localName === 'math' => $element->querySelector('annotation[encoding="application/x-tex"]')?->textContent,
+            $type === 'inline-math' || $type === 'block-math' => $element->getAttribute('data-latex'),
+            str_contains($class, ' math-tex ') => preg_replace('/^\s*\\\\[(\[]\s*|\s*\\\\[)\]]\s*$/', '', (string) $element->textContent),
+            default => false,
+        };
+
+        return $latex === false ? null : trim((string) $latex);
     }
 
     /**

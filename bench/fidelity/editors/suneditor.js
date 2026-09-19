@@ -11,6 +11,9 @@ window.roundTrip = async (html, recommended) => {
         ? {
             plugins,
             katex,
+            // A plugin only starts when a button uses it.
+            buttonList: [['font', 'fontSize', 'formatBlock', 'bold', 'underline', 'italic', 'strike', 'subscript', 'superscript',
+                'fontColor', 'hiliteColor', 'align', 'list', 'lineHeight', 'table', 'link', 'image', 'math']],
             attributesWhitelist: { all: 'style|id|role|data-.+' },
             addTagsWhitelist: 'section|colgroup|col',
         }

@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plain HTML keeps Word's "keep with next" and "keep lines together" as
   `break-after: avoid` and `break-inside: avoid`, and the HTML reader maps both
   back, whichever HTML they come from.
+- The CKEditor, TinyMCE and TipTap profiles build on plain HTML, and each
+  writes formulas in the shape its editor's math plugin reads: `\(…\)` in a
+  `math-tex` span for CKEditor (ckeditor5-math) and TinyMCE (MathJax), TipTap's
+  `inline-math` node for TipTap. Without a plugin the LaTeX stays readable
+  text. The HTML reader reads all of these back as formulas.
 
 ### Changed
 
