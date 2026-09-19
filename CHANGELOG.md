@@ -79,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Word leaves the larger of space after and space before, exactly as CSS
   margins collapse. Both directions used to add the two, which made every
   change of spacing (before each heading, for instance) too tall.
+- Justified paragraphs narrow their spaces (`word-spacing: -0.065em`): Word
+  squeezes the spaces of a justified line to fit one more word, a browser
+  only stretches them, so long justified text broke its lines (and pages)
+  later than Word.
 - `Options::$defaultStylesheet` defaults to `null`, meaning the profile's own
   defaults: a browser's for plain HTML, SunEditor's for an editor profile.
 

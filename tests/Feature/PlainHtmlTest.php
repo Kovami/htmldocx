@@ -57,6 +57,16 @@ it('uses no editor classes and no editor stylesheet', function () {
         ->and($html)->toContain('<body>');
 });
 
+it('narrows the spaces of justified text, as Word squeezes them to fit a word', function () {
+    $html = plainHtml(DocxBuilder::make()->body(
+        '<w:p><w:pPr><w:jc w:val="both"/></w:pPr><w:r><w:t>Justified</w:t></w:r></w:p>'
+        . '<w:p><w:r><w:t>Left</w:t></w:r></w:p>',
+    ));
+
+    expect($html)->toStartWith('<p style="text-align: justify; word-spacing: -0.065em;')
+        ->and(substr_count($html, 'word-spacing'))->toBe(1);
+});
+
 it('draws table cells itself, over whatever borders an editor gives them', function () {
     $html = plainHtml(DocxBuilder::make()->body(
         '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/></w:tblPr><w:tblGrid><w:gridCol w:w="9355"/></w:tblGrid>'

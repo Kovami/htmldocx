@@ -320,6 +320,14 @@ final class HtmlWriter
             $css['text-align'] = $properties->bidi ? 'right' : 'left';
         }
 
+        if (($css['text-align'] ?? $inherited) === 'justify') {
+            // Word (2013 and later) squeezes the spaces of a justified line
+            // to fit one more word, where a browser only ever stretches them:
+            // narrower spaces let the browser break the lines where Word does.
+            // ponytail: one width for every font (about 30% of Calibri's space), per-font space widths if a font breaks differently.
+            $css['word-spacing'] = '-0.065em';
+        }
+
         // Word indents to the text edge; CSS margins sit outside the border
         // and the padding the border's spacing becomes.
         $frame = [];
