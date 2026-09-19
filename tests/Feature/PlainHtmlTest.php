@@ -204,3 +204,13 @@ it('keeps Word\'s page-break rules and reads them back', function () {
         ->and($caption->keepNext)->toBeTrue()
         ->and($caption->keepLines)->toBeTrue();
 });
+
+it('reads plain HTML of a Word document back to the same HTML', function (string $path) {
+    $converter = HtmlDocx::plain(testOptions());
+    $conversion = $converter->fromDocxFile($path);
+    $html = $conversion->toHtml();
+    // HTML has no page, so the way back is given the document's own.
+    $again = $converter->fromDocx($converter->fromHtml($html, $conversion->document()->pageLayout)->toDocx())->toHtml();
+
+    expect($again)->toBe($html);
+})->with(fn(): array => glob(dirname(__DIR__, 2) . '/bench/fidelity/corpus/*.docx') ?: []);
