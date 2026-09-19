@@ -150,4 +150,16 @@ final readonly class ComputedStyle
     {
         return in_array($this->value('page-break-after') ?? $this->value('break-after'), ['always', 'page', 'left', 'right'], true);
     }
+
+    /** Whether a page may not break between this box and the next one. */
+    public function keepsWithNext(): bool
+    {
+        return in_array($this->value('page-break-after') ?? $this->value('break-after'), ['avoid', 'avoid-page'], true);
+    }
+
+    /** Whether a page may not break inside this box. */
+    public function keepsTogether(): bool
+    {
+        return in_array($this->value('page-break-inside') ?? $this->value('break-inside'), ['avoid', 'avoid-page'], true);
+    }
 }

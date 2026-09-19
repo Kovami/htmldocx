@@ -387,6 +387,15 @@ final class HtmlWriter
             $css['page-break-before'] = 'always';
         }
 
+        // Word's "keep with next" and "keep lines together" decide where its pages break.
+        if ($this->context->plain && $properties->keepNext) {
+            $css['break-after'] = 'avoid';
+        }
+
+        if ($this->context->plain && $properties->keepLines) {
+            $css['break-inside'] = 'avoid';
+        }
+
         if ($preserve && ! $editor->preservesWhitespace()) {
             $css['white-space'] = 'pre-wrap';
 

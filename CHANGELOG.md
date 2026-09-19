@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plain HTML names free fonts with the same metrics after Word's own (Calibri,
   Carlito, sans-serif; Cambria, Caladea, serif; Arial and Times New Roman with
   their Liberation equivalents) and keeps Word's 36 pt tab stops.
+- Plain HTML keeps Word's "keep with next" and "keep lines together" as
+  `break-after: avoid` and `break-inside: avoid`, and the HTML reader maps both
+  back, whichever HTML they come from.
 
 ### Changed
 

@@ -589,6 +589,8 @@ final class DocumentBuilder
                 firstLine: $style->textIndentPt === null ? 0 : Length::pointsToTwips($style->textIndentPt),
                 lineSpacing: $lineSpacing,
                 lineRule: $lineRule,
+                keepNext: $style->keepsWithNext(),
+                keepLines: $style->keepsTogether(),
                 shading: $context->shading,
                 borders: $context->borders,
                 bidi: $style->direction === 'rtl',

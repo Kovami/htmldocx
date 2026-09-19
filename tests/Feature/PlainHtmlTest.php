@@ -192,3 +192,15 @@ it('keeps Word\'s tab stops in text that needs its tabs', function () {
 
     expect($html)->toContain('white-space: pre-wrap; tab-size: 48px;');
 });
+
+it('keeps Word\'s page-break rules and reads them back', function () {
+    $converter = HtmlDocx::plain(testOptions());
+    $html = plainHtml(DocxBuilder::make()->body(
+        '<w:p><w:pPr><w:keepNext/><w:keepLines/></w:pPr><w:r><w:t>Caption</w:t></w:r></w:p><w:p><w:r><w:t>Body</w:t></w:r></w:p>',
+    ));
+    $caption = $converter->fromHtml($html)->document()->blocks[0]->properties;
+
+    expect($html)->toContain('break-after: avoid; break-inside: avoid;')
+        ->and($caption->keepNext)->toBeTrue()
+        ->and($caption->keepLines)->toBeTrue();
+});
