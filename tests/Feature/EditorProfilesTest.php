@@ -129,3 +129,27 @@ it('writes a CKEditor table in its figure, which carries the width and no margin
     expect($html)->toStartWith('<figure class="table" style="width: 50%; margin: 0 auto 0 auto;"><table style="width: 100%; ')
         ->and(profileHtml(Editor::CKEditor, $html))->toBe($html);
 });
+
+it('reads text an editor leaves unformatted in the typography that editor shows', function (?Editor $editor, string $font, int $halfPoints, ?int $lineSpacing) {
+    $options = new Kovami\HtmlDocx\Options(createdAt: new DateTimeImmutable('2026-01-02T03:04:05Z'));
+    $converter = $editor === null ? HtmlDocx::plain($options) : HtmlDocx::for($editor, $options);
+    $paragraph = $converter->fromHtml('<p>plain text</p>')->document()->blocks[0];
+
+    expect($paragraph->children[0]->properties->fontFamily)->toBe($font)
+        ->and($paragraph->children[0]->properties->size)->toBe($halfPoints)
+        ->and($paragraph->properties->lineSpacing)->toBe($lineSpacing);
+})->with([
+    // Each editor's own content stylesheet: what a user of it sees.
+    'CKEditor: Helvetica, medium, 1.5' => [Editor::CKEditor, 'Helvetica', 24, 306],
+    'TinyMCE: the system font, medium, 1.4' => [Editor::TinyMce, 'Segoe UI', 24, 253],
+    'SunEditor: Helvetica Neue 13px, 1.5' => [Editor::SunEditor, 'Helvetica Neue', 20, 302],
+    'plain HTML: the options\' own base' => [null, 'Calibri', 22, null],
+]);
+
+it('lets the options replace an editor\'s typography, for an application whose CSS differs', function () {
+    $options = new Kovami\HtmlDocx\Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, createdAt: new DateTimeImmutable('2026-01-02T03:04:05Z'));
+    $run = HtmlDocx::for(Editor::CKEditor, $options)->fromHtml('<p>plain text</p>')->document()->blocks[0]->children[0];
+
+    expect($run->properties->fontFamily)->toBe('Times New Roman')
+        ->and($run->properties->size)->toBe(24);
+});

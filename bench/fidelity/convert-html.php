@@ -29,5 +29,5 @@ echo json_encode([
     'right' => $points($page->marginRightTwips),
     'bottom' => $points($page->marginBottomTwips),
     'left' => $points($page->marginLeftTwips),
-    'font' => ['family' => $options->fontFamily, 'size' => $options->fontSizePt],
+    'font' => ['family' => $options->baseFontFamily(), 'size' => $options->baseFontSizePt()],
 ], JSON_THROW_ON_ERROR);

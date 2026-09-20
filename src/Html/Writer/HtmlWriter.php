@@ -105,7 +105,7 @@ final class HtmlWriter
         $document = $this->context->document;
         $options = $this->context->options;
 
-        $root = ComputedStyle::root($options->fontFamily, $options->fontSizePt, strtoupper(ltrim($options->textColor, '#')));
+        $root = ComputedStyle::root($options->baseFontFamily(), $options->baseFontSizePt(), strtoupper($options->baseTextColor()));
         $body = $this->context->dom->createElement('body');
 
         if (! $this->context->plain) {
@@ -343,10 +343,15 @@ final class HtmlWriter
         // and the padding the border's spacing becomes.
         $frame = [];
 
-        foreach (['left', 'right'] as $side) {
+        foreach (['top', 'right', 'bottom', 'left'] as $side) {
             $border = $properties->borders->{$side};
-            $frame[$side] = $border === null ? 0 : Length::pointsToTwips($border->space + $border->size / 8);
+            $frame[$side] = $border === null ? 0 : Length::pointsToTwips($border->space + ($side === 'top' || $side === 'bottom' ? 0 : $border->size / 8));
         }
+
+        // A border's space is padding in CSS, which takes room above and
+        // below the text; Word's does not, so the spacing gives it that room.
+        $top = max(0, $top - $frame['top']);
+        $bottom = max(0, $bottom - $frame['bottom']);
 
         // Any editor's CSS may move a block, so every edge is spelled out.
         $css += $this->blockFont($properties, $editor);
@@ -429,8 +434,8 @@ final class HtmlWriter
 
         $css = [
             'font-family' => CssFormatter::fontStack($this->blockFamily($properties)),
-            'font-size' => $this->context->css->points($size === null ? $options->fontSizePt : $size / 2),
-            'color' => CssFormatter::color($mark->color ?? $defaults->color ?? ltrim($options->textColor, '#')),
+            'font-size' => $this->context->css->points($size === null ? $options->baseFontSizePt() : $size / 2),
+            'color' => CssFormatter::color($mark->color ?? $defaults->color ?? $options->baseTextColor()),
         ];
 
         // Headings are bold in a browser, and seldom are in Word. Bold text itself
@@ -452,7 +457,7 @@ final class HtmlWriter
     {
         return $this->blockRun($properties)->fontFamily
             ?? $this->context->document->defaultRunProperties->fontFamily
-            ?? $this->context->options->fontFamily;
+            ?? $this->context->options->baseFontFamily();
     }
 
     /**
@@ -520,7 +525,7 @@ final class HtmlWriter
         }
 
         $size = $this->blockRun($properties)->size ?? $this->context->document->defaultRunProperties->size;
-        $points = $size === null ? $this->context->options->fontSizePt : $size / 2;
+        $points = $size === null ? $this->context->options->baseFontSizePt() : $size / 2;
 
         return ['padding-top' => $this->context->css->points((FontMetrics::SYMBOL_ASCENT - $ascent) * $points * ($properties->lineSpacing ?? 240) / 240)];
     }
@@ -541,7 +546,7 @@ final class HtmlWriter
 
         // ponytail: measured from the paragraph's own font; Word takes the tallest font on each line.
         $size = $mark->size ?? $this->blockRun($properties)->size ?? $this->context->document->defaultRunProperties->size;
-        $points = $size === null ? $this->context->options->fontSizePt : $size / 2;
+        $points = $size === null ? $this->context->options->baseFontSizePt() : $size / 2;
 
         return ($spacing / 240 - 1) * $single * $points / 2;
     }
@@ -932,9 +937,9 @@ final class HtmlWriter
         // Plain HTML needs no stylesheet: every block carries its own formatting.
         if (! $this->context->plain) {
             $environment = CssFormatter::declarations([
-                'font-family' => CssFormatter::fontFamily($options->fontFamily),
-                'font-size' => $this->context->css->points($options->fontSizePt),
-                'color' => CssFormatter::color(ltrim($options->textColor, '#')),
+                'font-family' => CssFormatter::fontFamily($options->baseFontFamily()),
+                'font-size' => $this->context->css->points($options->baseFontSizePt()),
+                'color' => CssFormatter::color($options->baseTextColor()),
             ]);
 
             $stylesheet = trim($options->stylesheet($this->context->editor) . "\n" . $options->extraStylesheet) . "\nbody { {$environment} }";

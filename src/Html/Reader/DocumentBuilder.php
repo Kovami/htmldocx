@@ -141,7 +141,7 @@ final class DocumentBuilder
     {
         $this->linkedFragments = $html->linkedFragments();
 
-        $root = ComputedStyle::root($this->options->fontFamily, $this->options->fontSizePt, strtoupper(ltrim($this->options->textColor, '#')));
+        $root = ComputedStyle::root($this->options->baseFontFamily(), $this->options->baseFontSizePt(), strtoupper($this->options->baseTextColor()));
         $body = $html->body();
         $this->pageContentWidth = $pageLayout->contentWidthTwips();
         self::unwrapTableFigures($html);
@@ -150,7 +150,10 @@ final class DocumentBuilder
         $this->collectComments($html);
         $sink = new BlockSink();
 
-        $this->renderChildren($body, $this->resolver->resolve($body, $root), new BlockContext($this->pageContentWidth), $sink);
+        // What the editor shows text in: the profile's own typography, unless
+        // the document or the options say otherwise.
+        $base = $this->resolver->resolve($body, $root);
+        $this->renderChildren($body, $base, new BlockContext($this->pageContentWidth), $sink);
 
         $catalog = new StyleCatalog($this->resolver->withoutAuthorRules(), $this->mapper);
         $blocks = BlockNormalizer::normalize($sink->blocks);
@@ -158,8 +161,8 @@ final class DocumentBuilder
 
         return new Document(
             blocks: $blocks,
-            defaultRunProperties: $this->mapper->run($root),
-            styles: $catalog->definitions($root),
+            defaultRunProperties: $this->mapper->run($base),
+            styles: $catalog->definitions($base),
             lists: $this->numbering->definitions(),
             pageLayout: $pageLayout,
             metadata: new DocumentMetadata(
@@ -407,11 +410,17 @@ final class DocumentBuilder
             $sink->add($this->createParagraph(new InlineFlow($style, $context), []));
         }
 
+        // Padding is space in the flow, whether a border is drawn around it
+        // or not: Word's border sits that far from the text without taking
+        // room, so the space has to come from the paragraph's own spacing.
         $this->applyVerticalMargins(
             $sink,
             $firstIndex,
-            Length::pointsToTwips($length('margin-top') + ($edges['top'] === null ? max(0.0, $padding('top') - $bullet) : 0)),
-            Length::pointsToTwips($length('margin-bottom') + ($edges['bottom'] === null ? $padding('bottom') : 0)),
+            Length::pointsToTwips($length('margin-top') + max(0.0, $padding('top') - $bullet)),
+            Length::pointsToTwips($length('margin-bottom') + $padding('bottom')),
+            // A box that establishes a formatting context of its own (a
+            // scroll container) keeps its content's margins inside it.
+            ! in_array(strtolower(trim((string) $style->value('overflow'))), ['', 'visible'], true),
         );
 
         if ($style->breaksPageAfter()) {
@@ -472,7 +481,11 @@ final class DocumentBuilder
         return (FontMetrics::SYMBOL_ASCENT - $ascent) * $style->fontSizePt * ($spacing ?? 240) / 240;
     }
 
-    private function applyVerticalMargins(BlockSink $sink, int $firstIndex, int $top, int $bottom): void
+    /**
+     * @param  bool  $keepsMargins  the box keeps its content's margins inside
+     *                              it (no collapsing through its edges)
+     */
+    private function applyVerticalMargins(BlockSink $sink, int $firstIndex, int $top, int $bottom, bool $keepsMargins = false): void
     {
         $lastIndex = $sink->count() - 1;
 
@@ -480,20 +493,21 @@ final class DocumentBuilder
             return;
         }
 
+        $join = static fn(int $own, int $outer): int => $keepsMargins ? $own + $outer : max($own, $outer);
         $first = $sink->blocks[$firstIndex];
 
         if ($first instanceof Paragraph && $top > 0) {
-            $first->properties->spacingBefore = max($first->properties->spacingBefore ?? 0, $top);
+            $first->properties->spacingBefore = $join($first->properties->spacingBefore ?? 0, $top);
         } elseif ($first instanceof Table && $top > 0) {
-            $sink->replace($firstIndex, $first->withMargins(max($first->marginTop, $top), $first->marginBottom));
+            $sink->replace($firstIndex, $first->withMargins($join($first->marginTop, $top), $first->marginBottom));
         }
 
         $last = $sink->blocks[$lastIndex];
 
         if ($last instanceof Paragraph && $bottom > 0) {
-            $last->properties->spacingAfter = max($last->properties->spacingAfter ?? 0, $bottom);
+            $last->properties->spacingAfter = $join($last->properties->spacingAfter ?? 0, $bottom);
         } elseif ($last instanceof Table && $bottom > 0) {
-            $sink->replace($lastIndex, $last->withMargins($last->marginTop, max($last->marginBottom, $bottom)));
+            $sink->replace($lastIndex, $last->withMargins($last->marginTop, $join($last->marginBottom, $bottom)));
         }
     }
 

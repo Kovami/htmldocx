@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use Kovami\HtmlDocx\Config\PageLayout;
 use Kovami\HtmlDocx\Css\DefaultStylesheet;
+use Kovami\HtmlDocx\Html\Writer\CssFormatter;
 
 final readonly class Options
 {
@@ -33,9 +34,9 @@ final readonly class Options
      * @param  int  $maxDocxTotalBytes  DOCX → HTML: decompressed size limit of the whole package
      */
     public function __construct(
-        public string $fontFamily = 'Calibri',
-        public float $fontSizePt = 11.0,
-        public string $textColor = '000000',
+        public ?string $fontFamily = null,
+        public ?float $fontSizePt = null,
+        public ?string $textColor = null,
         public ?string $language = null,
         public ?PageLayout $pageLayout = null,
         public ?string $defaultStylesheet = null,
@@ -65,14 +66,41 @@ final readonly class Options
         return new self(...[...get_object_vars($this), ...$changes]);
     }
 
-    /** The defaults HTML is read and written against, for an editor or (null) for plain HTML. */
+    /**
+     * The defaults HTML is read and written against, for an editor or (null)
+     * for plain HTML, with the base font, size and colour given here on top.
+     */
     public function stylesheet(?Editor $editor): string
     {
-        return $this->defaultStylesheet ?? match ($editor) {
+        $defaults = $this->defaultStylesheet ?? match ($editor) {
             Editor::SunEditor => DefaultStylesheet::CSS,
             Editor::CKEditor => DefaultStylesheet::CKEDITOR,
+            Editor::TinyMce => DefaultStylesheet::TINYMCE,
             default => DefaultStylesheet::BROWSER,
         };
+        $base = array_filter([
+            'font-family' => $this->fontFamily === null ? null : CssFormatter::fontFamily($this->fontFamily),
+            'font-size' => $this->fontSizePt === null ? null : CssFormatter::number($this->fontSizePt) . 'pt',
+            'color' => $this->textColor === null ? null : CssFormatter::color(ltrim($this->textColor, '#')),
+        ]);
+
+        return $base === [] ? $defaults : $defaults . "\nbody { " . CssFormatter::declarations($base) . ' }';
+    }
+
+    /** The font of text nothing else formats: the one given here, else Calibri. */
+    public function baseFontFamily(): string
+    {
+        return $this->fontFamily ?? 'Calibri';
+    }
+
+    public function baseFontSizePt(): float
+    {
+        return $this->fontSizePt ?? 11.0;
+    }
+
+    public function baseTextColor(): string
+    {
+        return ltrim($this->textColor ?? '000000', '#');
     }
 
     public function page(): PageLayout

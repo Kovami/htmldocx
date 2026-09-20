@@ -15,8 +15,14 @@ namespace Kovami\HtmlDocx\Css;
  *
  * {@see self::BROWSER}: a browser's defaults alone, for plain HTML.
  *
- * {@see self::CKEDITOR}: a browser's defaults plus what CKEditor's content
- * stylesheet gives tables, which its HTML leaves out wherever it matches.
+ * {@see self::CKEDITOR} and {@see self::TINYMCE}: a browser's defaults plus
+ * what those editors' content stylesheets add, which their HTML leaves out
+ * wherever it matches.
+ *
+ * Each editor's stylesheet also carries the typography it shows text in out
+ * of the box (its font, size, colour and line height), so a document made in
+ * it reads the way it looked; `Options::$fontFamily` and its neighbours
+ * replace that for an application whose own content CSS differs.
  */
 final class DefaultStylesheet
 {
@@ -40,7 +46,7 @@ final class DefaultStylesheet
         CSS;
 
     public const string CSS = self::DISPLAY . "\n" . <<<'CSS'
-        body { line-height: 1.5; }
+        body { font-family: "Helvetica Neue"; font-size: 13px; color: #333333; line-height: 1.5; }
 
         p { margin: 0 0 10px 0; }
         h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; }
@@ -155,6 +161,8 @@ final class DefaultStylesheet
         CSS;
 
     public const string CKEDITOR = self::BROWSER . <<<'CSS'
+
+        body { font-family: Helvetica, Arial, Tahoma, Verdana, sans-serif; font-size: medium; line-height: 1.5; }
         table { border: 1px double #b3b3b3; border-collapse: collapse; }
         td, th { border: 1px solid #bfbfbf; padding: 0.4em; vertical-align: middle; }
         th { background-color: #f2f2f2; }
@@ -169,5 +177,36 @@ final class DefaultStylesheet
         .image-style-align-center { margin-left: auto; margin-right: auto; }
         .image-style-block-align-left { margin-left: 0; margin-right: auto; }
         .image-style-block-align-right { margin-left: auto; margin-right: 0; }
+        .image > figcaption { padding: 0.6em; font-size: 0.75em; text-align: center; }
+        pre { color: #353535; tab-size: 4; white-space: pre-wrap; background-color: #dddddd;
+              border: 1px solid #c4c4c4; margin: 0.9em 0; padding: 1em; }
+        code { background-color: #dddddd; padding: 0.15em; }
+        hr { background-color: #dedede; border: 0; height: 4px; margin: 15px 0; }
+        .text-tiny { font-size: 0.7em; }
+        .text-small { font-size: 0.85em; }
+        .text-big { font-size: 1.4em; }
+        .text-huge { font-size: 1.8em; }
+        .marker-yellow { background-color: #fdfd77; }
+        .marker-green { background-color: #62f962; }
+        .marker-pink { background-color: #fc7899; }
+        .marker-blue { background-color: #72ccfd; }
+        .pen-red { color: #e71313; }
+        .pen-green { color: #128a00; }
+        CSS;
+
+    /** A browser's defaults plus TinyMCE's default content stylesheet. */
+    public const string TINYMCE = self::BROWSER . <<<'CSS'
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; font-size: medium; line-height: 1.4; }
+        table { border-collapse: collapse; }
+        table:not([cellpadding]) th, table:not([cellpadding]) td { padding: 0.4rem; }
+        table[border]:not([border="0"]):not([style*="border-width"]) th,
+        table[border]:not([border="0"]):not([style*="border-width"]) td { border-width: 1px; }
+        table[border]:not([border="0"]):not([style*="border-style"]) th,
+        table[border]:not([border="0"]):not([style*="border-style"]) td { border-style: solid; }
+        table[border]:not([border="0"]):not([style*="border-color"]) th,
+        table[border]:not([border="0"]):not([style*="border-color"]) td { border-color: #cccccc; }
+        figure { display: table; margin: 1rem auto; }
+        figure figcaption { display: block; margin-top: 0.25rem; text-align: center; }
         CSS;
 }

@@ -20,7 +20,12 @@ export const EDITORS = {
         element: 'div',
         content: { css: 'node_modules/ckeditor5/dist/browser/ckeditor5-content.css', className: 'ck-content' },
     },
-    tinymce: { scripts: ['node_modules/tinymce/tinymce.min.js', 'editors/tinymce.js'], styles: [], element: 'textarea' },
+    tinymce: {
+        scripts: ['node_modules/tinymce/tinymce.min.js', 'editors/tinymce.js'],
+        styles: [],
+        element: 'textarea',
+        content: { css: 'node_modules/tinymce/skins/content/default/content.css', className: 'mce-content-body' },
+    },
     tiptap: { bundle: 'editors/tiptap.js', styles: [], element: 'div' },
     suneditor: {
         bundle: 'editors/suneditor.js',

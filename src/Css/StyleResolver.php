@@ -25,6 +25,9 @@ final class StyleResolver
         'ui-monospace' => 'Courier New', 'ui-sans-serif' => 'Arial', 'ui-serif' => 'Times New Roman',
     ];
 
+    /** Not fonts but the platform's choice, which a DOCX cannot ask for. */
+    private const array SYSTEM_FONTS = ['-apple-system', 'blinkmacsystemfont', '-webkit-system-font', 'ui-rounded'];
+
     private const array WHITE_SPACE = ['normal', 'nowrap', 'pre', 'pre-wrap', 'pre-line', 'break-spaces'];
 
     /** @var list<CssRule> */
@@ -197,6 +200,12 @@ final class StyleResolver
 
             if (in_array($lower, ['inherit', 'initial', 'unset'], true)) {
                 return null;
+            }
+
+            // A font of the operating system's own, which a document cannot
+            // name: the next family in the stack is one Word can find.
+            if (in_array($lower, self::SYSTEM_FONTS, true)) {
+                continue;
             }
 
             if ($family !== '') {

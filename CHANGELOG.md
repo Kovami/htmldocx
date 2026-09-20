@@ -57,6 +57,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** each editor profile reads text the editor leaves unformatted
+  in the typography that editor shows out of the box: CKEditor's Helvetica at
+  the browser's medium size with 1.5 line spacing, TinyMCE's system font stack
+  with 1.4, SunEditor's Helvetica Neue 13px in #333. Plain HTML keeps
+  Calibri 11pt. `Options::$fontFamily`, `$fontSizePt` and `$textColor` are
+  null by default and replace a profile's typography when given, for an
+  application whose own content CSS differs.
 - **Breaking:** a new entry point replaces the 1.x methods. Choose the HTML
   with `HtmlDocx::plain()` or `HtmlDocx::for(Editor::SunEditor)` (an `Editor`
   case or its name, e.g. `'tinymce'`), start from `fromDocxFile()`,
@@ -100,6 +107,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Padding above and below a block takes room in Word too: a bordered box (a
+  code block, a quotation) used to lose it, since Word's border space does not
+  take room of its own. A box that keeps its content's margins inside it
+  (`overflow` other than `visible`, as CKEditor's quotations have) adds them
+  rather than collapsing them.
 - A table cell without its own vertical alignment takes its row's, as in a
   browser, where rows are middle-aligned; `inherit` used to fall back to top.
 - A floated picture keeps text wrapping around it on the way to Word: the

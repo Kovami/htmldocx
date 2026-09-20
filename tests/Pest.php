@@ -32,7 +32,14 @@ function converter(array $overrides = []): HtmlDocx
 
 function testOptions(array $overrides = []): Options
 {
-    return (new Options(createdAt: new DateTimeImmutable('2026-01-02T03:04:05Z')))->with($overrides);
+    // The base typography is pinned, so sizes relative to it (em, %) are
+    // read the same whatever an editor's own stylesheet says.
+    return (new Options(
+        fontFamily: 'Calibri',
+        fontSizePt: 11.0,
+        textColor: '000000',
+        createdAt: new DateTimeImmutable('2026-01-02T03:04:05Z'),
+    ))->with($overrides);
 }
 
 /** HTML → model → HTML: what the HTML writer makes of editor content. */
