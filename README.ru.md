@@ -10,10 +10,18 @@
 Превращает HTML в документы Word и документы Word обратно в HTML — одной библиотекой, без зависимостей в рантайме и без Word, LibreOffice или headless-браузера где-либо поблизости.
 
 ```php
-$converter = new Kovami\HtmlDocx\HtmlDocx;
+use Kovami\HtmlDocx\HtmlDocx;
 
-$docx = $converter->htmlToDocx('<h1>Отчёт</h1><p>Привет, <b>мир</b></p>');
-$html = $converter->docxToHtml($docx);
+$docx = HtmlDocx::plain()->fromHtml('<h1>Отчёт</h1><p>Привет, <b>мир</b></p>')->toDocx();
+$html = HtmlDocx::plain()->fromDocx($docx)->toHtml();
+```
+
+HTML на выходе самодостаточен: каждый абзац несёт свой шрифт, размер, цвет, отступы и межстрочный интервал — документ выглядит собой где угодно. Если у вас есть редактор, возьмите его диалект:
+
+```php
+use Kovami\HtmlDocx\Editor;
+
+$html = HtmlDocx::for(Editor::CKEditor)->fromDocxFile('report.docx')->toHtml();
 ```
 
 Оба направления сходятся посередине — в одной модели документа:
@@ -30,6 +38,8 @@ HTML ──разбор──► каскад CSS ──► модель док�
 - [Требования](#требования)
 - [Установка](#установка)
 - [Использование](#использование)
+- [Профили](#профили)
+- [Насколько похоже](#насколько-похоже)
 - [Опции](#опции)
 - [Изображения](#изображения)
 - [Предупреждения](#предупреждения)
@@ -38,6 +48,7 @@ HTML ──разбор──► каскад CSS ──► модель док�
 - [Чего не умеет](#чего-не-умеет)
 - [Круговые преобразования](#круговые-преобразования)
 - [Безопасность](#безопасность)
+- [Переход с 1.x](#переход-с-1x)
 - [Участие в разработке](#участие-в-разработке)
 - [Лицензия](#лицензия)
 
@@ -59,85 +70,149 @@ composer require kovami/htmldocx
 ### HTML в DOCX
 
 ```php
+use Kovami\HtmlDocx\Config\PageLayout;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Options;
-use Kovami\HtmlDocx\Config\PageLayout;
 
-$converter = new HtmlDocx(new Options(
-    fontFamily: 'Calibri',
-    fontSizePt: 11.0,
+$converter = HtmlDocx::plain(new Options(
     language: 'ru-RU',
     pageLayout: PageLayout::a4Portrait(marginCm: 2.0),
 ));
 
-$bytes = $converter->htmlToDocx($html);             // .docx строкой
-$converter->htmlToDocxFile($html, '/tmp/out.docx'); // сразу в файл
-$converter->htmlToDocxStream($html, $stream);       // сразу в поток
+$bytes = $converter->fromHtml($html)->toDocx();          // .docx строкой
+$converter->fromHtml($html)->saveDocx('/tmp/out.docx');  // сразу в файл
+$converter->fromHtml($html)->streamDocx($stream);        // сразу в поток
+$converter->fromHtmlFile('/tmp/in.html')->toDocx();      // из файла
 ```
 
 У размера бумаги нет HTML-эквивалента, поэтому он задаётся настройками — один раз через `Options` или на конкретный вызов:
 
 ```php
-$converter->htmlToDocx($html, PageLayout::a4Landscape());
+$converter->fromHtml($html, PageLayout::a4Landscape())->toDocx();
 ```
 
 ### DOCX в HTML
 
 ```php
-$html = $converter->docxToHtml($bytes);
-$html = $converter->docxFileToHtml('/tmp/report.docx');
-$html = $converter->docxStreamToHtml($stream);
+$html = $converter->fromDocx($bytes)->toHtml();
+$html = $converter->fromDocxFile('/tmp/report.docx')->toHtml();
+$html = $converter->fromDocxStream($stream)->toHtml();
+$converter->fromDocxFile('/tmp/report.docx')->saveHtml('/tmp/report.html');
 ```
 
 По умолчанию получается фрагмент (без `<html>` и `<body>`), готовый к вставке на страницу или в редактор. Когда нужен целый документ:
 
 ```php
-$html = $converter->withOptions(new Options(fullHtmlDocument: true))->docxFileToHtml('/tmp/report.docx');
+$html = HtmlDocx::plain(new Options(fullHtmlDocument: true))->fromDocxFile('/tmp/report.docx')->toHtml();
 ```
+
+Источник (`fromHtml`, `fromHtmlFile`, `fromDocx`, `fromDocxFile`, `fromDocxStream`, `fromDocument`) возвращает `Conversion`: документ читается один раз, а дальше у него можно просить что угодно — `toHtml()`, `saveHtml()`, `toDocx()`, `saveDocx()`, `streamDocx()`, `document()`.
 
 ### Работа с моделью напрямую
 
 Любое преобразование — это чтение и запись, и между ними можно остановиться: чтобы посмотреть документ, изменить его или собрать с нуля.
 
 ```php
-$document = $converter->readDocx($bytes);   // .docx → Kovami\HtmlDocx\Model\Document
-$document = $converter->readHtml($html);    // HTML  → Document
+$document = $converter->fromDocx($bytes)->document();   // .docx → Kovami\HtmlDocx\Model\Document
+$document = $converter->fromHtml($html)->document();    // HTML  → Document
 
-$converter->writeDocx($document);           // Document → байты .docx
-$converter->writeDocxToStream($document, $stream);
-$converter->writeHtml($document);           // Document → HTML
+$converter->fromDocument($document)->toDocx();          // Document → байты .docx
+$converter->fromDocument($document)->toHtml();          // Document → HTML
 ```
 
 Модель — обычные PHP-объекты: `Document` хранит список блоков `Paragraph` и `Table`, абзацы — инлайны `TextRun`, `ImageRun`, `Hyperlink`, `Formula`, `NoteReference`, `BreakRun`, `TabRun` и `Bookmark`, и каждый из них несёт полностью вычисленное форматирование — никаких стилей доискивать уже не нужно.
 
 ### Экземпляры неизменяемы
 
-`HtmlDocx` можно создать один раз и переиспользовать для любого числа документов. Методы `with*` возвращают новый экземпляр:
+Конвертер можно создать один раз и переиспользовать для любого числа документов. Методы `with*` возвращают новый экземпляр:
 
 ```php
-$converter = (new HtmlDocx)
+$converter = HtmlDocx::plain()
     ->withOptions(new Options(language: 'de-DE'))
     ->withLocalImageBaseDir(__DIR__.'/public')
     ->withWarningHandler(static fn (string $message) => Log::info($message));
 ```
 
+## Профили
+
+Редакторы расходятся в разметке: одному нужен `<figure>` вокруг картинки, другому `<div>`; один хранит MathML, другой — свой span. Профиль решает, какой диалект HTML писать, и заодно учит читателя идиомам этого редактора и типографике, которой тот показывает текст.
+
+```php
+HtmlDocx::plain();                   // стандартный HTML, для любого редактора и без него
+HtmlDocx::for(Editor::CKEditor);     // CKEditor 5
+HtmlDocx::for(Editor::TinyMce);      // TinyMCE
+HtmlDocx::for(Editor::TipTap);       // TipTap / ProseMirror
+HtmlDocx::for(Editor::SunEditor);    // SunEditor
+HtmlDocx::for('tinymce');            // по имени, регистр не важен, синонимы тоже
+```
+
+Каким бы профилем ни писался HTML, **читатель понимает все**: HTML от любого из этих редакторов (и вывод 1.x этой библиотеки) правильно читается любым профилем.
+
+| | plain | CKEditor | TinyMCE | TipTap | SunEditor |
+| --- | --- | --- | --- | --- | --- |
+| Текст, списки, таблицы, картинки, ссылки | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Сноски и концевые сноски | ✓ `<section class="footnotes">` | ✓ | ✓ | частично¹ | ✓ `se-footnotes` |
+| Формулы | ✓ MathML | ✓ `\(…\)` | ✓ `\(…\)` | ✓ inline-math | ✓ span KaTeX |
+| Колонтитулы | — отбрасываются с предупреждением | — | — | — | ✓ `se-header` / `se-footer` |
+| Комментарии | — отбрасываются с предупреждением | — | — | — | ✓ `se-comment` |
+| Поля номеров страниц | — становятся текстом | — | — | — | ✓ `se-field` |
+
+¹ Сноски записываются, но схема TipTap сохраняет только их текст: сам раздел и ссылки обратно круг через него не переживают.
+
+**Базовая типографика.** Текст, у которого нет своего форматирования, каждый редактор показывает шрифтом из своего content-стиля — профиль исходит ровно из него, поэтому документ, набранный в редакторе, в Word выглядит так же: у CKEditor это Helvetica браузерного размера medium с интервалом 1.5, у TinyMCE — системный шрифт с 1.4, у SunEditor — Helvetica Neue 13px цветом #333. Для plain HTML это Calibri 11pt. Если приложение оформляет редактор иначе — а так обычно и есть, — скажите об этом:
+
+```php
+new Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, textColor: '222222');
+new Options(extraStylesheet: 'body { font-family: Georgia; } p { margin: 0 0 12px; }');
+```
+
+**Настройка редактора.** Редакторы выбрасывают всё, чего нет в их схеме: из коробки CKEditor, TipTap и SunEditor сохраняют около трети написанного библиотекой форматирования (TinyMCE — почти всё). С плагинами и белыми списками ниже они сохраняют 98–99,7%, и то, что они отдают обратно, печатается с 75–81% краски на своём месте. Точные конфигурации, на которых считается бенч, лежат в [`bench/fidelity/editors`](bench/fidelity/editors).
+
+| Редактор | Что ему нужно |
+| --- | --- |
+| CKEditor 5 | Плагин `GeneralHtmlSupport`, разрешающий любые элементы со стилями, классами и атрибутами: `htmlSupport: { allow: [{ name: /.*/, styles: true, classes: true, attributes: true }] }`, рядом с плагинами таблиц, списков, картинок, ссылок, цитат и блоков кода |
+| TinyMCE | Плагины `lists`, `advlist`, `table`, `link` и `image`; остальную разметку он сохраняет как есть |
+| TipTap | `StarterKit` вместе с `TableKit`, `TextStyleKit`, `TextAlign`, `Image` (`inline: true`, `allowBase64: true`), `Subscript`, `Superscript`, `Highlight`, `Mathematics` — и расширение, которое сохраняет `style` и `id` у блоков (`addGlobalAttributes`): без него TipTap их выбрасывает |
+| SunEditor | Все его плагины вместе с KaTeX, плюс `attributesWhitelist: { all: 'style|id|role|start|value|data-.+' }` и `addTagsWhitelist: 'section|colgroup|col'` |
+
+## Насколько похоже
+
+В репозитории лежит бенч, который отвечает на этот вопрос числами, а не прилагательными ([`bench/fidelity`](bench/fidelity), macOS с Microsoft Word):
+
+- **DOCX → HTML**: Word печатает документ, Chromium печатает HTML библиотеки на той же бумаге, и страницы сравниваются попиксельно — какая доля краски с каждой стороны имеет краску с другой в пределах 1.33 pt, плюс куда попало каждое слово.
+- **HTML → DOCX**: обратно. HTML редактора показывается в браузере с его же content-стилем и сравнивается с тем, как Word печатает DOCX, сделанный библиотекой из этого HTML.
+
+| DOCX → HTML, plain HTML | Только текст | Вся страница |
+| --- | --- | --- |
+| Краска на месте | **96,4%** | 80,9% |
+| Слов на своей странице | **100%** | 100% |
+| Медианный вертикальный сдвиг | **0,5 pt** | — |
+
+«Только текст» — без колонтитулов и сносок: они расходятся по замыслу. В plain HTML нет страничной обвязки, а сноски браузер печатает в конце, тогда как Word — внизу страницы.
+
+Лучше посмотреть, чем читать: [примеры](https://kovami.github.io/htmldocx/) — это отчёт, написанный Word, HTML, который делает из него библиотека, DOCX, который она делает из редакторского HTML, и постраничные картинки рядом с печатью самого Word.
+
+| | |
+| --- | --- |
+| Word, plain HTML и профиль SunEditor рядом | [![showcase](examples/images/showcase-p1.png)](https://kovami.github.io/htmldocx/images/showcase-p1.png) |
+| Редакторский HTML в браузере и сделанный из него DOCX в Word | [![редакторский HTML](examples/images/editor-p1.png)](https://kovami.github.io/htmldocx/images/editor-p1.png) |
+
 ## Опции
 
-Один объект `Options` настраивает оба направления. Первый блок описывает окружение, в котором живёт документ: шрифт, размер и цвет, к которым текст откатывается, и таблицу стилей, относительно которой HTML читается и записывается.
+Один объект `Options` настраивает оба направления. Первый блок описывает окружение, в котором живёт документ: шрифт, размер и цвет, к которым текст откатывается, и таблицу стилей, относительно которой читается HTML.
 
 | Опция | По умолчанию | Направление | Что делает |
 | --- | --- | --- | --- |
-| `fontFamily` | `Calibri` | оба | Шрифт документа по умолчанию |
-| `fontSizePt` | `11.0` | оба | Размер по умолчанию, в пунктах |
-| `textColor` | `000000` | оба | Цвет по умолчанию, `RRGGBB` |
+| `fontFamily` | из профиля | оба | Базовый шрифт текста, у которого нет своего форматирования ([Профили](#профили)) |
+| `fontSizePt` | из профиля | оба | Базовый размер, в пунктах |
+| `textColor` | из профиля | оба | Базовый цвет, `RRGGBB` |
 | `language` | `null` | HTML → DOCX | Язык проверки правописания в документе, например `ru-RU` |
 | `pageLayout` | A4 книжная | HTML → DOCX | Размер бумаги, ориентация и поля |
-| `defaultStylesheet` | встроенная | оба | Заменяет встроенные браузерные/редакторские значения по умолчанию |
+| `defaultStylesheet` | из профиля | оба | Заменяет встроенные умолчания: content-стиль редактора для его профиля, браузерный — для plain HTML |
 | `extraStylesheet` | `''` | оба | CSS поверх умолчаний и под собственным `<style>` документа |
 | `title`, `author` | `null` | HTML → DOCX | Свойства документа (заголовок берётся из `<title>`, если не задан) |
 | `createdAt` | сейчас | HTML → DOCX | Фиксированная метка времени — для побайтово воспроизводимого результата |
 | `cssUnit` | `px` | DOCX → HTML | Единица длин и размеров шрифта: `px` или `pt` |
-| `keepDocumentDefaults` | `true` | DOCX → HTML | Выписывать базовое форматирование самого документа там, где оно отличается от окружения выше, чтобы HTML выглядел как документ. `false` принимает умолчания окружения и оставляет только осознанное форматирование |
 | `includeHiddenText` | `false` | DOCX → HTML | Сохранять текст, помеченный в Word как скрытый |
 | `includeHeadersFooters` | `true` | DOCX → HTML | Сохранять колонтитулы |
 | `includeComments` | `true` | DOCX → HTML | Сохранять комментарии рецензентов и текст, к которому они привязаны |
@@ -152,12 +227,14 @@ $converter = (new HtmlDocx)
 $options = (new Options(fontFamily: 'Georgia'))->with(['cssUnit' => 'pt', 'idPrefix' => 'doc1-']);
 ```
 
+Каждый блок HTML, который пишет библиотека, несёт собственное форматирование — каким бы профилем он ни был написан, — поэтому документ выглядит собой и в редакторе, и в письме, и на странице с чужими стилями.
+
 ## Изображения
 
 **В документ.** Значения `<img src>` разрешает `ImageSourceResolver`. Из коробки работают `data:`-URI и больше ничего: конвертер не ходит в сеть и не читает диск, пока вы этого не разрешите.
 
 ```php
-$converter = (new HtmlDocx)
+$converter = HtmlDocx::plain()
     // относительные пути разрешаются только внутри этой папки, выше — никогда
     ->withLocalImageBaseDir(public_path())
     // http(s)-картинки идут через ваш загрузчик, где живут ваши таймауты и белый список
@@ -172,7 +249,7 @@ $converter = (new HtmlDocx)
 use Kovami\HtmlDocx\Image\CallbackImageHandler;
 use Kovami\HtmlDocx\Model\ImageData;
 
-$converter = (new HtmlDocx)->withImageHandler(new CallbackImageHandler(
+$converter = HtmlDocx::plain()->withImageHandler(new CallbackImageHandler(
     function (ImageData $image, string $description): ?string {
         Storage::put($path = "media/{$image->hash()}.{$image->extension}", $image->bytes);
 
@@ -186,7 +263,7 @@ $converter = (new HtmlDocx)->withImageHandler(new CallbackImageHandler(
 Всё, что документ несёт, а преобразование выразить не может, сообщается, а не выбрасывается молча:
 
 ```php
-$converter = (new HtmlDocx)->withWarningHandler(function (string $message): void {
+$converter = HtmlDocx::plain()->withWarningHandler(function (string $message): void {
     Log::notice("htmldocx: {$message}");
 });
 ```
@@ -200,15 +277,16 @@ $converter = (new HtmlDocx)->withWarningHandler(function (string $message): void
 ```php
 // Laravel — app/Providers/AppServiceProvider.php
 use Kovami\HtmlDocx\Config\PageLayout;
+use Kovami\HtmlDocx\Editor;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Options;
 
-$this->app->singleton(HtmlDocx::class, fn (): HtmlDocx => (new HtmlDocx(new Options(
-    fontFamily: config('documents.font_family', 'Calibri'),
-    fontSizePt: (float) config('documents.font_size_pt', 11),
+$this->app->singleton(HtmlDocx::class, fn (): HtmlDocx => HtmlDocx::for(Editor::CKEditor, new Options(
+    fontFamily: config('documents.font_family'),
+    fontSizePt: config('documents.font_size_pt'),
     language: config('app.locale'),
     pageLayout: PageLayout::fromArray(config('documents.page', [])),
-)))
+))
     ->withLocalImageBaseDir(public_path())
     ->withWarningHandler(static fn (string $message) => Log::notice("htmldocx: {$message}")));
 ```
@@ -219,12 +297,12 @@ $this->app->singleton(HtmlDocx::class, fn (): HtmlDocx => (new HtmlDocx(new Opti
 PageLayout::fromArray(['size' => 'a4', 'orientation' => 'landscape', 'margin_cm' => 1.5]);
 ```
 
-Автоматическому связыванию Symfony не нужно вообще ничего — у всех аргументов конструктора есть значения по умолчанию, — а фабрика даёт тот же контроль, что и выше:
+В Symfony конвертер собирает фабрика — с тем же контролем, что и выше:
 
 ```yaml
 # config/services.yaml
 Kovami\HtmlDocx\HtmlDocx:
-    factory: ['App\Documents\ConverterFactory', 'create']
+    factory: ['App\Documents\ConverterFactory', 'create']   # возвращает HtmlDocx::plain(...) или HtmlDocx::for(...)
 ```
 
 ## Что умеет
@@ -244,8 +322,8 @@ Kovami\HtmlDocx\HtmlDocx:
 | `a href` | Гиперссылки; `href="#id"` превращается в ссылку на закладку, а закладками становятся только те id, на которые кто-то ссылается |
 | `br`, `hr`, табуляции | Разрывы строк, абзац-линейка с рамкой, символы табуляции |
 | `page-break-before` / `page-break-after` | Разрывы страниц |
-| `<span class="katex" data-exp="…">` | **Office Math** — LaTeX переводится в формулу, которую Word верстает и умеет редактировать |
-| `<ol class="se-footnotes">` / `se-endnotes` и надстрочные ссылки на них | Настоящие сноски и концевые сноски: то, что библиотека вывела в HTML, возвращается сносками |
+| MathML, `\(…\)` и `\[…\]`, узлы формул TipTap, span KaTeX от SunEditor | **Office Math** — формула переводится в ту, которую Word верстает и умеет редактировать |
+| `<section class="footnotes">` / `endnotes` и надстрочные ссылки на них (а также `se-footnotes` от SunEditor) | Настоящие сноски и концевые сноски: то, что библиотека вывела в HTML, возвращается сносками |
 | `<div class="se-header">` / `se-footer`, с `data-type="first"` или `"even"` | Колонтитулы, в том числе особые для первой и для чётных страниц |
 | `<span class="se-field" data-field="PAGE">` / `NUMPAGES` | Поля номера страницы и числа страниц, которые Word пересчитывает сам |
 | `<span class="se-comment" data-comment="1 2">` и `<ol class="se-comments">` | Комментарии к отмеченному тексту — диапазоны могут пересекать абзацы и накладываться друг на друга — с автором, инициалами, датой, ответами и отметкой «решено» |
@@ -253,12 +331,13 @@ Kovami\HtmlDocx\HtmlDocx:
 | `input` | Флажки и переключатели как ☑ / ☐, остальные поля — своим значением |
 | `dir="rtl"`, `direction` | Абзацы с написанием справа налево |
 | `<title>` | Заголовок документа |
+| `float: left` / `right` у картинки | Картинка, привязанная к этому краю колонки, с обтеканием текстом |
 
 Пробельные символы обрабатываются по правилам CSS — схлопывание, `pre`, `pre-wrap`, `pre-line`, `nowrap`, — а `text-transform`, отступ первой строки, `line-height` (множителем или фиксированной высотой) и `text-align` (включая `justify`) переносятся как есть. Кривая вёрстка разбирается так же, как её разбирает браузер, — потому что разбирается таким же парсером.
 
 ### DOCX → HTML
 
-Форматирование вычисляется так же, как его вычисляет Word: умолчания документа, цепочки наследования стилей, уровни нумерации, стили таблиц и прямое форматирование — каждый слой в своём порядке, — а затем записывается в HTML, который показывает то же самое и без внешней таблицы стилей.
+Форматирование вычисляется так же, как его вычисляет Word: умолчания документа, цепочки наследования стилей, уровни нумерации, стили таблиц и прямое форматирование — каждый слой в своём порядке, — а затем записывается в HTML, который показывает то же самое и без внешней таблицы стилей. Строки ниже описывают plain HTML; профиль пишет то же содержимое на диалекте своего редактора ([Профили](#профили)).
 
 | Содержимое | Во что превращается в HTML |
 | --- | --- |
@@ -267,15 +346,15 @@ Kovami\HtmlDocx\HtmlDocx:
 | Шрифты и цвета темы | Разрешаются через `theme1.xml`, включая осветление и затемнение |
 | Нумерация | Настоящая вложенность `<ul>`/`<ol>`, `start` и `value`, CSS-стили счётчиков там, где они подходят, и точный текст маркера там, где не подходят (`1.2.`, `A)`, `α.`) |
 | Таблицы | `<table>` с `<colgroup>`, `<thead>`, `rowspan`/`colspan` и форматированием, которое диктует стиль таблицы: строки заголовка, чередование строк, первый и последний столбец, угловые ячейки |
-| Изображения | `<img>` со своим размером; картинка, стоящая в абзаце одна, оборачивается в компонент `<div><figure>`, чтобы редакторы могли её выделять и выравнивать, а обтекаемая сохраняет `float` |
-| Сноски и концевые сноски | Надстрочные ссылки на нумерованный список в конце, со ссылками обратно к месту в тексте |
-| Колонтитулы | `<div class="se-header">` перед содержимым и `<div class="se-footer">` после него; у вариантов для первой и чётных страниц есть `data-type`. Берутся те, что показывает последний раздел, с наследованием между разделами, как в Word |
-| Номера страниц | `<span class="se-field" data-field="PAGE">` (или `NUMPAGES`) вокруг значения, которое Word показал последним |
-| Комментарии | Текст, к которому относится комментарий, обёрнут в `<span class="se-comment" data-comment="…">` (через пробел — все комментарии, которые его покрывают), а после сносок идёт `<ol class="se-comments">`: по `li` на комментарий с `data-author`, `data-initials`, `data-date`, `data-parent` у ответа и `data-resolved` |
+| Изображения | `<img>` со своим размером — одна в абзаце или внутри строки; обтекаемая сохраняет `float` и обтекание. Профиль SunEditor заворачивает её в свой компонент, который его панель умеет выделять и масштабировать |
+| Сноски и концевые сноски | Надстрочные ссылки на `<section class="footnotes">` / `endnotes` в конце (с ролями DPUB-ARIA), со ссылками обратно к месту в тексте |
+| Колонтитулы | Сохраняет только профиль SunEditor: `<div class="se-header">` перед содержимым и `<div class="se-footer">` после него; у вариантов для первой и чётных страниц есть `data-type`. Берутся те, что показывает последний раздел, с наследованием между разделами, как в Word |
+| Номера страниц | `<span class="se-field" data-field="PAGE">` (профиль SunEditor) или текстом то число, которое Word показал последним |
+| Комментарии | Сохраняет только профиль SunEditor: текст, к которому относится комментарий, обёрнут в `<span class="se-comment" data-comment="…">` (через пробел — все комментарии, которые его покрывают), а после сносок идёт `<ol class="se-comments">`: по `li` на комментарий с `data-author`, `data-initials`, `data-date`, `data-parent` у ответа и `data-resolved` |
 | Гиперссылки и закладки | `<a href>` и `<a id>`, включая поля перекрёстных ссылок и `HYPERLINK` |
 | Поля | Их текущий результат (даты, ссылки, флажки форм); номера страниц остаются полями |
 | Исправления | Показываются принятыми: вставки остаются, удаления и перенесённый текст убираются |
-| Office Math | `<span class="katex" data-exp="…">` с формулой в виде LaTeX |
+| Office Math | MathML с LaTeX в аннотации — или в том виде, который читает редактор профиля |
 | Надписи и фигуры | Их текст — абзацами следом за тем, к которому они привязаны |
 | Символы и дингбаты | Переводятся в настоящие символы Unicode |
 | Разрывы строк и страниц, табуляции | `<br>`, `page-break-before`, сохранённые пробелы |
@@ -292,12 +371,19 @@ Kovami\HtmlDocx\HtmlDocx:
 - **Диаграммы, SmartArt и OLE-объекты** доходят только картинкой, которую Word хранит рядом с ними; живой объект теряется.
 - **`w:altChunk`** (встроенные внутрь `.docx` HTML или RTF) пропускается, с предупреждением.
 - **Макросы, данные форм и привязки элементов управления** не переносятся.
-- **Раскладка вордовская, а не браузерная.** Плавающие блоки, flexbox, grid, многоколоночная вёрстка, абсолютное позиционирование и перекрытия в текстовом процессоре эквивалента не имеют: блочные боксы становятся абзацами, а их отступы, интервалы, рамки и фон сохраняются. Изображения из HTML вставляются в строку.
+- **Раскладка вордовская, а не браузерная.** Flexbox, grid, многоколоночная вёрстка, абсолютное позиционирование и перекрытия в текстовом процессоре эквивалента не имеют: блочные боксы становятся абзацами, а их отступы, интервалы, рамки и фон сохраняются. Плавающая картинка становится привязанной, с обтеканием текстом; плавающий текст — нет.
 - **Внешние таблицы стилей не загружаются.** В каскаде участвуют только блоки `<style>` внутри документа и те стили, что вы настроили. Блоки `@media` и `@supports` читаются, когда относятся к печати; `<style media="screen">` пропускается.
 - **Ни скриптов, ни SVG, ни canvas.** `script`, `svg`, `canvas`, `select`, `textarea` и `button` игнорируются.
 - **Старый двоичный `.doc`**, RTF, ODT и PDF — вне области задач, в обе стороны.
 - **Шрифты не встраиваются**, а текст не измеряется: разбиение на страницы — дело Word, поэтому число страниц и место разрыва здесь неизвестны.
 - **HTML на выходе — фрагмент содержимого**, а не постраничное представление документа.
+
+Несколько расхождений — это спор двух движков, а не потеря при преобразовании; именно из-за них бенч выше не показывает 100%:
+
+- браузер делает строку выше, чтобы вместить надстрочный знак, Word — нет;
+- рамку тоньше пикселя браузер рисует целым пикселем, отчего каждая строка таблицы на доли пункта выше вордовской;
+- маркер списка CSS ставит рядом с текстом, а Word — на выступе;
+- редактор, который не моделирует какое-то форматирование, выбрасывает его ещё до библиотеки: TipTap не хранит `style` у картинок (проценты ширины, обтекание) и межбуквенный интервал, TinyMCE — табуляции внутри блоков кода.
 
 ## Круговые преобразования
 
@@ -307,7 +393,7 @@ HTML-писатель выписывает только то, что отлич�
 - `DOCX → HTML → DOCX` сохраняет структуру, форматирование, нумерацию, таблицы, изображения, ссылки, сноски, колонтитулы и комментарии.
 - Судья — сам Word: документ, записанный здесь, открывается в Word без предложения его восстановить, а если прочитать документ Word, пересохранить его в самом Word и прочитать снова, результат будет тем же.
 
-Отдельного слова заслуживают вертикальные интервалы — единственное место, где модели по-настоящему расходятся: Word складывает интервал после одного абзаца с интервалом перед следующим, а CSS схлопывает их в больший. Писатель обращает эту арифметику (верхний отступ каждого абзаца несёт свой интервал плюс интервал предыдущего), поэтому промежутки, которые вы видите в браузере, — это те же промежутки, которые напечатает Word.
+Вертикальные интервалы устроены как в Word: между двумя абзацами он оставляет больший из интервала после первого и интервала перед вторым — ровно так же схлопываются поля в CSS, поэтому промежутки, которые вы видите в браузере, это те же промежутки, которые напечатает Word.
 
 ## Безопасность
 
@@ -321,6 +407,32 @@ HTML-писатель выписывает только то, что отлич�
 - Всё, чему в документе доверять нельзя, — символы, которые XML не переносит, битые части, оборванные связи — вычищается или пропускается, а не проходит насквозь.
 
 Ошибки, останавливающие преобразование, выбрасываются как `Kovami\HtmlDocx\Exceptions\HtmlDocxException`.
+
+## Переход с 1.x
+
+Методов 1.x больше нет: конвертер выбирается через `plain()` или `for()`, источник читается один раз, а результат спрашивается у возвращённого `Conversion`.
+
+| 1.x | 2.0 |
+| --- | --- |
+| `new HtmlDocx($options)` | `HtmlDocx::plain($options)` — или `HtmlDocx::for(Editor::SunEditor, $options)` ради разметки 1.x |
+| `$c->htmlToDocx($html)` | `$c->fromHtml($html)->toDocx()` |
+| `$c->htmlToDocxFile($html, $path)` | `$c->fromHtml($html)->saveDocx($path)` |
+| `$c->htmlToDocxStream($html, $stream)` | `$c->fromHtml($html)->streamDocx($stream)` |
+| `$c->docxToHtml($bytes)` | `$c->fromDocx($bytes)->toHtml()` |
+| `$c->docxFileToHtml($path)` | `$c->fromDocxFile($path)->toHtml()` |
+| `$c->docxStreamToHtml($stream)` | `$c->fromDocxStream($stream)->toHtml()` |
+| `$c->readDocx($bytes)` | `$c->fromDocx($bytes)->document()` |
+| `$c->readHtml($html)` | `$c->fromHtml($html)->document()` |
+| `$c->writeDocx($document)` | `$c->fromDocument($document)->toDocx()` |
+| `$c->writeDocxToStream($document, $stream)` | `$c->fromDocument($document)->streamDocx($stream)` |
+| `$c->writeHtml($document)` | `$c->fromDocument($document)->toHtml()` |
+
+Изменилось ещё два:
+
+- **HTML стал самодостаточным.** Каждый блок выписывает свой шрифт, размер, цвет, поля и межстрочный интервал вместо того, чтобы опираться на таблицу стилей редактора, — и выглядит правильно где угодно. Опция `Options::$keepDocumentDefaults`, которая выбирала между этими двумя способами, удалена.
+- **`Options::$fontFamily`, `$fontSizePt` и `$textColor` по умолчанию берутся из типографики профиля**, а не равны Calibri 11pt. Передайте их, чтобы вернуть прежнюю базу или совпасть с CSS своего редактора.
+
+`HtmlDocx::for(Editor::SunEditor)` пишет ту же разметку, что писала 1.x, и читатель любого профиля её понимает — сохранённый HTML продолжает работать.
 
 ## Участие в разработке
 
