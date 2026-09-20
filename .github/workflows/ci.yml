@@ -57,3 +57,22 @@ jobs:
       - run: composer validate --strict
       - run: composer analyse
       - run: composer lint
+
+  examples:
+    name: Examples are what the library writes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, mbstring, xmlwriter, zlib, zip
+          coverage: none
+
+      - uses: ramsey/composer-install@4.0.0
+
+      # examples/build.php is reproducible; Word's own files are not touched.
+      - run: php examples/build.php
+      - name: Rebuild examples/build-word.sh on macOS when this fails
+        run: git diff --exit-code -- examples

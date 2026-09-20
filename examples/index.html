@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kovami/htmldocx — examples</title>
+<style>
+body { font-family: system-ui, sans-serif; line-height: 1.5; margin: 2rem auto; max-width: 48rem; padding: 0 1rem; color: #1b1b1b; }
+h1 { margin-bottom: 0.25rem; }
+p.lead { margin-top: 0; color: #555; }
+section { margin-top: 2rem; }
+ul { padding-left: 1.25rem; }
+li { margin: 0.25rem 0; }
+a { color: #2f5496; }
+footer { margin-top: 3rem; color: #555; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<h1>kovami/htmldocx</h1>
+<p class="lead">Every file here is written by <code>examples/build-word.sh</code>: Word writes and prints the documents, the library converts them.</p>
+<section>
+<h2>A report Word wrote</h2>
+<p>Source: <a href="showcase.docx">showcase.docx</a></p>
+<ul>
+<li><a href="showcase.html">showcase.html</a> — the plain HTML the library writes from it</li>
+<li><a href="showcase.suneditor.html">showcase.suneditor.html</a> — the same document in the SunEditor profile</li>
+<li><a href="showcase.pdf">showcase.pdf</a> — Word's own print of the document, to compare with</li>
+<li><a href="images/showcase-p1.png">images/showcase-p1.png</a> — page 1 side by side: Word, plain HTML, SunEditor</li>
+<li><a href="images/showcase-p2.png">images/showcase-p2.png</a> — page 2 side by side</li>
+</ul>
+</section>
+<section>
+<h2>There and back again</h2>
+<p>Source: <a href="roundtrip.docx">roundtrip.docx</a></p>
+<ul>
+<li><a href="roundtrip.pdf">roundtrip.pdf</a> — the document after DOCX → HTML → DOCX, printed by Word</li>
+<li><a href="images/roundtrip-p1.png">images/roundtrip-p1.png</a> — page 1 next to the original</li>
+<li><a href="images/roundtrip-p2.png">images/roundtrip-p2.png</a> — page 2 next to the original</li>
+</ul>
+</section>
+<section>
+<h2>From an editor to Word</h2>
+<p>Source: <a href="editor.html">editor.html</a></p>
+<ul>
+<li><a href="editor.docx">editor.docx</a> — the DOCX the library writes from that HTML</li>
+<li><a href="editor.pdf">editor.pdf</a> — Word's print of it</li>
+<li><a href="images/editor-p1.png">images/editor-p1.png</a> — the HTML in a browser next to the DOCX in Word</li>
+</ul>
+</section>
+<footer><a href="https://github.com/kovami/htmldocx">The library on GitHub</a></footer>
+</body>
+</html>
