@@ -40,7 +40,8 @@ it('nests lists one level deeper per nesting depth', function () {
 
     expect(numberingLevel($docx, 'L0'))->toMatchArray(['level' => 0, 'format' => 'decimal'])
         ->and(numberingLevel($docx, 'L1'))->toMatchArray(['level' => 1, 'format' => 'bullet', 'text' => 'o', 'font' => 'Courier New'])
-        ->and(numberingLevel($docx, 'L2'))->toMatchArray(['level' => 2, 'format' => 'decimal', 'text' => '%3.'])
+        // SunEditor numbers a list inside a list with letters, as its CSS says.
+        ->and(numberingLevel($docx, 'L2'))->toMatchArray(['level' => 2, 'format' => 'lowerLetter', 'text' => '%3.'])
         ->and(numberingLevel($docx, 'back to L0')['numId'])->toBe(numberingLevel($docx, 'L0')['numId']);
 
     $indents = array_map(

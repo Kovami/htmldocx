@@ -107,6 +107,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The SunEditor profile follows the rest of SunEditor's own list and script
+  rules: the space it leaves under every item, the letters and roman numerals
+  it numbers nested lists with, and its 75% superscripts and subscripts.
 - Padding above and below a block takes room in Word too: a bordered box (a
   code block, a quotation) used to lose it, since Word's border space does not
   take room of its own. A box that keeps its content's margins inside it

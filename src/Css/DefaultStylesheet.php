@@ -60,6 +60,7 @@ final class DefaultStylesheet
         i, em, cite, dfn, var, address { font-style: italic; }
         u, ins { text-decoration: underline; }
         s, strike, del { text-decoration: line-through; }
+        sub, sup { font-size: 75%; }
         sub { vertical-align: sub; }
         sup { vertical-align: super; }
         small { font-size: smaller; }
@@ -78,10 +79,13 @@ final class DefaultStylesheet
             border-left: 5px solid #b1b1b1;
         }
 
-        ul, ol { margin: 0 0 10px; padding-left: 40px; }
-        li ul, li ol { margin: 0; }
+        ul, ol { margin: 1em 0; padding-left: 40px; }
+        ol ol, ol ul, ul ol, ul ul { margin: 0; }
+        li { margin-bottom: 5px; }
         ul { list-style-type: disc; }
         ol { list-style-type: decimal; }
+        ol ol, ul ol { list-style-type: lower-alpha; }
+        ol ol ol, ul ol ol, ul ul ol { list-style-type: upper-roman; }
         ul ul, ol ul { list-style-type: circle; }
         ul ul ul, ul ol ul, ol ul ul, ol ol ul { list-style-type: square; }
         dl { margin: 0 0 10px; }
