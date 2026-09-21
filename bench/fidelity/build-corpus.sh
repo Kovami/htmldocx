@@ -22,6 +22,10 @@ with timeout of 180 seconds
 end timeout
 APPLESCRIPT
     cp "$work/$name.saved.docx" "corpus/$name.docx"
+    # Word signs the package with the name of whoever runs it; the repository is public.
+    php -r '$z = new ZipArchive(); $z->open($argv[1]); $x = $z->getFromName("docProps/core.xml");
+        $x = preg_replace("~<(dc:creator|cp:lastModifiedBy)>[^<]*</~", "<\$1>htmldocx bench</", $x);
+        $z->addFromString("docProps/core.xml", $x); $z->close();' "corpus/$name.docx"
     echo "corpus/$name.docx"
 done
 
