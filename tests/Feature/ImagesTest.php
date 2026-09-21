@@ -239,3 +239,14 @@ it('sizes and places CKEditor\'s pictures by their figure', function (string $cl
     'side' => ['image-style-side', '', 0.5, 'right', null],
     'wrapped on the left' => ['image-style-align-left image_resized', 'width: 40%', 0.40, 'left', null],
 ]);
+
+it('lets min-width widen a box past its width, as SunEditor sizes a centred picture', function () {
+    // SunEditor's own markup for a picture at 50% of the page: the component is
+    // stretched to the column by min-width and the figure takes half of it.
+    [$image, , $contentWidth] = pictureOf(
+        '<div class="se-component se-image-container __se__float-center" style="width: 50%; min-width: 100%;"><figure style="width: 50%;"><img src="SRC" style="width: 100%; height: auto;"></figure></div>',
+        Kovami\HtmlDocx\Editor::SunEditor,
+    );
+
+    expect($image->width)->toBe(intdiv($contentWidth, 2));
+});

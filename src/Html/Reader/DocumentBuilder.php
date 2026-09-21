@@ -365,14 +365,17 @@ final class DocumentBuilder
         $horizontal = self::fitIndents($horizontal, $parent->availableWidth);
         $tag = $element->localName;
 
-        // A box of its own width holds its pictures and tables to it.
+        // A box of its own width holds its pictures and tables to it; as in
+        // CSS, min-width wins over width and max-width (SunEditor stretches a
+        // picture component to the column that way).
         $available = $parent->availableWidth - $horizontal['left'] - $horizontal['right'];
-        foreach (['width', 'max-width'] as $property) {
-            $width = $style->lengthPt($property, $percentBase);
+        $widths = array_filter(
+            [$style->lengthPt('width', $percentBase), $style->lengthPt('max-width', $percentBase)],
+            static fn(?float $width): bool => $width !== null && $width > 0,
+        );
 
-            if ($width !== null && $width > 0) {
-                $available = min($available, Length::pointsToTwips($width));
-            }
+        if ($widths !== []) {
+            $available = min($available, Length::pointsToTwips(max(min($widths), $style->lengthPt('min-width', $percentBase) ?? 0.0)));
         }
 
         $context = $parent->with([
