@@ -331,12 +331,9 @@ final class TableBuilder
     private function naturalWidths(int $columnCount, array $cells): array
     {
         $widths = array_fill(0, $columnCount, self::MIN_COLUMN_TWIPS);
+        $natural = [];
 
-        foreach ($cells as $cell) {
-            if ($cell['colspan'] !== 1) {
-                continue;
-            }
-
+        foreach ($cells as $index => $cell) {
             $style = $cell['style'];
             $longest = 0.0;
 
@@ -353,7 +350,26 @@ final class TableBuilder
                 $frame += max(0, $style->lengthPt("padding-{$side}") ?? 0) + ($style->border($side)->widthPt ?? 0);
             }
 
-            $widths[$cell['col']] = max($widths[$cell['col']], Length::pointsToTwips($longest * $style->fontSizePt + $frame));
+            $natural[$index] = Length::pointsToTwips($longest * $style->fontSizePt + $frame);
+
+            if ($cell['colspan'] === 1) {
+                $widths[$cell['col']] = max($widths[$cell['col']], $natural[$index]);
+            }
+        }
+
+        // A cell spanning columns widens them by what its content needs beyond
+        // theirs, shared in proportion to their widths, as CSS's auto layout does.
+        foreach ($cells as $index => $cell) {
+            $span = array_slice($widths, $cell['col'], $cell['colspan'], true);
+            $excess = $natural[$index] - array_sum($span);
+
+            if ($cell['colspan'] === 1 || $excess <= 0) {
+                continue;
+            }
+
+            foreach ($span as $column => $width) {
+                $widths[$column] += intdiv($excess * $width, max(1, array_sum($span)));
+            }
         }
 
         return array_values($widths);

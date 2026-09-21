@@ -937,6 +937,11 @@ final class DocumentBuilder
 
             $width = preg_match('/(?:^|;)\s*width\s*:\s*([^;]+)/i', (string) $figure->getAttribute('style'), $match) === 1 ? trim($match[1]) : null;
 
+            // SunEditor 3's figure is as wide as its content (max-content) unless it says otherwise.
+            if ($width === null && str_contains(' ' . $figure->getAttribute('class') . ' ', ' se-flex-component ')) {
+                $width = 'auto';
+            }
+
             // The figure has the width; a table filling it has the same.
             $style = (string) preg_replace('/(?:^|;)\s*width\s*:\s*100%\s*(?=;|$)/i', '', (string) $table->getAttribute('style'));
 

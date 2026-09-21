@@ -47,7 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   writer stands such a picture at the line's bottom (`vertical-align:
   bottom`), where a browser leaves no gap either.
 
-Bench: plain-text 43.4% → 96.3%, plain-images 76.3% → 95.7% (HTML → DOCX);
+- A table laid out automatically shares its width as a browser does, cells
+  spanning columns included: their content widens the columns they span.
+- A table SunEditor 3 keeps in a figure takes the figure's width (as wide as
+  its content when the figure says nothing) and the 10px below it.
+
+Bench: plain-text 43.4% → 96.3%, plain-images 76.3% → 95.7%, plain-tables
+98.7% → 99.5%, suneditor-tables 77.1% → 97.3% (HTML → DOCX);
 notes 35.1% → 60.8% of the whole page (DOCX → HTML).
 
 ## [2.1.0] - 2026-09-21

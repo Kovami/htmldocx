@@ -197,12 +197,12 @@ it('moves table margins onto the neighbouring paragraphs', function () {
         ->and(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('after')), 'before'))->toBe('400');
 });
 
-it('keeps a SunEditor table flush with what follows, as SunEditor 3 draws it', function () {
-    // SunEditor 3's table has no margin, and a component has only its own below it.
+it('separates SunEditor tables from following content by the margin of their figure', function () {
+    // SunEditor 3 keeps a table in a figure with 10px below it.
     $docx = docx('<table><tr><td>x</td></tr></table><div class="se-component"><img src="' . TestImage::pngDataUri(10, 10) . '"></div>');
     $next = $docx->first('/w:document/w:body/w:tbl/following-sibling::w:p[1]');
 
-    expect((int) Docx::attr($docx->first('w:pPr/w:spacing', $next), 'before'))->toBe(0);
+    expect((int) Docx::attr($docx->first('w:pPr/w:spacing', $next), 'before'))->toBe(150);
 });
 
 it('keeps the larger margin between consecutive tables', function () {

@@ -207,9 +207,9 @@ Share of the ink in place within 1.33 pt, higher is better.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Text and character formatting | 96.3% | 92.4% | 96.2% | 19.3% | 96.3% |
 | Lists | 94.0% | 92.6% | 95.2% | 31.2% | 94.1% |
-| Tables | 98.7% | 77.0% | 88.8% | 59.0% | 97.5% |
+| Tables | 99.5% | 97.3% | 88.8% | 59.0% | 97.5% |
 | Pictures | 95.7% | 93.6% | 94.5% | 69.1% | 27.2% |
-| **Mean** | **96.2%** | **88.9%** | **93.7%** | **44.7%** | **78.8%** |
+| **Mean** | **96.4%** | **94.0%** | **93.7%** | **44.7%** | **78.8%** |
 <!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.
