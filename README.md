@@ -184,7 +184,7 @@ The repository carries a bench that answers the question with numbers instead of
 
 | DOCX → HTML, plain HTML | Body text | Whole page |
 | --- | --- | --- |
-| Ink in place | **96.4%** | 80.9% |
+| Ink in place | **96.5%** | 81.0% |
 | Words on the same page | **100%** | 100% |
 | Median vertical drift | **0.5 pt** | — |
 

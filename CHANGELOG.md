@@ -5,6 +5,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Text sits where the browser shows it. Chromium centres a font's content in
+  its line box, Word puts the font's line gap above the text and a multiple's
+  extra space below the line, so the two set the same paragraph a point or
+  more apart. `FontMetrics::baselineShift()` computes the difference from
+  both measured (Chromium's content height and `normal` line height, Word's
+  single line); DOCX → HTML raises the text by it, HTML → DOCX lowers the
+  text by it through spacing before and gives it back from the spacing that
+  follows, so nothing after the paragraph moves. A line holding only a
+  picture starts at the picture's top in both and is left alone.
+- A line height of a size Word cannot have is kept: Word has only half
+  points, so SunEditor's 13px (9.75pt) becomes 10pt, and the multiple is now
+  taken of that, not of 9.75pt. SunEditor text no longer grows 2.5% a line.
+
+HTML → DOCX in the bench: mean ink in place 70.9% → 75.1%; suneditor-text
+70.2% → 90.8%, suneditor-lists 58.6% → 88.9%, suneditor-tables 85.9% →
+98.7%, ckeditor-images 88.2% → 94.5%, ckeditor-text 84.1% → 89.5%,
+plain-text 39.3% → 43.4%. DOCX → HTML: 96.4% → 96.5% of body ink.
+
 ## [2.0.1] - 2026-09-21
 
 A security release. Everyone on 2.0.0 should upgrade.
