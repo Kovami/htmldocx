@@ -134,6 +134,9 @@ final class DocumentBuilder
     /** @var WeakMap<ParagraphProperties, array{0: int, 1: int}> how much a browser grows each paragraph to hold its scripts, above and below, in twips */
     private WeakMap $scriptGrowth;
 
+    /** @var WeakMap<ParagraphProperties, int> room a browser leaves under a picture alone on its line, in twips */
+    private WeakMap $pictureGap;
+
     public function __construct(
         private readonly StyleResolver $resolver,
         private readonly PropertyMapper $mapper,
@@ -145,6 +148,7 @@ final class DocumentBuilder
         $this->tables = new TableBuilder($resolver, $mapper);
         $this->lowered = new WeakMap();
         $this->scriptGrowth = new WeakMap();
+        $this->pictureGap = new WeakMap();
     }
 
     public function build(HtmlDocument $html, PageLayout $pageLayout): Document
@@ -523,6 +527,12 @@ final class DocumentBuilder
             // A browser grows a line that holds a superscript or subscript, Word does not: the paragraph takes the room in its spacing.
             [$above, $below] = $this->scriptGrowth[$properties] ?? [0, 0];
 
+            // Word's line ends at a picture alone on it; a browser's goes on below the baseline.
+            // ponytail: single spacing only; Word also multiplies a picture's line, not measured yet.
+            if (self::pictureOnly($block->children) && ($properties->lineSpacing ?? 240) === 240) {
+                $below += $this->pictureGap[$properties] ?? 0;
+            }
+
             if ($lower !== 0 || $lowered !== 0 || $above !== 0 || $grownBelow !== 0) {
                 $gap = max($previous->spacingAfter ?? 0, $properties->spacingBefore ?? 0) + $lower - $lowered + $above + $grownBelow;
                 $properties->spacingBefore = max(0, $gap);
@@ -674,6 +684,12 @@ final class DocumentBuilder
 
             $flow->buffer()->appendImage($image, $flow->link);
 
+            if ($float === null && ! $style->isBlockLevel() && in_array($style->value('vertical-align'), [null, 'baseline'], true)) {
+                $block = $flow->style;
+                $lineHeight = $block->lineHeight === null ? null : ($block->lineHeight->multiple !== null ? $block->lineHeight->multiple * $block->fontSizePt : $block->lineHeight->points);
+                $flow->buffer()->pictureGap = max($flow->buffer()->pictureGap, FontMetrics::belowBaseline($block->fontFamily, $block->fontSizePt, $lineHeight) ?? 0.0);
+            }
+
             // A picture in a figure set apart by auto margins, or set apart
             // itself, sits where they put it: Word aligns its paragraph instead.
             if ($float === null) {
@@ -734,6 +750,7 @@ final class DocumentBuilder
         if ($inlines !== null) {
             $paragraph = $this->createParagraph($flow, $inlines);
             $this->scriptGrowth[$paragraph->properties] = array_map(Length::pointsToTwips(...), $buffer->scriptGrowth);
+            $this->pictureGap[$paragraph->properties] = Length::pointsToTwips($buffer->pictureGap);
 
             if ($buffer->alignment !== null) {
                 $paragraph->properties->alignment = $buffer->alignment;

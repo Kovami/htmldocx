@@ -251,3 +251,19 @@ it('lets min-width widen a box past its width, as SunEditor sizes a centred pict
 
     expect($image->width)->toBe(intdiv($contentWidth, 2));
 });
+
+it('gives a picture alone on its line the room a browser leaves under the baseline', function () {
+    $src = TestImage::pngDataUri(40, 40);
+    $after = static fn(string $style): int => (int) Docx::attr(
+        docx("<p style=\"margin: 0\"><img src=\"{$src}\" width=\"40\" height=\"40\"{$style}></p>", HtmlDocx::plain(testOptions()))->first('//w:p/w:pPr/w:spacing'),
+        'after',
+    );
+    $html = HtmlDocx::plain(testOptions())->fromHtml("<p style=\"margin: 0\"><img src=\"{$src}\" width=\"40\" height=\"40\"></p>")->toHtml();
+
+    // Calibri 11pt: descent 0.269 em, no leading — about 3pt that Word's line does not have.
+    expect($after(''))->toBeGreaterThan(50)
+        // Standing at the line's bottom it leaves none, and that is what the writer writes.
+        ->and($after(' style="vertical-align: bottom"'))->toBe(0)
+        ->and($html)->toContain('vertical-align: bottom;')
+        ->and(HtmlDocx::plain(testOptions())->fromHtml($html)->toHtml())->toBe($html);
+});

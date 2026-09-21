@@ -256,6 +256,27 @@ final class HtmlWriter
 
             $this->inlines->write($children, $element, $style);
             $this->closeParagraph($children, $element);
+            $this->standPictureOnLineBottom($children, $properties, $element);
+        }
+    }
+
+    /**
+     * Word's line ends at a picture alone on it; a browser's goes on below the
+     * baseline the picture stands on. At the line's bottom it leaves no gap
+     * (DocumentBuilder adds that gap to a picture that does stand on the baseline).
+     *
+     * @param  list<Inline>  $children
+     */
+    private function standPictureOnLineBottom(array $children, ParagraphProperties $properties, Element $element): void
+    {
+        $image = self::imageOnly($children);
+
+        if ($image === null || $image->float !== null || ($properties->lineSpacing ?? 240) !== 240) {
+            return;
+        }
+
+        foreach ($element->getElementsByTagName('img') as $img) {
+            $img->setAttribute('style', trim($img->getAttribute('style') . ' vertical-align: bottom;'));
         }
     }
 

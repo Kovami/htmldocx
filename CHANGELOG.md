@@ -18,8 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   SunEditor's own stylesheet, and footnote and endnote marks are written
   with it too, so they no longer make their line taller in the browser.
 
-Bench: plain-text 43.4% → 96.3% (HTML → DOCX); notes 35.1% → 60.8% of the
-whole page (DOCX → HTML).
+- A picture alone on its line stands on the baseline in a browser, which
+  leaves the font's descent under it; Word's line ends at the picture. The
+  reader adds that room below such a paragraph (single spacing), and the
+  writer stands such a picture at the line's bottom (`vertical-align:
+  bottom`), where a browser leaves no gap either.
+
+Bench: plain-text 43.4% → 96.3%, plain-images 76.3% → 95.7% (HTML → DOCX);
+notes 35.1% → 60.8% of the whole page (DOCX → HTML).
 
 ## [2.1.0] - 2026-09-21
 

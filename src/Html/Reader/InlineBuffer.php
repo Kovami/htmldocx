@@ -37,6 +37,9 @@ final class InlineBuffer
     /** @var array{0: float, 1: float} how much the browser grows the paragraph's lines to hold its scripts, in points; see FontMetrics::scriptGrowth() */
     public array $scriptGrowth = [0.0, 0.0];
 
+    /** Room a browser leaves under a picture standing on the baseline, in points; see FontMetrics::belowBaseline() */
+    public float $pictureGap = 0.0;
+
     /** @var array<int, list<CommentStart|CommentEnd>> comment boundaries, by the index of the item they come before */
     private array $boundaries = [];
 
