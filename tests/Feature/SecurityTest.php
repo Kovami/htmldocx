@@ -105,3 +105,9 @@ it('refuses a DOCTYPE in any encoding', function (string $part) {
     'UTF-16BE without BOM' => mb_convert_encoding('<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE d [<!ENTITY x "y">]><d>&x;</d>', 'UTF-16BE', 'UTF-8'),
     'UTF-32' => mb_convert_encoding('<?xml version="1.0" encoding="UTF-32"?><!DOCTYPE d [<!ENTITY x "y">]><d>&x;</d>', 'UTF-32LE', 'UTF-8'),
 ]);
+
+it('drops a script link whatever whitespace hides its scheme', function (string $href) {
+    $docx = docx('<p><a href="' . $href . '">text</a></p>');
+
+    expect($docx->count('//w:hyperlink'))->toBe(0);
+})->with(['java&#9;script:alert(1)', 'java&#10;script:alert(1)', "\u{0001}javascript:alert(1)"]);

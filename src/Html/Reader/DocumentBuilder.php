@@ -13,6 +13,7 @@ use Kovami\HtmlDocx\Css\ComputedStyle;
 use Kovami\HtmlDocx\Css\FontMetrics;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Css\StyleResolver;
+use Kovami\HtmlDocx\Html\Writer\InlineWriter;
 use Kovami\HtmlDocx\Model\Block;
 use Kovami\HtmlDocx\Model\Bookmark;
 use Kovami\HtmlDocx\Model\Border;
@@ -1057,7 +1058,8 @@ final class DocumentBuilder
             return $fragment === '' ? null : LinkTarget::anchor($this->bookmarks->nameFor($fragment));
         }
 
-        if ($href === '' || preg_match('/^(javascript|vbscript|data|file):/i', $href)) {
+        // One filter for both directions, so a scheme hidden by a tab or a control character is caught here too.
+        if (InlineWriter::safeUrl($href) === null) {
             return null;
         }
 
