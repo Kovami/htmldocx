@@ -30,10 +30,31 @@ A security release. Everyone on 2.0.0 should upgrade.
   so a scheme split by a tab or a control character (`java&#9;script:`) is
   dropped in both directions. (GHSA-77jg-mwvf-46gp)
 
+### Fixed
+
+- Helvetica's single line is 1.2 times its size, as Word on macOS draws it,
+  not the 1.1753 of its Windows metrics: CKEditor text at 1.5 no longer
+  drifts a quarter of a point per line in Word (#2).
+- The CKEditor profile gives blockquote the `overflow: hidden` of CKEditor's
+  own stylesheet, so a quotation keeps its margins apart from its paragraph's
+  instead of losing 12 pt above and below.
+- `min-width` widens a box past its `width`, as in CSS: a picture SunEditor
+  centres at 50% of the page no longer comes out at 25% (#3).
+- The bench corpus no longer carries the repository owner's name in its
+  document properties, and `build-corpus.sh` keeps it out (#5).
+
+HTML → DOCX in the bench (`npm run html`): mean ink in place 69.7% → 70.9%;
+ckeditor-lists 66.5% → 96.1%, ckeditor-tables 83.3% → 88.5%,
+suneditor-images 80.7% → 88.5%. ckeditor-images falls from 96.8% to 88.2%:
+its lines are now as tall as the browser's, which shows a constant 3 pt
+offset of the first line that the taller lines used to hide. DOCX → HTML is
+unchanged at 96.4% of body ink.
+
 ### Documentation
 
 - The README says that `ImageData::$bytes` are untrusted and how to serve
-  pictures safely, and that KaTeX should keep `trust: false`.
+  pictures safely, that KaTeX should keep `trust: false`, and what TinyMCE's
+  system font stack becomes in Word (#1).
 
 ## [2.0.0] - 2026-09-20
 
