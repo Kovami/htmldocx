@@ -29,9 +29,9 @@ export const EDITORS = {
     tiptap: { bundle: 'editors/tiptap.js', styles: [], element: 'div' },
     suneditor: {
         bundle: 'editors/suneditor.js',
-        styles: ['node_modules/suneditor/dist/css/suneditor.min.css'],
+        styles: ['node_modules/suneditor/dist/suneditor.min.css'],
         element: 'textarea',
-        content: { css: 'node_modules/suneditor/src/assets/css/suneditor-contents.css', className: 'sun-editor-editable' },
+        content: { css: 'node_modules/suneditor/src/assets/suneditor-contents.css', className: 'sun-editor-editable' },
     },
 };
 
