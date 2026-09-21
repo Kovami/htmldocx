@@ -5,7 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.0] - 2026-09-21
+
+A release about fidelity: the text of HTML and DOCX written by the library
+sits where the other side shows it. The API is unchanged; the HTML and DOCX
+it writes differ, which is why this is a minor release.
 
 ### Fixed
 
@@ -255,7 +259,8 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/kovami/htmldocx/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/kovami/htmldocx/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/kovami/htmldocx/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/kovami/htmldocx/releases/tag/v1.0.0
