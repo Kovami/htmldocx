@@ -22,12 +22,12 @@ final class Xml
 {
     public static function parse(string $xml, string $partName): XMLDocument
     {
-        if (str_starts_with($xml, "\u{FEFF}")) {
-            $xml = substr($xml, 3);
-        }
+        $xml = self::utf8($xml);
 
-        if (preg_match('/<!DOCTYPE/i', $xml) === 1) {
-            throw HtmlDocxException::malformedDocx("{$partName} declares a DOCTYPE, which OOXML never does");
+        // A NUL byte is not XML in any ASCII-compatible encoding; left in, it could
+        // hide a DOCTYPE (UTF-32, say) from the check below.
+        if (str_contains($xml, "\0") || preg_match('/<!DOCTYPE/i', $xml) === 1) {
+            throw HtmlDocxException::malformedDocx("{$partName} declares a DOCTYPE or is in an encoding OOXML does not use");
         }
 
         $xml = strtr($xml, Namespaces::STRICT_TO_TRANSITIONAL);
@@ -35,12 +35,41 @@ final class Xml
         set_error_handler(static fn(): bool => true);
 
         try {
-            return XMLDocument::createFromString($xml, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);
+            $document = XMLDocument::createFromString($xml, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);
         } catch (Throwable $exception) {
             throw HtmlDocxException::malformedDocx("{$partName} is not well-formed XML ({$exception->getMessage()})");
         } finally {
             restore_error_handler();
         }
+
+        if ($document->doctype !== null) {
+            throw HtmlDocxException::malformedDocx("{$partName} declares a DOCTYPE, which OOXML never does");
+        }
+
+        return $document;
+    }
+
+    /** OOXML parts are UTF-8 or UTF-16; UTF-16 is decoded so the checks above read what libxml will. */
+    private static function utf8(string $xml): string
+    {
+        if (str_starts_with($xml, "\u{FEFF}")) {
+            return substr($xml, 3);
+        }
+
+        $encoding = match (substr($xml, 0, 2)) {
+            "\xFF\xFE", "<\0" => 'UTF-16LE',
+            "\xFE\xFF", "\0<" => 'UTF-16BE',
+            default => null,
+        };
+
+        if ($encoding === null) {
+            return $xml;
+        }
+
+        $xml = mb_convert_encoding($xml, 'UTF-8', $encoding);
+        $xml = str_starts_with($xml, "\u{FEFF}") ? substr($xml, 3) : $xml;
+
+        return (string) preg_replace('/^(<\?xml[^>]*?encoding\s*=\s*)(["\'])[^"\']*\2/', '$1"UTF-8"', $xml, 1);
     }
 
     public static function child(?Element $element, string $localName, string $namespace = Namespaces::W): ?Element

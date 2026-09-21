@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Kovami\HtmlDocx\Editor;
+use Kovami\HtmlDocx\Exceptions\HtmlDocxException;
 use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Html\Writer\CssFormatter;
 use Kovami\HtmlDocx\Tests\Support\DocxBuilder;
@@ -83,3 +84,24 @@ it('skips an SVG picture instead of passing its bytes on', function () use ($pic
         ->and($html)->not->toContain('script')
         ->and(implode("\n", $warnings))->toContain('SVG');
 });
+
+$utf16 = static fn(string $body, string $doctype = ''): string => "\xFF\xFE" . mb_convert_encoding(
+    '<?xml version="1.0" encoding="UTF-16" standalone="yes"?>' . $doctype
+    . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' . $body . '</w:body></w:document>',
+    'UTF-16LE',
+    'UTF-8',
+);
+
+it('reads a part written in UTF-16', function () use ($utf16) {
+    $html = HtmlDocx::for(Editor::SunEditor)->fromDocx(DocxBuilder::make()->part('document.xml', $utf16('<w:p><w:r><w:t>привет</w:t></w:r></w:p>'))->toBytes())->toHtml();
+
+    expect($html)->toContain('привет');
+});
+
+it('refuses a DOCTYPE in any encoding', function (string $part) {
+    expect(fn() => DocxBuilder::make()->part('document.xml', $part)->read())->toThrow(HtmlDocxException::class);
+})->with([
+    'UTF-16LE with BOM' => $utf16('<w:p><w:r><w:t>&x;</w:t></w:r></w:p>', '<!DOCTYPE w:document [<!ENTITY x "leaked">]>'),
+    'UTF-16BE without BOM' => mb_convert_encoding('<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE d [<!ENTITY x "y">]><d>&x;</d>', 'UTF-16BE', 'UTF-8'),
+    'UTF-32' => mb_convert_encoding('<?xml version="1.0" encoding="UTF-32"?><!DOCTYPE d [<!ENTITY x "y">]><d>&x;</d>', 'UTF-32LE', 'UTF-8'),
+]);
