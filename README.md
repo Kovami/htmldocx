@@ -142,7 +142,7 @@ HtmlDocx::plain();                   // standard HTML, for any editor or none
 HtmlDocx::for(Editor::CKEditor);     // CKEditor 5
 HtmlDocx::for(Editor::TinyMce);      // TinyMCE
 HtmlDocx::for(Editor::TipTap);       // TipTap / ProseMirror
-HtmlDocx::for(Editor::SunEditor);    // SunEditor
+HtmlDocx::for(Editor::SunEditor);    // SunEditor 3
 HtmlDocx::for('tinymce');            // by name, case-insensitive, aliases included
 ```
 
@@ -166,7 +166,7 @@ new Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, textColor: '222222'
 new Options(extraStylesheet: 'body { font-family: Georgia; } p { margin: 0 0 12px; }');
 ```
 
-**Editor configuration.** Editors drop what their schema does not know: out of the box CKEditor, TipTap and SunEditor keep about a third of the formatting this library writes (TinyMCE nearly all of it). With the plugins and allow-lists below they keep 98–99.7%, and what they hand back still prints at 75–81% of the ink Word puts on the page. The exact configurations the bench uses live in [`bench/fidelity/editors`](bench/fidelity/editors).
+**Editor configuration.** Editors drop what their schema does not know: out of the box CKEditor, TipTap and SunEditor keep a quarter to a half of the formatting this library writes (TinyMCE nearly all of it). With the plugins and allow-lists below they keep 97.7–99.7%, and what they hand back prints at 95.6–97.3% of the ink Word puts on the page (see the bench below). The exact configurations the bench uses live in [`bench/fidelity/editors`](bench/fidelity/editors).
 
 | Editor | What it needs |
 | --- | --- |
@@ -187,7 +187,7 @@ Plain HTML and SunEditor are the profiles tuned first; the other editors follow.
 <!-- bench:start (npm run table in bench/fidelity) -->
 Share of the ink in place within 1.33 pt, higher is better.
 
-**DOCX → HTML**: Word prints the document; the library's HTML — passed through the editor with the configuration below, and shown with its content stylesheet — is printed by Chromium on the same page, body text only (headers, footers and notes differ by design).
+**DOCX → HTML**: Word prints the document; the library's HTML — passed through the editor with the configuration below, and shown with its content stylesheet — is printed by Chromium on the same page, body text only (headers, footers, notes and comments differ by design).
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -440,7 +440,7 @@ The 1.x methods are gone: a converter is now chosen with `plain()` or `for()`, a
 
 | 1.x | 2.0 |
 | --- | --- |
-| `new HtmlDocx($options)` | `HtmlDocx::plain($options)`, or `HtmlDocx::for(Editor::SunEditor, $options)` for the 1.x markup |
+| `new HtmlDocx($options)` | `HtmlDocx::plain($options)`, or `HtmlDocx::for(Editor::SunEditor, $options)` for SunEditor's markup |
 | `$c->htmlToDocx($html)` | `$c->fromHtml($html)->toDocx()` |
 | `$c->htmlToDocxFile($html, $path)` | `$c->fromHtml($html)->saveDocx($path)` |
 | `$c->htmlToDocxStream($html, $stream)` | `$c->fromHtml($html)->streamDocx($stream)` |
@@ -458,7 +458,7 @@ Two more things changed:
 - **The HTML is self-contained.** Every block spells out its font, size, colour, margins and line height instead of leaning on the editor's stylesheet, so it looks right wherever it is shown. `Options::$keepDocumentDefaults`, which chose between the two, is gone.
 - **`Options::$fontFamily`, `$fontSizePt` and `$textColor` default to the profile's typography** rather than to Calibri 11pt. Pass them to keep the old base, or to match your editor's own CSS.
 
-`HtmlDocx::for(Editor::SunEditor)` writes the markup 1.x wrote, and every profile's reader understands it, so stored HTML keeps working.
+The markup 1.x wrote (SunEditor 2's) is still read by every profile's reader, so stored HTML keeps working. Since 2.2 `HtmlDocx::for(Editor::SunEditor)` writes for SunEditor 3; an application still on SunEditor 2 should pass SunEditor 2's content stylesheet as `extraStylesheet`, or stay on 2.1.
 
 ## Contributing
 

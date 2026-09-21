@@ -142,7 +142,7 @@ HtmlDocx::plain();                   // стандартный HTML, для лю
 HtmlDocx::for(Editor::CKEditor);     // CKEditor 5
 HtmlDocx::for(Editor::TinyMce);      // TinyMCE
 HtmlDocx::for(Editor::TipTap);       // TipTap / ProseMirror
-HtmlDocx::for(Editor::SunEditor);    // SunEditor
+HtmlDocx::for(Editor::SunEditor);    // SunEditor 3
 HtmlDocx::for('tinymce');            // по имени, регистр не важен, синонимы тоже
 ```
 
@@ -166,7 +166,7 @@ new Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, textColor: '222222'
 new Options(extraStylesheet: 'body { font-family: Georgia; } p { margin: 0 0 12px; }');
 ```
 
-**Настройка редактора.** Редакторы выбрасывают всё, чего нет в их схеме: из коробки CKEditor, TipTap и SunEditor сохраняют около трети написанного библиотекой форматирования (TinyMCE — почти всё). С плагинами и белыми списками ниже они сохраняют 98–99,7%, и то, что они отдают обратно, печатается с 75–81% краски на своём месте. Точные конфигурации, на которых считается бенч, лежат в [`bench/fidelity/editors`](bench/fidelity/editors).
+**Настройка редактора.** Редакторы выбрасывают всё, чего нет в их схеме: из коробки CKEditor, TipTap и SunEditor сохраняют от четверти до половины написанного библиотекой форматирования (TinyMCE — почти всё). С плагинами и белыми списками ниже они сохраняют 97,7–99,7%, и то, что они отдают обратно, печатается с 95,6–97,3% краски на своём месте (см. бенч ниже). Точные конфигурации, на которых считается бенч, лежат в [`bench/fidelity/editors`](bench/fidelity/editors).
 
 | Редактор | Что ему нужно |
 | --- | --- |
@@ -187,7 +187,7 @@ Plain HTML и SunEditor настраиваются в первую очеред�
 <!-- bench:start (npm run table in bench/fidelity) -->
 Доля краски на своём месте с точностью 1,33 pt, чем больше, тем лучше.
 
-**DOCX → HTML**: документ печатает Word; HTML библиотеки — пропущенный через редактор с конфигурацией ниже и показанный с его стилями контента — печатает Chromium на той же странице, только основной текст (колонтитулы и сноски расходятся намеренно).
+**DOCX → HTML**: документ печатает Word; HTML библиотеки — пропущенный через редактор с конфигурацией ниже и показанный с его стилями контента — печатает Chromium на той же странице, только основной текст (колонтитулы, сноски и комментарии расходятся намеренно).
 
 | Документ | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -440,7 +440,7 @@ HTML-писатель выписывает только то, что отлич�
 
 | 1.x | 2.0 |
 | --- | --- |
-| `new HtmlDocx($options)` | `HtmlDocx::plain($options)` — или `HtmlDocx::for(Editor::SunEditor, $options)` ради разметки 1.x |
+| `new HtmlDocx($options)` | `HtmlDocx::plain($options)` — или `HtmlDocx::for(Editor::SunEditor, $options)` ради разметки SunEditor |
 | `$c->htmlToDocx($html)` | `$c->fromHtml($html)->toDocx()` |
 | `$c->htmlToDocxFile($html, $path)` | `$c->fromHtml($html)->saveDocx($path)` |
 | `$c->htmlToDocxStream($html, $stream)` | `$c->fromHtml($html)->streamDocx($stream)` |
@@ -458,7 +458,7 @@ HTML-писатель выписывает только то, что отлич�
 - **HTML стал самодостаточным.** Каждый блок выписывает свой шрифт, размер, цвет, поля и межстрочный интервал вместо того, чтобы опираться на таблицу стилей редактора, — и выглядит правильно где угодно. Опция `Options::$keepDocumentDefaults`, которая выбирала между этими двумя способами, удалена.
 - **`Options::$fontFamily`, `$fontSizePt` и `$textColor` по умолчанию берутся из типографики профиля**, а не равны Calibri 11pt. Передайте их, чтобы вернуть прежнюю базу или совпасть с CSS своего редактора.
 
-`HtmlDocx::for(Editor::SunEditor)` пишет ту же разметку, что писала 1.x, и читатель любого профиля её понимает — сохранённый HTML продолжает работать.
+Разметку, которую писала 1.x (разметку SunEditor 2), по-прежнему понимает читатель любого профиля — сохранённый HTML продолжает работать. С версии 2.2 `HtmlDocx::for(Editor::SunEditor)` пишет для SunEditor 3; приложению, которое остаётся на SunEditor 2, стоит передать стили контента SunEditor 2 через `extraStylesheet` или остаться на 2.1.
 
 ## Участие в разработке
 

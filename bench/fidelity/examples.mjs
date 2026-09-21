@@ -30,10 +30,10 @@ const { page } = JSON.parse(execFileSync('php', [join(import.meta.dirname, 'conv
 
 const browser = await chromium.launch();
 const printed = async (file, extra = '') => rasterize(await print(browser, readFileSync(join(examples, file), 'utf8').replace('</body>', `${extra}</body>`), page, work, file));
-// SunEditor draws its formula spans with KaTeX; the page shows them as the editor does.
+// SunEditor draws its formula spans (SunEditor 3's se-math, 2's __se__katex) with KaTeX; the page shows them as the editor does.
 const katex = pathToFileURL(join(import.meta.dirname, 'node_modules/katex/dist/')).href;
 const renderKatex = `<link rel="stylesheet" href="${katex}katex.min.css"><script src="${katex}katex.min.js"></script>
-<script>document.querySelectorAll('.__se__katex').forEach((span) => katex.render(span.dataset.exp, span, { throwOnError: false }));</script>`;
+<script>document.querySelectorAll('.se-math, .__se__katex').forEach((span) => katex.render(span.dataset.seValue ?? span.dataset.exp, span, { throwOnError: false }));</script>`;
 const word = await pdf('showcase.pdf');
 const plain = await printed('showcase.html');
 const sunEditor = await printed('showcase.suneditor.html', renderKatex);

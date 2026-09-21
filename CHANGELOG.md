@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-09-22
+
+A release about SunEditor 3 and fidelity. The API is unchanged. The
+SunEditor profile now writes for SunEditor 3: an application still on
+SunEditor 2 should read the first entry below before upgrading.
+
 ### Changed
 
 - **The SunEditor profile targets SunEditor 3** (3.3), the current release:
@@ -76,6 +82,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   collapse with the next margin, as SunEditor's image component too; the
   reader takes it back out of the spacing after. SunEditor 3 shows a
   component's picture as a block, and the profile's stylesheet says so.
+
+- The bench's body-only variant leaves comments out, as it does headers,
+  footers and notes, and its page lets a line's multiple spacing hang into
+  the bottom margin, as Word does. The README images draw SunEditor 3's
+  formulas.
 
 Bench: plain-text 43.4% → 96.3%, plain-images 76.3% → 95.7%, plain-tables
 98.7% → 99.5%, suneditor-tables 77.1% → 97.3%, suneditor-lists 92.6% →
@@ -338,7 +349,8 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/kovami/htmldocx/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/kovami/htmldocx/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/kovami/htmldocx/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/kovami/htmldocx/compare/v1.0.0...v2.0.0
