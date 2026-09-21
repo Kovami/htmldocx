@@ -159,7 +159,7 @@ Whatever profile writes the HTML, **the reader understands all of them**: HTML f
 
 ¹ The notes are written, but TipTap's schema keeps only their text: the section and the links back do not survive a round trip through it.
 
-**Base typography.** Each editor shows text it has no formatting for in its own content stylesheet, and a profile assumes exactly that, so a document made in the editor reads in Word the way it looked: CKEditor's Helvetica at the browser's medium size with 1.5 line spacing, TinyMCE's system font stack with 1.4, SunEditor's Helvetica Neue 13px in #333. Plain HTML assumes Calibri 11pt. If your application styles its editor differently — most do — say so:
+**Base typography.** Each editor shows text it has no formatting for in its own content stylesheet, and a profile assumes exactly that, so a document made in the editor reads in Word the way it looked: CKEditor's Helvetica at the browser's medium size with 1.5 line spacing, TinyMCE's system font stack with 1.4, SunEditor's Helvetica Neue 13px in #333. Plain HTML assumes Calibri 11pt. TinyMCE's stack starts with "whatever this system calls its own font", which a DOCX cannot ask for: Word gets Segoe UI, which is what Windows shows, while macOS shows San Francisco with other metrics, so text runs longer or shorter there. If your application styles its editor differently — most do — or its users are on a Mac, say so:
 
 ```php
 new Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, textColor: '222222');
