@@ -191,25 +191,25 @@ Share of the ink in place within 1.33 pt, higher is better.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | 89.6% | 81.6% | 87.4% | 89.5% | 88.5% |
-| Fonts and typography | 98.2% | 98.1% | 98.2% | 98.2% | 82.4% |
+| Text and character formatting | 93.9% | 85.9% | 91.8% | 93.9% | 95.4% |
+| Fonts and typography | 98.1% | 98.1% | 98.2% | 98.1% | 85.5% |
 | Lists | 96.2% | 96.2% | 96.2% | 96.2% | 96.3% |
 | Tables | 92.4% | 92.4% | 92.4% | 92.4% | 92.4% |
 | Pictures | 97.9% | 93.4% | 97.9% | 97.9% | 97.9% |
 | A six-page report | 97.7% | 97.7% | 97.7% | 97.7% | 97.6% |
 | Footnotes and endnotes | 99.7% | 99.7% | 99.7% | 99.7% | 99.7% |
 | Headers, footers, comments | 100.0% | 80.9% | 100.0% | 100.0% | 100.0% |
-| **Mean** | **96.5%** | **92.5%** | **96.2%** | **96.5%** | **94.4%** |
+| **Mean** | **97.0%** | **93.1%** | **96.7%** | **97.0%** | **95.6%** |
 
 **HTML → DOCX**: the editor's own HTML shown in Chromium with its content stylesheet, against Word's print of the DOCX the library writes from it.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | 96.3% | 92.4% | 96.2% | 19.3% | 96.3% |
-| Lists | 94.0% | 92.6% | 95.2% | 31.2% | 94.1% |
-| Tables | 99.5% | 97.3% | 88.8% | 59.0% | 97.5% |
-| Pictures | 95.7% | 93.6% | 94.5% | 69.1% | 27.2% |
-| **Mean** | **96.4%** | **94.0%** | **93.7%** | **44.7%** | **78.8%** |
+| Text and character formatting | 96.3% | 92.4% | 97.0% | 19.3% | 96.3% |
+| Lists | 92.6% | 94.4% | 96.9% | 31.3% | 94.0% |
+| Tables | 99.4% | 97.4% | 89.3% | 59.0% | 98.2% |
+| Pictures | 95.7% | 93.6% | 94.5% | 69.1% | 26.4% |
+| **Mean** | **96.0%** | **94.4%** | **94.4%** | **44.7%** | **78.7%** |
 <!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.

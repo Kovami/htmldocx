@@ -107,6 +107,12 @@ results accumulate, so `npm run table` always shows the latest run of each cell.
 Plain HTML and SunEditor are the profiles tuned first: a change should not cost
 them anything. Run `npm run table` before a pull request that moves a number.
 
+The bench prints the HTML on the page the document asks for, with one
+allowance: Word keeps a line on the page when its single height fits and lets
+what a multiple line spacing adds below it hang into the bottom margin, so the
+printed page's bottom margin gives up the extra of the body's most common line
+spacing (`convert.php`). A browser needs the whole line box to fit.
+
 ## Code style
 
 Match the surrounding code. Comments explain *why* — a Word quirk, a CSS rule,

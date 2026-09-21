@@ -71,8 +71,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a taller single line. Such a run gets `line-height: 0`.
 
 Bench: plain-text 43.4% → 96.3%, plain-images 76.3% → 95.7%, plain-tables
-98.7% → 99.5%, suneditor-tables 77.1% → 97.3% (HTML → DOCX);
-notes 35.1% → 60.8% of the whole page (DOCX → HTML).
+98.7% → 99.5%, suneditor-tables 77.1% → 97.3%, suneditor-lists 92.6% →
+94.4%, ckeditor-lists 95.2% → 96.9% (HTML → DOCX);
+notes 35.1% → 60.8% of the whole page, formatting-ru 89.6% → 93.9%
+(SunEditor 81.6% → 85.9%) of the body (DOCX → HTML).
 
 ## [2.1.0] - 2026-09-21
 
