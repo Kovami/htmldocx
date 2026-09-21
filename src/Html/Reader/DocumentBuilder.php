@@ -431,14 +431,14 @@ final class DocumentBuilder
             $sink->add($this->createParagraph(new InlineFlow($style, $context), []));
         }
 
-        // Padding is space in the flow, whether a border is drawn around it
-        // or not: Word's border sits that far from the text without taking
-        // room, so the space has to come from the paragraph's own spacing.
+        // Padding under a border is the border's space in Word, which takes
+        // that room itself, above and below the text as CSS's does; padding
+        // with no border there has to come from the paragraph's spacing.
         $this->applyVerticalMargins(
             $sink,
             $firstIndex,
-            Length::pointsToTwips($length('margin-top') + max(0.0, $padding('top') - $bullet)),
-            Length::pointsToTwips($length('margin-bottom') + $padding('bottom')),
+            Length::pointsToTwips($length('margin-top') + max(0.0, ($edges['top'] === null ? $padding('top') : 0.0) - $bullet)),
+            Length::pointsToTwips($length('margin-bottom') + ($edges['bottom'] === null ? $padding('bottom') : 0.0)),
             // A box that establishes a formatting context of its own (a
             // scroll container) keeps its content's margins inside it.
             ! in_array(strtolower(trim((string) $style->value('overflow'))), ['', 'visible'], true),
@@ -588,7 +588,8 @@ final class DocumentBuilder
         $ascent = FontMetrics::ascent($style->fontFamily);
         [$spacing, $rule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0, $style->fontSizePt);
 
-        if ($style->listStyleType !== 'disc' || $ascent === null || ($rule ?? 'auto') !== 'auto') {
+        // Only a bullet drawn in Symbol grows the line, and the writer marks one by padding it (see ListCounter).
+        if ($style->listStyleType !== 'disc' || $ascent === null || ($rule ?? 'auto') !== 'auto' || ($style->lengthPt('padding-top') ?? 0.0) <= 0) {
             return 0.0;
         }
 
@@ -825,8 +826,9 @@ final class DocumentBuilder
             }
 
             if ($context->marker !== null && ! $context->marker->consumed) {
-                $context->marker->consumed = true;
-                $properties->numbering = $context->marker->reference;
+                // HtmlWriter pads the first line of an item by what Word's Symbol
+                // bullet adds to it; that padding says the bullet was Symbol's.
+                $properties->numbering = $context->marker->reference(($style->lengthPt('padding-top') ?? 0.0) > 0);
                 // A marker inside the first line hangs nowhere.
                 $properties->firstLine = $context->list?->hanging === 0 ? 0 : -min(360, $context->indentLeft);
             }

@@ -195,3 +195,16 @@ it('indents a quotation the way the editor showing it does', function (?Kovami\H
     'a browser: 40px on both sides' => [null, 600, false, false],
     'CKEditor: a rule and 1.5em' => [Kovami\HtmlDocx\Editor::CKEditor, 405, true, true],
 ]);
+
+it('leaves the padding under a border to the border, which takes that room in Word', function () {
+    // Measured in Word: a border's space adds to the paragraph's height above
+    // and below the text, as CSS padding does, on top of its spacing.
+    $bordered = docx('<p style="margin: 0; border: 1px solid #000; padding: 8px">boxed</p>', Kovami\HtmlDocx\HtmlDocx::plain(testOptions()));
+    $padded = docx('<p style="margin: 0; padding: 8px 0">padded</p>', Kovami\HtmlDocx\HtmlDocx::plain(testOptions()));
+    $html = Kovami\HtmlDocx\HtmlDocx::plain(testOptions())->fromDocx($bordered->bytes)->toHtml();
+
+    expect(Docx::attr($bordered->first('//w:pBdr/w:top'), 'space'))->toBe('6')
+        ->and((int) Docx::attr($bordered->first('//w:p/w:pPr/w:spacing'), 'before'))->toBeLessThan(40)
+        ->and((int) Docx::attr($padded->first('//w:p/w:pPr/w:spacing'), 'before'))->toBeGreaterThanOrEqual(120)
+        ->and($html)->toContain('padding-top: 8px;');
+});

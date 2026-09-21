@@ -33,7 +33,8 @@ final class NumberingPart
                 ->leaf('w:multiLevelType', ['w:val' => 'hybridMultilevel']);
 
             foreach ($list->levels as $level) {
-                [$text, $font] = $level->format === 'bullet' ? self::WORD_BULLETS[$level->text] ?? [$level->text, null] : [$level->text, null];
+                // A disc stays in the font it was in: Symbol's makes Word's line a little taller.
+                [$text, $font] = $level->format === 'bullet' && ($level->symbolBullet || $level->text !== "\u{2022}") ? self::WORD_BULLETS[$level->text] ?? [$level->text, null] : [$level->text, null];
 
                 $xml->open('w:lvl', ['w:ilvl' => $level->level])
                     ->leaf('w:start', ['w:val' => $level->start])

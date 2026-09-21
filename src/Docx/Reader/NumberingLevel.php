@@ -25,5 +25,6 @@ final readonly class NumberingLevel
         public ParagraphFormat $paragraph = new ParagraphFormat(),
         public RunFormat $run = new RunFormat(),
         public string $suffix = 'tab',
+        public ?string $font = null,
     ) {}
 }

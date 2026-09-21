@@ -142,6 +142,36 @@ final class FontMetrics
         return $descent * $sizePt + (($lineHeightPt ?? $normal * $sizePt) - ($ascent + $descent) * $sizePt) / 2;
     }
 
+    /**
+     * Whether a browser makes a line taller to hold a run in another font
+     * where Word does not. Word's line is the tallest single line of its
+     * fonts; a browser's holds each run's box, its own half-leading around
+     * its own font, and Courier New's in Calibri reaches 0.075em lower.
+     * The run is taken with the line height it inherits from the paragraph.
+     */
+    public static function outgrowsLine(ComputedStyle $run, ComputedStyle $paragraph): bool
+    {
+        $box = static function (ComputedStyle $style) use ($paragraph): ?array {
+            [$ascent, $descent, $normal] = self::CSS_LINE[strtolower(trim($style->fontFamily))] ?? [null, null, null];
+            $single = self::singleLine($style->fontFamily);
+
+            if ($ascent === null || $single === null) {
+                return null;
+            }
+
+            $size = $style->fontSizePt;
+            $height = $paragraph->lineHeight;
+            $line = $height === null ? $normal * $size : ($height->multiple !== null ? $height->multiple * $size : $height->points);
+            $half = ($line - ($ascent + $descent) * $size) / 2;
+
+            return [$ascent * $size + $half, $descent * $size + $half, $single * $size];
+        };
+        [$run, $paragraph] = [$box($run), $box($paragraph)];
+
+        return $run !== null && $paragraph !== null && $run[2] <= $paragraph[2]
+            && ($run[0] > $paragraph[0] + 0.01 || $run[1] > $paragraph[1] + 0.01);
+    }
+
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */
     public static function singleLine(string $family): ?float
     {

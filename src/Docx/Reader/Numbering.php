@@ -162,6 +162,7 @@ final class Numbering
                     indentLeft: $level->paragraph->indentLeft ?? 0,
                     hanging: max(0, -($level->paragraph->firstLine ?? 0)),
                     suffix: $level->suffix,
+                    symbolBullet: strtolower((string) $level->font) === 'symbol',
                 );
             }
 
@@ -260,6 +261,7 @@ final class Numbering
             restartAfter: Xml::int(Xml::val($lvl, 'lvlRestart')),
             legal: Xml::onOff($lvl, 'isLgl') ?? false,
             paragraphStyleId: Xml::val($lvl, 'pStyle'),
+            font: $symbolFont,
             suffix: Xml::val($lvl, 'suff') ?? 'tab',
             paragraph: $this->parser->paragraph(Xml::child($lvl, 'pPr')),
             run: $run,

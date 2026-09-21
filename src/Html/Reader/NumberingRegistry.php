@@ -21,7 +21,7 @@ final class NumberingRegistry
     /**
      * @param  int  $start  the counter value of the first item; literal styles render exactly this value
      */
-    public function register(string $listStyleType, int $level, int $start, int $indentLeft, int $hanging, string $suffix = 'tab'): int
+    public function register(string $listStyleType, int $level, int $start, int $indentLeft, int $hanging, string $suffix = 'tab', bool $symbolBullet = false): int
     {
         $numId = count($this->definitions) + 1;
         $levels = [];
@@ -32,7 +32,7 @@ final class NumberingRegistry
                 : self::format('decimal', $i);
 
             $levels[] = $i === $level
-                ? new ListLevel($i, $format, $text, max(0, $start), $indentLeft, $hanging, $suffix)
+                ? new ListLevel($i, $format, $text, max(0, $start), $indentLeft, $hanging, $suffix, $symbolBullet)
                 : new ListLevel($i, $format, $text, 1, 720 * ($i + 1), 360);
         }
 

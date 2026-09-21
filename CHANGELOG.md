@@ -57,6 +57,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A table SunEditor 3 keeps in a figure takes the figure's width (as wide as
   its content when the figure says nothing) and the 10px below it.
 
+- A paragraph border's space takes room in Word, above and below the text,
+  on top of the paragraph's spacing, as CSS padding does. The HTML writer no
+  longer takes it out of the margins, and the reader turns padding into
+  spacing only on sides with no border.
+- A bullet keeps the font it was drawn in. Only Word's Symbol bullet makes a
+  line taller, so the HTML writer pads a first line only for that one, and a
+  plain `•` (a disc from HTML, or a DOCX bullet in the text's font) stays in
+  the text's font in Word, where it leaves the line as a browser's.
+- A run in another font no longer makes the browser's line taller than
+  Word's: a browser gives each run its own half-leading, and Courier New's in
+  Calibri reaches 0.075em lower, while Word's line grows only for a font with
+  a taller single line. Such a run gets `line-height: 0`.
+
 Bench: plain-text 43.4% → 96.3%, plain-images 76.3% → 95.7%, plain-tables
 98.7% → 99.5%, suneditor-tables 77.1% → 97.3% (HTML → DOCX);
 notes 35.1% → 60.8% of the whole page (DOCX → HTML).

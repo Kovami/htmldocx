@@ -15,7 +15,17 @@ final class ListMarker
 {
     public bool $consumed = false;
 
+    /**
+     * @param  \Closure(bool): NumberingReference  $number  numbers the item, told whether its bullet is Word's Symbol one
+     */
     public function __construct(
-        public readonly NumberingReference $reference,
+        private readonly \Closure $number,
     ) {}
+
+    public function reference(bool $symbol): NumberingReference
+    {
+        $this->consumed = true;
+
+        return ($this->number)($symbol);
+    }
 }

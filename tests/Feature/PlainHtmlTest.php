@@ -90,13 +90,14 @@ it('draws superscripts at Word\'s size and reads them back at their text\'s', fu
         ->and($run->properties->size)->toBe(24);
 });
 
-it('makes the first line of a bulleted item as tall as Word\'s Symbol bullet does, and reads it back', function (?Editor $editor) {
+it('makes the first line of an item with Word\'s Symbol bullet taller, and reads it back', function (?Editor $editor) {
     $converter = $editor === null ? HtmlDocx::plain(testOptions()) : HtmlDocx::for($editor, testOptions());
-    $html = $converter->fromHtml('<ul><li style="font-family: Calibri; font-size: 12pt">a</li></ul>')->toHtml();
+    $plain = $converter->fromHtml('<ul><li style="font-family: Calibri; font-size: 12pt">a</li></ul>')->toHtml();
+    // The writer's padding marks a Symbol bullet: Symbol's ascent is 0.0533 em above Calibri's, 0.64pt at 12pt.
+    $symbol = str_replace('line-height: 1.221;', 'line-height: 1.221; padding-top: 0.85px;', $plain);
 
-    // Symbol's ascent is 0.0533 em above Calibri's: 0.64pt at 12pt.
-    expect($html)->toContain('padding-top: 0.85px;')
-        ->and($converter->fromDocx($converter->fromHtml($html)->toDocx())->toHtml())->toBe($html);
+    expect($plain)->not->toContain('padding-top')
+        ->and($converter->fromDocx($converter->fromHtml($symbol)->toDocx())->toHtml())->toBe($symbol);
 })->with([null, Editor::TipTap]);
 
 it('draws table cells itself, over whatever borders an editor gives them', function () {
@@ -225,9 +226,26 @@ it('names free fonts with the same metrics, for systems without Word\'s', functi
     ));
 
     expect($html)->toContain('font-family: Calibri, Carlito, sans-serif;')
-        ->and($html)->toContain('<span style="font-family: Cambria, Caladea, serif;">b</span>')
+        ->and($html)->toContain('<span style="font-family: Cambria, Caladea, serif; line-height: 0;">b</span>')
         ->and($html)->toContain('<span style="font-family: &quot;Fancy Script&quot;;">c</span>');
 });
+
+it('keeps a line as tall as Word does around a run in another font', function (string $font, int $size, bool $held) {
+    $html = plainHtml(DocxBuilder::make()->styles(
+        '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults>',
+    )->body(
+        '<w:p><w:pPr><w:spacing w:line="360" w:lineRule="auto"/></w:pPr><w:r><w:t>a</w:t></w:r>'
+        . "<w:r><w:rPr><w:rFonts w:ascii=\"{$font}\"/><w:sz w:val=\"{$size}\"/></w:rPr><w:t>b</w:t></w:r></w:p>",
+    ));
+
+    // Courier New's box, with its own half-leading, reaches 0.075em below Calibri's;
+    // Word's line grows only for a font whose single line is taller.
+    expect(str_contains($html, 'line-height: 0;'))->toBe($held);
+})->with([
+    'Courier New, same size' => ['Courier New', 22, true],
+    'Courier New, larger: Word grows the line too' => ['Courier New', 32, false],
+    'Calibri, smaller' => ['Calibri', 16, false],
+]);
 
 it('keeps Word\'s tab stops in text that needs its tabs', function () {
     $html = plainHtml(DocxBuilder::make()->body('<w:p><w:r><w:t>a</w:t></w:r><w:r><w:tab/></w:r><w:r><w:t>b</w:t></w:r></w:p>'));

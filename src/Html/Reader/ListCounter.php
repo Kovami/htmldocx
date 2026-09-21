@@ -20,6 +20,11 @@ final class ListCounter
 
     private ?string $numberedStyleType = null;
 
+    private bool $symbol = false;
+
+    /** The value the current definition numbers next. */
+    private ?int $continues = null;
+
     private function __construct(
         private readonly NumberingRegistry $numbering,
         public readonly int $level,
@@ -54,16 +59,30 @@ final class ListCounter
     {
         $value = ($this->ordered && $item->localName === 'li' ? self::integer($item->getAttribute('value')) : null) ?? $this->next;
         $type = $style->listStyleType;
-
-        if ($this->numId === null || $value !== $this->next || $type !== $this->numberedStyleType
-            || $this->step < 0 || NumberingRegistry::isLiteral($type)) {
-            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $this->hanging, $this->suffix);
-            $this->numberedStyleType = $type;
-        }
-
         $this->next = $value + $this->step;
 
-        return new ListMarker(new NumberingReference($this->numId, $this->level));
+        return new ListMarker(fn(bool $symbol): NumberingReference => $this->reference($value, $type, $symbol));
+    }
+
+    /**
+     * Numbers the item once its first paragraph takes the marker.
+     *
+     * @param  bool  $symbol  whether the paragraph carries HtmlWriter's padding for Word's Symbol bullet
+     */
+    private function reference(int $value, string $type, bool $symbol): NumberingReference
+    {
+        $symbol = $symbol && $type === 'disc';
+
+        if ($this->numId === null || $value !== $this->continues || $type !== $this->numberedStyleType || $symbol !== $this->symbol
+            || $this->step < 0 || NumberingRegistry::isLiteral($type)) {
+            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $this->hanging, $this->suffix, $symbol);
+            $this->numberedStyleType = $type;
+            $this->symbol = $symbol;
+        }
+
+        $this->continues = $value + $this->step;
+
+        return new NumberingReference($this->numId, $this->level);
     }
 
     private static function integer(?string $value): ?int

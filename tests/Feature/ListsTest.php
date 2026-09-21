@@ -30,7 +30,7 @@ function numberingLevel(Docx $docx, string $text): array
 it('renders unordered and ordered lists', function () {
     $docx = docx('<ul><li>bullet one</li><li>bullet two</li></ul><ol><li>number one</li><li>number two</li></ol>');
 
-    expect(numberingLevel($docx, 'bullet one'))->toMatchArray(['level' => 0, 'format' => 'bullet', 'text' => "\u{F0B7}", 'font' => 'Symbol'])
+    expect(numberingLevel($docx, 'bullet one'))->toMatchArray(['level' => 0, 'format' => 'bullet', 'text' => "\u{2022}", 'font' => null])
         ->and(numberingLevel($docx, 'number two'))->toMatchArray(['level' => 0, 'format' => 'decimal', 'text' => '%1.', 'start' => '1'])
         ->and(numberingLevel($docx, 'bullet one')['numId'])->toBe(numberingLevel($docx, 'bullet two')['numId']);
 });
@@ -56,8 +56,9 @@ it('nests lists one level deeper per nesting depth', function () {
 it('uses the browser bullet sequence for nested unordered lists', function () {
     $docx = docx('<ul><li>disc<ul><li>circle<ul><li>square</li></ul></li></ul></li></ul>');
 
-    // Word's own bullets, from its symbol fonts.
-    expect(numberingLevel($docx, 'disc'))->toMatchArray(['text' => "\u{F0B7}", 'font' => 'Symbol'])
+    // A disc stays in the text's font, which leaves Word's line as the
+    // browser's; Word's own circle and square, from its symbol fonts.
+    expect(numberingLevel($docx, 'disc'))->toMatchArray(['text' => "\u{2022}", 'font' => null])
         ->and(numberingLevel($docx, 'circle'))->toMatchArray(['text' => 'o', 'font' => 'Courier New'])
         ->and(numberingLevel($docx, 'square'))->toMatchArray(['text' => "\u{F0A7}", 'font' => 'Wingdings']);
 });

@@ -6,6 +6,7 @@ namespace Kovami\HtmlDocx\Html\Writer;
 
 use Dom\Element;
 use Kovami\HtmlDocx\Css\ComputedStyle;
+use Kovami\HtmlDocx\Css\FontMetrics;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Docx\Reader\NumberFormat;
 use Kovami\HtmlDocx\Editor;
@@ -272,12 +273,18 @@ final readonly class InlineWriter
      */
     public function inheritLineHeight(Element $element, ComputedStyle $paragraph): void
     {
-        if (in_array($element->localName, ['sup', 'sub'], true)
-            || $this->context->resolver->resolve($element, $paragraph)->lineHeight == $paragraph->lineHeight) {
+        if (in_array($element->localName, ['sup', 'sub'], true)) {
             return;
         }
 
-        $element->setAttribute('style', trim($element->getAttribute('style') . ' line-height: inherit;'));
+        $style = $this->context->resolver->resolve($element, $paragraph);
+
+        // A run in another font whose box would stick out of the line Word keeps holds no line of its own.
+        if (FontMetrics::outgrowsLine($style, $paragraph)) {
+            $element->setAttribute('style', trim($element->getAttribute('style') . ' line-height: 0;'));
+        } elseif ($style->lineHeight != $paragraph->lineHeight) {
+            $element->setAttribute('style', trim($element->getAttribute('style') . ' line-height: inherit;'));
+        }
     }
 
     /**

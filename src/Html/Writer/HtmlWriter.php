@@ -375,10 +375,8 @@ final class HtmlWriter
             $frame[$side] = $border === null ? 0 : Length::pointsToTwips($border->space + ($side === 'top' || $side === 'bottom' ? 0 : $border->size / 8));
         }
 
-        // A border's space is padding in CSS, which takes room above and
-        // below the text; Word's does not, so the spacing gives it that room.
-        $top = max(0, $top - $frame['top']);
-        $bottom = max(0, $bottom - $frame['bottom']);
+        // A border's space is padding in CSS; Word's takes room above and below
+        // the text too, on top of the spacing, so the margins keep all of it.
 
         // Any editor's CSS may move a block, so every edge is spelled out.
         $css += $this->blockFont($properties, $editor);
@@ -547,7 +545,7 @@ final class HtmlWriter
         $level = $numbering === null ? null : $this->context->document->list($numbering->numId)->levels[$numbering->level] ?? null;
         $ascent = FontMetrics::ascent($this->blockFamily($properties));
 
-        if ($level?->format !== 'bullet' || $level->text !== "\u{2022}" || $ascent === null || ($properties->lineRule ?? 'auto') !== 'auto') {
+        if ($level?->format !== 'bullet' || $level->text !== "\u{2022}" || ! $level->symbolBullet || $ascent === null || ($properties->lineRule ?? 'auto') !== 'auto') {
             return [];
         }
 
