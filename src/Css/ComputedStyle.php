@@ -21,6 +21,7 @@ final readonly class ComputedStyle
      * @param  string|null  $inlineBackground  background painted behind inline text, propagated to inline descendants
      * @param  string  $verticalPosition  baseline, super or sub
      * @param  array<string, string>  $declarations  this element's own cascaded longhand declarations
+     * @param  float  $relativeTopPt  how far relatively positioned blocks around it, itself included, move it down
      */
     public function __construct(
         public string $display,
@@ -45,6 +46,7 @@ final readonly class ComputedStyle
         public string $direction,
         public string $listStyleType,
         public array $declarations,
+        public float $relativeTopPt = 0.0,
     ) {}
 
     public static function root(string $fontFamily, float $fontSizePt, string $color): self

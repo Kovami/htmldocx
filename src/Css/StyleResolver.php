@@ -121,6 +121,9 @@ final class StyleResolver
             direction: $this->keyword($d['direction'] ?? null, ['ltr' => 'ltr', 'rtl' => 'rtl']) ?? $parent->direction,
             listStyleType: $this->listStyleType($d['list-style-type'] ?? null) ?? $parent->listStyleType,
             declarations: $d,
+            relativeTopPt: $parent->relativeTopPt + (! $isInline && strtolower(trim($d['position'] ?? '')) === 'relative'
+                ? Length::toPoints($d['top'] ?? '', $fontSize, $parent->rootFontSizePt) ?? 0.0
+                : 0.0),
         );
     }
 

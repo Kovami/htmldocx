@@ -241,7 +241,8 @@ final class HtmlWriter
                 $element,
                 $baseline ?? $parentStyle,
                 fn(ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark)
-                    + $this->raise($element, $this->leadingAbove($properties, $mark))
+                    // A line holding only a picture starts at the picture's top in both.
+                    + $this->raise($element, self::imageOnly($children) === null ? $this->leadingAbove($properties, $mark) : 0.0)
                     + ($index === 0 && $item !== null ? $this->bulletLine($properties) : []),
             );
 
@@ -531,16 +532,16 @@ final class HtmlWriter
     }
 
     /**
-     * How much lower than Word a browser sets the text of a paragraph with
-     * more than single spacing, in points: Word adds the extra space of a
-     * multiple below each line, CSS splits it above and below.
+     * How much lower than Word a browser sets the text of a paragraph, in
+     * points (FontMetrics::baselineShift()): the line height written is the
+     * multiple of the font's single line that lineHeight() gives.
      */
     private function leadingAbove(ParagraphProperties $properties, ?RunProperties $mark): float
     {
-        $single = FontMetrics::singleLine($this->blockFamily($properties));
-        $spacing = $properties->lineSpacing ?? 240;
+        $family = $this->blockFamily($properties);
+        $single = FontMetrics::singleLine($family);
 
-        if ($single === null || ($properties->lineRule ?? 'auto') !== 'auto' || $spacing <= 240) {
+        if ($single === null || ($properties->lineRule ?? 'auto') !== 'auto') {
             return 0;
         }
 
@@ -548,7 +549,7 @@ final class HtmlWriter
         $size = $mark->size ?? $this->blockRun($properties)->size ?? $this->context->document->defaultRunProperties->size;
         $points = $size === null ? $this->context->options->baseFontSizePt() : $size / 2;
 
-        return ($spacing / 240 - 1) * $single * $points / 2;
+        return FontMetrics::baselineShift($family, $points, ($properties->lineSpacing ?? 240) / 240 * $single * $points) ?? 0.0;
     }
 
     /**

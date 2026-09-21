@@ -82,12 +82,18 @@ final class PropertyMapper
     /**
      * @param  float  $singleLine  the font's single line as a multiple of its size, to read
      *                             a multiple of the size as Word's multiple of that line
+     * @param  float|null  $fontSizePt  the CSS font size: Word only has half points (13px
+     *                                  becomes 10pt), and the multiple applies to what it has
      * @return array{0: int|null, 1: string|null} line value and ST_LineSpacingRule
      */
-    public function lineSpacing(?LineHeight $lineHeight, float $singleLine = 1.0): array
+    public function lineSpacing(?LineHeight $lineHeight, float $singleLine = 1.0, ?float $fontSizePt = null): array
     {
+        $wordSize = $fontSizePt === null ? null : max(2, (int) round($fontSizePt * 2)) / 2;
+        // Below 0.01 pt the difference is how the size was written (1.33px for 1pt), not a size Word lacks.
+        $rounding = $wordSize === null || abs($fontSizePt - $wordSize) < 0.01 ? 1.0 : $fontSizePt / $wordSize;
+
         return match (true) {
-            $lineHeight?->multiple !== null => [max(1, (int) round($lineHeight->multiple / $singleLine * 240)), 'auto'],
+            $lineHeight?->multiple !== null => [max(1, (int) round($lineHeight->multiple / $singleLine * 240 * $rounding)), 'auto'],
             $lineHeight?->points !== null => [max(1, Length::pointsToTwips($lineHeight->points)), 'atLeast'],
             default => [null, null],
         };

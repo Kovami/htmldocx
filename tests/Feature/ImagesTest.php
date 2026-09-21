@@ -182,15 +182,16 @@ it('does not reserve the aspect-ratio space of an embedded player', function () 
     $docx = docx('<div class="se-component se-video-container"><figure style="width: 100%; height: 56.25%; padding-bottom: 56.25%;"><iframe src="https://www.youtube.com/embed/abc"></iframe></figure></div><p>after</p>');
     $spacing = $docx->first('w:pPr/w:spacing', $docx->paragraph('youtube'));
 
-    expect((int) Docx::attr($spacing, 'after'))->toBe(150)
-        ->and(Docx::attr($spacing, 'before'))->toBeNull();
+    // Only the few twips that set the text where the browser shows it, no player-sized gap.
+    expect((int) Docx::attr($spacing, 'before'))->toBeLessThan(100)
+        ->and((int) Docx::attr($spacing, 'after'))->toBe(150);
 });
 
 it('keeps fixed padding around embedded players', function () {
     $spacing = docx('<div style="padding: 20pt 0; margin: 0"><iframe src="https://example.com/v"></iframe></div>')->first('//w:p/w:pPr/w:spacing');
 
-    expect(Docx::attr($spacing, 'before'))->toBe('400')
-        ->and(Docx::attr($spacing, 'after'))->toBe('400');
+    expect((int) Docx::attr($spacing, 'before') + (int) Docx::attr($spacing, 'after'))->toBe(800)
+        ->and((int) Docx::attr($spacing, 'before'))->toBeGreaterThanOrEqual(400);
 });
 
 /** The first picture of HTML read with a profile, and the paragraph holding it. */

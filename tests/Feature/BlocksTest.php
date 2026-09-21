@@ -87,7 +87,10 @@ it('maps vertical margins to spacing, which Word collapses the way CSS does', fu
 });
 
 it('uses SunEditor paragraph spacing by default', function () {
-    expect(Docx::attr(docx('<p>p</p>')->first('//w:p/w:pPr/w:spacing'), 'after'))->toBe('150');
+    // Some of it is spent above the text, to set it where SunEditor shows it; the paragraph is as tall.
+    $spacing = docx('<p>p</p>')->first('//w:p/w:pPr/w:spacing');
+
+    expect((int) Docx::attr($spacing, 'before') + (int) Docx::attr($spacing, 'after'))->toBe(150);
 });
 
 it('renders blockquotes with a left border and indentation', function () {

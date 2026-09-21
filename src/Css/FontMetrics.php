@@ -36,6 +36,29 @@ final class FontMetrics
     ];
 
     /**
+     * How tall Chromium makes a line of the font, as [content (ascent +
+     * descent), `line-height: normal`], multiples of the font size. Measured
+     * in Chromium on macOS with Word's own font files; fonts macOS does not
+     * have are left out.
+     */
+    // ponytail: measured on macOS only; Chromium on Windows reads the Windows metrics, which differ for a few of these.
+    private const array CSS_LINE = [
+        'aptos' => [1.221, 1.221], 'aptos narrow' => [1.221, 1.221], 'aptos light' => [1.221, 1.221], 'aptos semibold' => [1.221, 1.221],
+        'calibri' => [1.221, 1.221], 'calibri light' => [1.221, 1.221], 'cambria' => [1.172, 1.172],
+        'constantia' => [1.0, 1.221], 'corbel' => [1.0, 1.208],
+        'arial' => [1.117, 1.15], 'arial narrow' => [1.148, 1.148], 'arial black' => [1.411, 1.411],
+        'times new roman' => [1.107, 1.107], 'courier new' => [1.133, 1.133], 'georgia' => [1.136, 1.136],
+        'verdana' => [1.215, 1.215], 'tahoma' => [1.207, 1.207], 'trebuchet ms' => [1.161, 1.161],
+        'garamond' => [1.125, 1.125], 'book antiqua' => [1.205, 1.205], 'bookman old style' => [1.174, 1.174],
+        'century gothic' => [1.226, 1.226], 'century' => [1.202, 1.202], 'palatino linotype' => [1.349, 1.349],
+        'franklin gothic book' => [1.134, 1.134], 'franklin gothic medium' => [1.134, 1.134], 'gill sans mt' => [1.159, 1.159],
+        'lucida console' => [1.0, 1.0], 'lucida sans unicode' => [1.537, 1.537], 'comic sans ms' => [1.394, 1.394],
+        'impact' => [1.22, 1.22], 'helvetica' => [1.15, 1.15], 'helvetica neue' => [1.165, 1.193],
+        'pt sans' => [1.176, 1.295], 'pt serif' => [1.294, 1.294], 'microsoft sans serif' => [1.132, 1.132],
+        'rockwell' => [1.175, 1.175], 'tw cen mt' => [1.089, 1.089], 'perpetua' => [1.146, 1.146],
+    ];
+
+    /**
      * Windows ascent, as a multiple of the font size, of the fonts whose
      * ascent is below Symbol's, which Word's bullets are drawn in: a line
      * holds the tallest ascent of its fonts, so Word makes a bulleted line
@@ -54,6 +77,27 @@ final class FontMetrics
     public static function ascent(string $family): ?float
     {
         return self::ASCENT[strtolower(trim($family))] ?? null;
+    }
+
+    /**
+     * How much lower a browser sets the first line of a paragraph than Word
+     * does, in points, for a line box `$lineHeightPt` tall (null: `normal`).
+     * Chromium centres the font's content in the line box; Word puts the
+     * font's line gap above the text and a multiple's extra space below the
+     * line, so its baseline sits at the single line less the descent.
+     * Null for a font not measured.
+     */
+    public static function baselineShift(string $family, float $sizePt, ?float $lineHeightPt): ?float
+    {
+        $key = strtolower(trim($family));
+        $single = self::SINGLE_LINE[$key] ?? null;
+        [$content, $normal] = self::CSS_LINE[$key] ?? [null, null];
+
+        if ($single === null || $content === null) {
+            return null;
+        }
+
+        return (($lineHeightPt ?? $normal * $sizePt) + $content * $sizePt) / 2 - $single * $sizePt;
     }
 
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */

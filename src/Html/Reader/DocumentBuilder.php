@@ -38,6 +38,7 @@ use Kovami\HtmlDocx\Model\Table;
 use Kovami\HtmlDocx\Model\TextRun;
 use Kovami\HtmlDocx\Options;
 use Throwable;
+use WeakMap;
 
 /**
  * Walks the HTML DOM and builds the document model, following the CSS
@@ -127,6 +128,9 @@ final class DocumentBuilder
 
     private bool $pendingPageBreak = false;
 
+    /** @var WeakMap<ParagraphProperties, int> how much lower to set each paragraph's text in Word, in twips; see lowerText() */
+    private WeakMap $lowered;
+
     public function __construct(
         private readonly StyleResolver $resolver,
         private readonly PropertyMapper $mapper,
@@ -136,6 +140,7 @@ final class DocumentBuilder
         $this->numbering = new NumberingRegistry();
         $this->bookmarks = new BookmarkRegistry();
         $this->tables = new TableBuilder($resolver, $mapper);
+        $this->lowered = new WeakMap();
     }
 
     public function build(HtmlDocument $html, PageLayout $pageLayout): Document
@@ -158,6 +163,7 @@ final class DocumentBuilder
 
         $catalog = new StyleCatalog($this->resolver->withoutAuthorRules(), $this->mapper);
         $blocks = BlockNormalizer::normalize($sink->blocks);
+        $this->lowerText($blocks);
         $comments = CommentRanges::balance([$blocks, ...array_map(static fn(Note $note): array => $note->blocks, $this->notes)], $this->comments);
 
         return new Document(
@@ -472,11 +478,94 @@ final class DocumentBuilder
         }
     }
 
+    /**
+     * Sets each paragraph's text as far down in Word as a browser shows it
+     * (FontMetrics::baselineShift()) without moving what follows: the
+     * paragraph's spacing before gains the difference and the next one's
+     * gives it back. Word collapses spacing the way CSS collapses margins,
+     * so the gap between two paragraphs is the larger of after and before:
+     * the new gap goes into before, and after may not exceed it.
+     *
+     * @param  list<Block>  $blocks
+     */
+    private function lowerText(array $blocks): void
+    {
+        $previous = null;
+        $lowered = 0;
+
+        foreach ($blocks as $block) {
+            if ($block instanceof Table) {
+                foreach ($block->rows as $row) {
+                    foreach ($row->cells as $cell) {
+                        $this->lowerText($cell->blocks);
+                    }
+                }
+            }
+
+            $properties = $block instanceof Paragraph ? $block->properties : null;
+
+            // A style's own spacing is not known here; leave such a paragraph as it is.
+            if ($properties === null || ($properties->styleId !== null && ($properties->spacingBefore === null || $properties->spacingAfter === null))) {
+                $this->giveBack($previous, $lowered);
+                [$previous, $lowered] = [null, 0];
+
+                continue;
+            }
+
+            // A line holding only a picture starts at the picture's top in both (HtmlWriter does the same).
+            $lower = self::pictureOnly($block->children) ? 0 : $this->lowered[$properties] ?? 0;
+
+            if ($lower !== 0 || $lowered !== 0) {
+                $gap = max($previous->spacingAfter ?? 0, $properties->spacingBefore ?? 0) + $lower - $lowered;
+                $properties->spacingBefore = max(0, $gap);
+
+                if ($previous !== null && ($previous->spacingAfter ?? 0) > $properties->spacingBefore) {
+                    $previous->spacingAfter = $properties->spacingBefore;
+                }
+
+                // Too little space to give back: lower the one before less, or what follows moves down.
+                if ($gap < 0 && $previous !== null) {
+                    $previous->spacingBefore = max(0, ($previous->spacingBefore ?? 0) + $gap);
+                }
+            }
+
+            [$previous, $lowered] = [$properties, $lower];
+        }
+
+        $this->giveBack($previous, $lowered);
+    }
+
+    /**
+     * @param  list<Inline>  $children
+     */
+    private static function pictureOnly(array $children): bool
+    {
+        $pictures = array_filter($children, static fn(Inline $child): bool => $child instanceof ImageRun);
+
+        return count($pictures) === 1 && array_filter($children, static fn(Inline $child): bool => ! $child instanceof ImageRun && ! $child instanceof Bookmark) === [];
+    }
+
+    /** The last paragraph of a run takes what it was lowered by off its own spacing after. */
+    private function giveBack(?ParagraphProperties $properties, int $lowered): void
+    {
+        if ($properties === null || $lowered === 0) {
+            return;
+        }
+
+        $after = ($properties->spacingAfter ?? 0) - $lowered;
+        $properties->spacingAfter = max(0, $after);
+
+        // Too little space after to give back: lower it less, or what follows moves down.
+        if ($after < 0) {
+            $properties->spacingBefore = max(0, ($properties->spacingBefore ?? 0) + $after);
+        }
+    }
+
     /** What Word's Symbol bullet adds to the first line of an item in this style, in points; see HtmlWriter::bulletLine(). */
     private function bulletLine(ComputedStyle $style): float
     {
         $ascent = FontMetrics::ascent($style->fontFamily);
-        [$spacing, $rule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0);
+        [$spacing, $rule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0, $style->fontSizePt);
 
         if ($style->listStyleType !== 'disc' || $ascent === null || ($rule ?? 'auto') !== 'auto') {
             return 0.0;
@@ -677,7 +766,7 @@ final class DocumentBuilder
 
         if ($properties === null) {
             // A multiple of the font size is Word's multiple of the font's own single line; see HtmlWriter.
-            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0);
+            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0, $style->fontSizePt);
 
             $properties = new ParagraphProperties(
                 styleId: $context->styleId,
@@ -694,6 +783,17 @@ final class DocumentBuilder
                 bidi: $style->direction === 'rtl',
                 markRunProperties: $this->mapper->run($style),
             );
+
+            // Where the browser shows the text relative to Word, less what the
+            // HTML itself raises it by (HtmlWriter::raise() writes that).
+            $shift = $lineRule === null || $lineRule === 'auto'
+                ? FontMetrics::baselineShift($style->fontFamily, $style->fontSizePt, $style->lineHeight === null ? null : ($style->lineHeight->multiple !== null ? $style->lineHeight->multiple * $style->fontSizePt : $style->lineHeight->points))
+                : null;
+            $lower = Length::pointsToTwips(($shift ?? 0.0) + $style->relativeTopPt);
+
+            if ($lower !== 0) {
+                $this->lowered[$properties] = $lower;
+            }
 
             if ($context->marker !== null && ! $context->marker->consumed) {
                 $context->marker->consumed = true;

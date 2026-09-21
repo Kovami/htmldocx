@@ -24,7 +24,7 @@ it('spells out the font, colour, margins and line height of every block', functi
     ));
 
     expect($html)->toBe(
-        '<p style="font-family: &quot;Times New Roman&quot;, &quot;Liberation Serif&quot;, Tinos, serif; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322; position: relative; top: -1.15px;">'
+        '<p style="font-family: &quot;Times New Roman&quot;, &quot;Liberation Serif&quot;, Tinos, serif; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322; position: relative; top: -0.86px;">'
         . '<span style="font-family: Aptos, sans-serif; font-size: 16px;">Body</span></p>',
     );
 });

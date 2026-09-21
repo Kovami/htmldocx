@@ -190,7 +190,10 @@ it('indents tables inside indented containers', function () {
 it('moves table margins onto the neighbouring paragraphs', function () {
     $docx = docx('<p style="margin: 0">before</p><table style="margin: 30pt 0 20pt"><tr><td>x</td></tr></table><p style="margin: 0">after</p>');
 
-    expect(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('before')), 'after'))->toBe('600')
+    $before = $docx->first('w:pPr/w:spacing', $docx->paragraph('before'));
+
+    // The text is set a little lower, where the browser shows it, and gives the space back below.
+    expect((int) Docx::attr($before, 'before') + (int) Docx::attr($before, 'after'))->toBe(600)
         ->and(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('after')), 'before'))->toBe('400');
 });
 

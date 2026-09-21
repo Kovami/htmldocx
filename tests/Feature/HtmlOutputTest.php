@@ -15,14 +15,14 @@ it('writes paragraphs and headings', function () {
 it('keeps each paragraph\'s own spacing, which Word collapses the way CSS does', function () {
     // Between two paragraphs Word leaves the larger of space after and space before.
     expect(html('<p style="margin-bottom: 20px">a</p><p style="margin-top: 30px">b</p>'))
-        ->toContain('margin: 0 0 20px 0; line-height: 1.5; position: relative; top: -2.05px;">a</p>')
-        ->toContain('margin: 30px 0 10px 0; line-height: 1.5; position: relative; top: -2.05px;">b</p>');
+        ->toContain('margin: 2.07px 0 20px 0; line-height: 1.5; position: relative; top: -2.05px;">a</p>')
+        ->toContain('margin: 30px 0 7.93px 0; line-height: 1.5; position: relative; top: -2.05px;">b</p>');
 });
 
 it('spells out every block\'s formatting, even what the editor\'s stylesheet already says', function () {
     // Content leaves the editor: shown elsewhere, it keeps looking like the document.
     expect(html('<p style="margin: 0 0 10px; line-height: 1.5">plain</p>'))
-        ->toBe('<p style="font-family: Calibri, Carlito, sans-serif; font-size: 14.67px; color: #000000; margin: 0 0 10px 0; line-height: 1.5; position: relative; top: -2.05px;">plain</p>');
+        ->toBe('<p style="font-family: Calibri, Carlito, sans-serif; font-size: 14.67px; color: #000000; margin: 2.07px 0 7.93px 0; line-height: 1.5; position: relative; top: -2.05px;">plain</p>');
 });
 
 it('keeps an empty paragraph visible and as tall as its paragraph mark', function () {
@@ -172,7 +172,7 @@ it('prefixes generated ids so several documents can share a page', function () {
 
 it('writes lengths in the configured unit', function () {
     expect(html('<p style="margin-top: 30px">x</p>', testOptions(['cssUnit' => 'pt'])))
-        ->toContain('margin: 22.5pt 0 7.5pt 0;');
+        ->toContain('margin: 24.05pt 0 5.95pt 0;');
 });
 
 it('wraps the content in a full document when asked', function () {

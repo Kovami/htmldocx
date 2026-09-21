@@ -142,7 +142,7 @@ it('reads text an editor leaves unformatted in the typography that editor shows'
     // Each editor's own content stylesheet: what a user of it sees.
     'CKEditor: Helvetica, medium, 1.5' => [Editor::CKEditor, 'Helvetica', 24, 300],
     'TinyMCE: the system font, medium, 1.4' => [Editor::TinyMce, 'Segoe UI', 24, 253],
-    'SunEditor: Helvetica Neue 13px, 1.5' => [Editor::SunEditor, 'Helvetica Neue', 20, 302],
+    'SunEditor: Helvetica Neue 13px, 1.5' => [Editor::SunEditor, 'Helvetica Neue', 20, 294],
     'plain HTML: the options\' own base' => [null, 'Calibri', 22, null],
 ]);
 
@@ -158,6 +158,7 @@ it('keeps the margins of a CKEditor quotation apart from its paragraph\'s, as it
     // ckeditor5-content.css gives blockquote overflow: hidden, so the margins inside it do not collapse through it.
     $paragraph = HtmlDocx::for(Editor::CKEditor, testOptions())->fromHtml('<blockquote><p>quoted</p></blockquote>')->document()->blocks[0];
 
-    expect($paragraph->properties->spacingBefore)->toBe(440)
-        ->and($paragraph->properties->spacingAfter)->toBe(440);
+    // Both margins, 11pt each side, with some of the space below moved above the text to set it where CKEditor shows it.
+    expect($paragraph->properties->spacingBefore + $paragraph->properties->spacingAfter)->toBe(880)
+        ->and($paragraph->properties->spacingBefore)->toBeGreaterThan(440);
 });
