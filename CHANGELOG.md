@@ -5,6 +5,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-09-21
+
+A security release. Everyone on 2.0.0 should upgrade.
+
+### Security
+
+- A font name (`w:rFonts`) or a list marker (`w:lvlText`) carrying a line
+  break (`&#10;`, `&#13;`) could close its CSS string and add declarations of
+  its own to the HTML's `style` attributes, such as a `background` image
+  fetched from anywhere. CSS strings now escape every control character, a raw
+  line break in a declaration is refused, and font names lose characters no
+  font is named with. (GHSA-frq2-4fmc-7hwq)
+- SVG pictures in a document were passed to the `ImageHandler` unchecked; an
+  application storing them on its own origin, as the README showed, served
+  whatever script they carried. SVG is now skipped with a warning, like Windows
+  metafiles. (GHSA-6vgg-c4m4-wgjj)
+- A part written in UTF-16 slipped past the `DOCTYPE` check, and libxml then
+  expanded the entities it declared (external ones were never loaded). UTF-16
+  is now decoded before the check, other encodings that could hide a `DOCTYPE`
+  are refused, and a parsed part with a doctype is rejected as well.
+  (GHSA-77jg-mwvf-46gp)
+- Links from HTML are filtered by the same function as links written to HTML,
+  so a scheme split by a tab or a control character (`java&#9;script:`) is
+  dropped in both directions. (GHSA-77jg-mwvf-46gp)
+
+### Documentation
+
+- The README says that `ImageData::$bytes` are untrusted and how to serve
+  pictures safely, and that KaTeX should keep `trust: false`.
+
 ## [2.0.0] - 2026-09-20
 
 A release about looking right: the HTML a document becomes is self-contained
@@ -182,6 +212,7 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/kovami/htmldocx/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/kovami/htmldocx/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/kovami/htmldocx/releases/tag/v1.0.0

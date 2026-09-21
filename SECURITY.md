@@ -8,7 +8,8 @@ relies on are listed under [Safety](README.md#safety) in the README.
 
 | Version | Supported |
 | --- | --- |
-| 1.x | Yes |
+| 2.x | Yes |
+| 1.x | No |
 
 Fixes are released as a new patch version of the latest minor release.
 

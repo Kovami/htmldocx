@@ -258,6 +258,8 @@ $converter = HtmlDocx::plain()->withImageHandler(new CallbackImageHandler(
 ));
 ```
 
+`$image->bytes` come from the document, so treat them as untrusted. Only pictures recognised by their signature (PNG, JPEG, GIF, BMP, TIFF, WebP converted to PNG) reach the handler; SVG, which can carry scripts, and Windows metafiles are skipped with a warning. Store them under the `extension` the library gives, serve them with its `contentType` and `X-Content-Type-Options: nosniff`, and preferably from a separate domain, so that a file served under the wrong type is never interpreted as a page on your own site.
+
 ## Warnings
 
 Anything a document carries but the conversion cannot represent is reported rather than silently dropped:
@@ -400,10 +402,13 @@ Vertical spacing works the way Word works it: between two paragraphs Word leaves
 Documents arrive from users, so the reader treats them as hostile input:
 
 - Decompressed size is capped per part and per package (`maxDocxEntryBytes`, `maxDocxTotalBytes`), the number of entries is limited, and inflation stops at the size an entry declares — a zip bomb runs out of room instead of memory.
-- A part that declares a `DOCTYPE` is rejected outright, since OOXML never has one: entity-expansion attacks have nowhere to start, and the parser has no network access.
+- A part that declares a `DOCTYPE` is rejected outright, since OOXML never has one: entity-expansion attacks have nowhere to start, and the parser has no network access. UTF-16 parts are decoded before the check, and any other encoding that could hide one is refused.
+- Everything a document puts into a `style` attribute — font names, list markers — is written as a properly escaped CSS string, so a value cannot close its declaration and add another.
 - Relationship targets that point outside the package are treated as missing.
 - `javascript:`, `vbscript:`, `data:` and `file:` URLs are dropped from hyperlinks in both directions (an image `src` is a different matter: `data:` is exactly how pictures travel).
 - Local images are read only below a directory you name, remote images only through a fetcher you write.
+- Pictures are passed on only in raster formats recognised by their bytes; SVG is never passed on (see [Images](#images)).
+- Formulas are written as LaTeX for the editor to render. If you render them with KaTeX, keep its default `trust: false`, so `\href`, `\url` and `\htmlClass` in a document cannot produce links or markup.
 - Everything a document cannot be trusted to contain — characters XML cannot carry, malformed parts, broken relationships — is cleaned or skipped rather than passed through.
 
 Errors that stop a conversion are thrown as `Kovami\HtmlDocx\Exceptions\HtmlDocxException`.
