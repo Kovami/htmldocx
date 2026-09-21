@@ -382,7 +382,6 @@ Being explicit is more useful than a long feature list, so:
 
 A few differences are the two engines disagreeing, not the conversion losing anything, and they are what keeps the bench above from reading 100%:
 
-- a browser makes a line taller to fit a superscript, Word does not;
 - a browser draws a border thinner than a pixel as a whole one, which makes every table row a fraction of a point taller than Word's;
 - CSS puts a list marker next to its text, Word at the hanging indent;
 - an editor that drops formatting it does not model drops it before the library sees it — TipTap keeps no `style` on pictures (percent widths, floats) and no letter spacing, TinyMCE no tabs inside code blocks.

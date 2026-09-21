@@ -100,6 +100,31 @@ final class FontMetrics
         return (($lineHeightPt ?? $normal * $sizePt) + $content * $sizePt) / 2 - $single * $sizePt;
     }
 
+    /**
+     * How much taller a browser makes a line holding text in this style than
+     * Word does, in points: [above, below]. A browser raises or lowers a
+     * superscript's or subscript's own line box and grows the line to hold
+     * it; Word keeps the line and moves only the glyphs. Measured in Chromium
+     * over Calibri, Helvetica Neue, Arial and Times at 11–16pt, normal and 1.5
+     * line height: 0.23 and 0.20 of the text size, give or take a pixel. A
+     * script with no line height of its own (`line-height: 0`) grows nothing.
+     *
+     * @return array{0: float, 1: float}
+     */
+    public static function scriptGrowth(ComputedStyle $style): array
+    {
+        // The computed line height never is 0 (Word has no such line), so read the declaration.
+        if (preg_match('/^0(\.0*)?([a-z]+|%)?$/', (string) $style->value('line-height')) === 1) {
+            return [0.0, 0.0];
+        }
+
+        return match ($style->verticalPosition) {
+            'super' => [0.23 * $style->fontSizePt, 0.0],
+            'sub' => [0.0, 0.20 * $style->fontSizePt],
+            default => [0.0, 0.0],
+        };
+    }
+
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */
     public static function singleLine(string $family): ?float
     {

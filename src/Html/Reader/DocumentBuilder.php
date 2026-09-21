@@ -131,6 +131,9 @@ final class DocumentBuilder
     /** @var WeakMap<ParagraphProperties, int> how much lower to set each paragraph's text in Word, in twips; see lowerText() */
     private WeakMap $lowered;
 
+    /** @var WeakMap<ParagraphProperties, array{0: int, 1: int}> how much a browser grows each paragraph to hold its scripts, above and below, in twips */
+    private WeakMap $scriptGrowth;
+
     public function __construct(
         private readonly StyleResolver $resolver,
         private readonly PropertyMapper $mapper,
@@ -141,6 +144,7 @@ final class DocumentBuilder
         $this->bookmarks = new BookmarkRegistry();
         $this->tables = new TableBuilder($resolver, $mapper);
         $this->lowered = new WeakMap();
+        $this->scriptGrowth = new WeakMap();
     }
 
     public function build(HtmlDocument $html, PageLayout $pageLayout): Document
@@ -492,6 +496,7 @@ final class DocumentBuilder
     {
         $previous = null;
         $lowered = 0;
+        $grownBelow = 0;
 
         foreach ($blocks as $block) {
             if ($block instanceof Table) {
@@ -506,8 +511,8 @@ final class DocumentBuilder
 
             // A style's own spacing is not known here; leave such a paragraph as it is.
             if ($properties === null || ($properties->styleId !== null && ($properties->spacingBefore === null || $properties->spacingAfter === null))) {
-                $this->giveBack($previous, $lowered);
-                [$previous, $lowered] = [null, 0];
+                $this->giveBack($previous, $lowered, $grownBelow);
+                [$previous, $lowered, $grownBelow] = [null, 0, 0];
 
                 continue;
             }
@@ -515,8 +520,11 @@ final class DocumentBuilder
             // A line holding only a picture starts at the picture's top in both (HtmlWriter does the same).
             $lower = self::pictureOnly($block->children) ? 0 : $this->lowered[$properties] ?? 0;
 
-            if ($lower !== 0 || $lowered !== 0) {
-                $gap = max($previous->spacingAfter ?? 0, $properties->spacingBefore ?? 0) + $lower - $lowered;
+            // A browser grows a line that holds a superscript or subscript, Word does not: the paragraph takes the room in its spacing.
+            [$above, $below] = $this->scriptGrowth[$properties] ?? [0, 0];
+
+            if ($lower !== 0 || $lowered !== 0 || $above !== 0 || $grownBelow !== 0) {
+                $gap = max($previous->spacingAfter ?? 0, $properties->spacingBefore ?? 0) + $lower - $lowered + $above + $grownBelow;
                 $properties->spacingBefore = max(0, $gap);
 
                 if ($previous !== null && ($previous->spacingAfter ?? 0) > $properties->spacingBefore) {
@@ -529,10 +537,10 @@ final class DocumentBuilder
                 }
             }
 
-            [$previous, $lowered] = [$properties, $lower];
+            [$previous, $lowered, $grownBelow] = [$properties, $lower, $below];
         }
 
-        $this->giveBack($previous, $lowered);
+        $this->giveBack($previous, $lowered, $grownBelow);
     }
 
     /**
@@ -546,13 +554,13 @@ final class DocumentBuilder
     }
 
     /** The last paragraph of a run takes what it was lowered by off its own spacing after. */
-    private function giveBack(?ParagraphProperties $properties, int $lowered): void
+    private function giveBack(?ParagraphProperties $properties, int $lowered, int $grownBelow = 0): void
     {
-        if ($properties === null || $lowered === 0) {
+        if ($properties === null || ($lowered === 0 && $grownBelow === 0)) {
             return;
         }
 
-        $after = ($properties->spacingAfter ?? 0) - $lowered;
+        $after = ($properties->spacingAfter ?? 0) - $lowered + $grownBelow;
         $properties->spacingAfter = max(0, $after);
 
         // Too little space after to give back: lower it less, or what follows moves down.
@@ -725,6 +733,7 @@ final class DocumentBuilder
 
         if ($inlines !== null) {
             $paragraph = $this->createParagraph($flow, $inlines);
+            $this->scriptGrowth[$paragraph->properties] = array_map(Length::pointsToTwips(...), $buffer->scriptGrowth);
 
             if ($buffer->alignment !== null) {
                 $paragraph->properties->alignment = $buffer->alignment;

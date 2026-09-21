@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kovami\HtmlDocx\Html\Reader;
 
 use Kovami\HtmlDocx\Css\ComputedStyle;
+use Kovami\HtmlDocx\Css\FontMetrics;
 use Kovami\HtmlDocx\Model\BreakRun;
 use Kovami\HtmlDocx\Model\CommentEnd;
 use Kovami\HtmlDocx\Model\CommentStart;
@@ -33,6 +34,9 @@ final class InlineBuffer
     /** The paragraph's alignment when its content sets it (a picture between auto margins), else null. */
     public ?string $alignment = null;
 
+    /** @var array{0: float, 1: float} how much the browser grows the paragraph's lines to hold its scripts, in points; see FontMetrics::scriptGrowth() */
+    public array $scriptGrowth = [0.0, 0.0];
+
     /** @var array<int, list<CommentStart|CommentEnd>> comment boundaries, by the index of the item they come before */
     private array $boundaries = [];
 
@@ -42,6 +46,11 @@ final class InlineBuffer
 
     public function appendText(string $text, RunProperties $properties, ComputedStyle $style, ?LinkTarget $link): void
     {
+        if (trim($text) !== '') {
+            [$above, $below] = FontMetrics::scriptGrowth($style);
+            $this->scriptGrowth = [max($this->scriptGrowth[0], $above), max($this->scriptGrowth[1], $below)];
+        }
+
         $text = self::transform(str_replace(["\r\n", "\r"], "\n", $text), $style->textTransform);
 
         if ($style->preservesWhitespace()) {

@@ -327,6 +327,8 @@ final readonly class InlineWriter
     private function noteReference(NoteReference $reference, Element $parent): void
     {
         $sup = $this->context->element('sup', $parent);
+        // Word's note mark does not make its line taller; a browser's does.
+        $sup->setAttribute('style', 'line-height: 0;');
         $link = $this->context->element('a', $sup);
         $link->setAttribute('href', '#' . $this->context->id("{$reference->type}-{$reference->number}"));
         $link->setAttribute('id', $this->context->id("{$reference->type}-ref-{$reference->number}"));

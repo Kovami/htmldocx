@@ -42,8 +42,8 @@ it('keeps Word\'s footnotes and endnotes with their marks and text', function ()
     $html = wordHtml();
 
     expect($html)
-        ->toContain('<sup><a href="#footnote-1" id="footnote-ref-1">1</a></sup>')
-        ->toContain('<sup><a href="#endnote-1" id="endnote-ref-1">i</a></sup>')
+        ->toContain('<sup style="line-height: 0;"><a href="#footnote-1" id="footnote-ref-1">1</a></sup>')
+        ->toContain('<sup style="line-height: 0;"><a href="#endnote-1" id="endnote-ref-1">i</a></sup>')
         ->toContain('<li id="footnote-1">')
         ->toContain('<li id="endnote-1">')
         // The note styles are resolved: footnote text is 10pt.

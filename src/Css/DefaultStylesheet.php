@@ -60,7 +60,7 @@ final class DefaultStylesheet
         i, em, cite, dfn, var, address { font-style: italic; }
         u, ins { text-decoration: underline; }
         s, strike, del { text-decoration: line-through; }
-        sub, sup { font-size: 75%; }
+        sub, sup { font-size: 75%; line-height: 0; }
         sub { vertical-align: sub; }
         sup { vertical-align: super; }
         small { font-size: smaller; }

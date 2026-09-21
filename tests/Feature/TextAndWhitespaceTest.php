@@ -93,3 +93,16 @@ it('writes KaTeX formulas from SunEditor as Office Math', function () {
         ->and($docx->count('//m:oMath//m:sSup'))->toBe(1)
         ->and($docx->first('//m:oMath//m:sup//m:t')?->textContent)->toBe('2');
 });
+
+it('gives a paragraph the room a browser grows its line by to hold a superscript', function () {
+    // Word keeps the line and moves only the glyphs; the browser's taller line would push the rest down.
+    $spacing = static fn(string $html, ?Kovami\HtmlDocx\Editor $editor = null): int => (int) Kovami\HtmlDocx\Tests\Support\Docx::attr(
+        docx($html, $editor === null ? Kovami\HtmlDocx\HtmlDocx::plain(testOptions()) : Kovami\HtmlDocx\HtmlDocx::for($editor, testOptions()))->first('//w:p/w:pPr/w:spacing'),
+        'before',
+    );
+
+    expect($spacing('<p style="margin: 0">E = mc<sup>2</sup></p>') - $spacing('<p style="margin: 0">E = mc2</p>'))->toBeGreaterThan(40)
+        // SunEditor's stylesheet gives scripts line-height: 0, so its lines do not grow.
+        ->and($spacing('<p style="margin: 0">E = mc<sup>2</sup></p>', Kovami\HtmlDocx\Editor::SunEditor))
+        ->toBe($spacing('<p style="margin: 0">E = mc2</p>', Kovami\HtmlDocx\Editor::SunEditor));
+});

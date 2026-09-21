@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- A browser grows a line to hold a superscript or subscript, Word does not,
+  so everything after such a paragraph came out higher in Word. The HTML
+  reader now gives the paragraph that room in its spacing (0.23 of the text
+  size above for a superscript, 0.20 below for a subscript, as measured in
+  Chromium), unless the script has `line-height: 0` and grows nothing.
+- The SunEditor profile gives `sub` and `sup` the `line-height: 0` of
+  SunEditor's own stylesheet, and footnote and endnote marks are written
+  with it too, so they no longer make their line taller in the browser.
+
+Bench: plain-text 43.4% → 96.3% (HTML → DOCX); notes 35.1% → 60.8% of the
+whole page (DOCX → HTML).
+
 ## [2.1.0] - 2026-09-21
 
 A release about fidelity: the text of HTML and DOCX written by the library

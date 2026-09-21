@@ -69,8 +69,8 @@ it('reads its own notes back and links them from the HTML', function () {
     $html = $converter->fromDocument($read)->toHtml();
 
     expect($html)
-        ->toContain('<sup><a href="#footnote-1" id="footnote-ref-1">1</a></sup>')
-        ->toContain('<sup><a href="#endnote-1" id="endnote-ref-1">i</a></sup>')
+        ->toContain('<sup style="line-height: 0;"><a href="#footnote-1" id="footnote-ref-1">1</a></sup>')
+        ->toContain('<sup style="line-height: 0;"><a href="#endnote-1" id="endnote-ref-1">i</a></sup>')
         ->toContain('<li id="footnote-1">')
         ->toContain('The footnote body.')
         ->toContain('<a href="#footnote-ref-1">')
