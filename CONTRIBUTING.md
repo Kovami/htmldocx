@@ -86,6 +86,27 @@ Tests are black-box: they go through the public API and look at the result.
 Name a test after the behaviour (`it('reads a floating picture and which side
 text flows around')`), not after the method it calls.
 
+## Measuring fidelity
+
+A change to layout — spacing, line height, fonts, tables, pictures — is judged
+by the bench in [`bench/fidelity`](bench/fidelity) (macOS with Microsoft Word
+and Node; `npm install` there first):
+
+```bash
+cd bench/fidelity
+npm run bench     # DOCX → HTML, plain HTML, against Word's print of the corpus
+npm run editors   # DOCX → HTML through each editor, and what the editor keeps
+npm run html      # HTML → DOCX, each editor's HTML against Word's print of our DOCX
+npm run lines -- report/html/plain-text.html.pdf report/html/plain-text.word.pdf
+                  # where each line landed, to see why a score moved
+npm run table     # rewrite the README's fidelity tables from the latest results
+```
+
+Every command takes names to run only part of it (`npm run html -- plain suneditor`);
+results accumulate, so `npm run table` always shows the latest run of each cell.
+Plain HTML and SunEditor are the profiles tuned first: a change should not cost
+them anything. Run `npm run table` before a pull request that moves a number.
+
 ## Code style
 
 Match the surrounding code. Comments explain *why* — a Word quirk, a CSS rule,

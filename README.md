@@ -182,13 +182,35 @@ The repository carries a bench that answers the question with numbers instead of
 - **DOCX → HTML**: Word prints the document, Chromium prints the library's HTML at the same paper size, and the two are compared page by page — the share of the ink on either side that has ink on the other within 1.33 pt, plus where every word landed.
 - **HTML → DOCX**: the reverse. An editor's HTML is shown in a browser with that editor's content stylesheet, and compared with Word's print of the DOCX the library writes from it.
 
-| DOCX → HTML, plain HTML | Body text | Whole page |
-| --- | --- | --- |
-| Ink in place | **96.5%** | 81.0% |
-| Words on the same page | **100%** | 100% |
-| Median vertical drift | **0.5 pt** | — |
+Plain HTML and SunEditor are the profiles tuned first; the other editors follow.
 
-"Body text" leaves out headers, footers and notes, which differ by design: plain HTML has no page furniture, and a browser prints notes at the end where Word puts them at the foot of the page.
+<!-- bench:start (npm run table in bench/fidelity) -->
+Share of the ink in place within 1.33 pt, higher is better.
+
+**DOCX → HTML**: Word prints the document; the library's HTML — passed through the editor with the configuration below, and shown with its content stylesheet — is printed by Chromium on the same page, body text only (headers, footers and notes differ by design).
+
+| Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Text and character formatting | 89.6% | 80.5% | 87.4% | 89.5% | 88.5% |
+| Fonts and typography | 98.2% | 98.2% | 98.2% | 98.2% | 82.4% |
+| Lists | 96.2% | 96.2% | 96.2% | 96.2% | 96.3% |
+| Tables | 92.4% | 92.4% | 92.4% | 92.4% | 92.4% |
+| Pictures | 97.9% | 44.3% | 97.9% | 97.9% | 97.9% |
+| A six-page report | 97.7% | 97.7% | 97.7% | 97.7% | 97.6% |
+| Footnotes and endnotes | 99.7% | 99.7% | 99.7% | 99.7% | 99.7% |
+| Headers, footers, comments | 100.0% | 83.5% | 100.0% | 100.0% | 100.0% |
+| **Mean** | **96.5%** | **86.6%** | **96.2%** | **96.5%** | **94.4%** |
+
+**HTML → DOCX**: the editor's own HTML shown in Chromium with its content stylesheet, against Word's print of the DOCX the library writes from it.
+
+| Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Text and character formatting | 96.3% | 90.8% | 96.2% | 19.3% | 96.3% |
+| Lists | 94.0% | 88.9% | 95.2% | 31.2% | 94.1% |
+| Tables | 98.7% | 98.7% | 88.8% | 59.0% | 97.5% |
+| Pictures | 76.3% | 89.1% | 94.5% | 69.1% | 27.2% |
+| **Mean** | **91.3%** | **91.9%** | **93.7%** | **44.7%** | **78.8%** |
+<!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.
 

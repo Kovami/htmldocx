@@ -12,7 +12,9 @@
 //    added is listed;
 //  - fidelity: the editor's HTML is printed, the way the editor's docs say to
 //    show it (with its content stylesheet), and compared with Word's PDF, as
-//    run.mjs does for the library's own HTML.
+//    run.mjs does for the library's own HTML; with the recommended
+//    configuration also the body alone (body.php), which is what the README's
+//    table reports (npm run table).
 //
 // Usage: npm run editors [-- editor|name ...]
 //        PROFILE=plain npm run editors   (one profile's HTML for every editor)
@@ -43,7 +45,23 @@ const names = Object.keys(sources)
     .sort();
 
 const converted = {};
-const convert = (name, as) => (converted[`${as} ${name}`] ??= JSON.parse(execFileSync('php', [join(here, 'convert.php'), sources[name], as], { maxBuffer: 256 << 20 }).toString()));
+const convert = (name, as, variant = 'full') => (converted[`${as} ${variant} ${name}`] ??= JSON.parse(execFileSync('php', [join(here, 'convert.php'), sources[name], as, variant], { maxBuffer: 256 << 20 }).toString()));
+
+/** The HTML the editor hands back after loading the fragment; throws what the page threw. */
+async function throughEditor(harness, fragment, recommended, errors = []) {
+    const page = await browser.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(pathToFileURL(harness).href, { waitUntil: 'load' });
+
+    try {
+        const output = await page.evaluate(([input, config]) => window.roundTrip(input, config), [fragment, recommended]);
+        const features = await page.evaluate(([a, b]) => [window.features(a), window.features(b)], [fragment, output]);
+
+        return { output, features };
+    } finally {
+        await page.close();
+    }
+}
 
 const browser = await chromium.launch();
 const results = [];
@@ -56,24 +74,16 @@ for (const [editor, config] of editors.flatMap((editor) => ['default', 'recommen
 
     for (const name of names) {
         const { html, page: geometry } = convert(name, profile ?? editor);
-        const input = body(html);
-        const page = await browser.newPage();
         const errors = [];
-        page.on('pageerror', (error) => errors.push(error.message));
-        await page.goto(pathToFileURL(harness).href, { waitUntil: 'load' });
-
-        let output;
+        let output, before, after;
 
         try {
-            output = await page.evaluate(([fragment, recommended]) => window.roundTrip(fragment, recommended), [input, config === 'recommended']);
+            ({ output, features: [before, after] } = await throughEditor(harness, body(html), config === 'recommended', errors));
         } catch (error) {
             console.warn(`${run} ${name}: ${error.message.split('\n')[0]}`);
-            await page.close();
             continue;
         }
 
-        const [before, after] = await page.evaluate(([a, b]) => [window.features(a), window.features(b)], [input, output]);
-        await page.close();
         writeFileSync(join(dir, `${name}.html`), output);
 
         const reference = join(here, 'reference', `${name}.pdf`);
@@ -81,14 +91,26 @@ for (const [editor, config] of editors.flatMap((editor) => ['default', 'recommen
             ? await measure(browser, shown(editor, html, output), geometry, new Uint8Array(readFileSync(reference)), dir, `${name}.printed`)
             : null;
 
-        const result = { editor: run, name, before, after, pixels: scores?.pixelSimilarity ?? null, errors };
+        // The body alone, without headers, footers and notes, which differ from Word by design.
+        const bodyReference = join(here, 'reference', `${name}.body.pdf`);
+        let bodyPixels = scores?.pixelSimilarity ?? null;
+
+        if (config === 'recommended' && existsSync(bodyReference)) {
+            const variant = convert(name, profile ?? editor, 'body');
+            const { output: bodyOutput } = await throughEditor(harness, body(variant.html), true);
+            bodyPixels = (await measure(browser, shown(editor, variant.html, bodyOutput), variant.page, new Uint8Array(readFileSync(bodyReference)), dir, `${name}.body.printed`)).pixelSimilarity;
+        }
+
+        const result = { editor: run, name, before, after, pixels: scores?.pixelSimilarity ?? null, bodyPixels, errors };
         results.push(result);
         console.log(`${run} ${name}: survived ${percent(survival([result]).rate)}, ink ${scores ? percent(scores.pixelSimilarity) : '—'}${errors.length ? `, ${errors.length} page error(s)` : ''}`);
     }
 }
 
 await browser.close();
-writeFileSync(join(report, 'summary.json'), JSON.stringify(results, null, 2));
+// Every result so far, this run's replacing earlier ones: npm run table reads it.
+const kept = existsSync(join(report, 'summary.json')) ? JSON.parse(readFileSync(join(report, 'summary.json'), 'utf8')) : [];
+writeFileSync(join(report, 'summary.json'), JSON.stringify([...kept.filter((r) => !results.some((n) => n.editor === r.editor && n.name === r.name)), ...results], null, 2));
 writeFileSync(join(report, 'summary.md'), summary(results));
 console.log(`\n${summary(results)}`);
 

@@ -8,7 +8,8 @@
     "editors": "node editors.mjs",
     "examples": "node examples.mjs",
     "html": "node html.mjs",
-    "lines": "node lines.mjs"
+    "lines": "node lines.mjs",
+    "table": "node table.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^0.1.80",

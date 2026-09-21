@@ -15,7 +15,7 @@
 // report/html/ gets the HTML, DOCX, PDFs, page images and summary.md.
 
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -58,7 +58,7 @@ for (const profile of profiles) {
         execFileSync('rm', [file]);
         const pdf = printWithWord(join(report, `${id}.docx`), id);
         const scores = await measure(browser, asShown(profile, html, page), page, pdf, report, id);
-        const result = { ...scores, name: id };
+        const { dy, ...result } = { ...scores, name: id };
         results.push(result);
         console.log(format(result));
     }
@@ -78,6 +78,9 @@ const summary = [
     '',
 ].join('\n');
 writeFileSync(join(report, 'summary.md'), summary);
+// Every result so far, this run's replacing earlier ones: npm run table reads it.
+const kept = existsSync(join(report, 'summary.json')) ? JSON.parse(readFileSync(join(report, 'summary.json'), 'utf8')) : [];
+writeFileSync(join(report, 'summary.json'), JSON.stringify([...kept.filter((r) => !results.some((n) => n.name === r.name)), ...results], null, 2));
 console.log(`\n${summary}`);
 
 /** The editor's own markup for an HTML fragment. */
