@@ -49,6 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A table laid out automatically shares its width as a browser does, cells
   spanning columns included: their content widens the columns they span.
+- In the SunEditor profile an empty line holds a no-break space instead of a
+  `<br>`: SunEditor 3 drops an empty line holding only `<br>` in a table
+  cell, with the size and line height that line carried. Runs and line
+  breaks get their paragraph's line height where SunEditor 3's stylesheet
+  would give them their own.
 - A table SunEditor 3 keeps in a figure takes the figure's width (as wide as
   its content when the figure says nothing) and the 10px below it.
 

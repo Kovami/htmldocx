@@ -194,12 +194,12 @@ Share of the ink in place within 1.33 pt, higher is better.
 | Text and character formatting | 89.6% | 81.6% | 87.4% | 89.5% | 88.5% |
 | Fonts and typography | 98.2% | 98.1% | 98.2% | 98.2% | 82.4% |
 | Lists | 96.2% | 96.2% | 96.2% | 96.2% | 96.3% |
-| Tables | 92.4% | 83.1% | 92.4% | 92.4% | 92.4% |
+| Tables | 92.4% | 92.4% | 92.4% | 92.4% | 92.4% |
 | Pictures | 97.9% | 93.4% | 97.9% | 97.9% | 97.9% |
 | A six-page report | 97.7% | 97.7% | 97.7% | 97.7% | 97.6% |
 | Footnotes and endnotes | 99.7% | 99.7% | 99.7% | 99.7% | 99.7% |
 | Headers, footers, comments | 100.0% | 80.9% | 100.0% | 100.0% | 100.0% |
-| **Mean** | **96.5%** | **91.4%** | **96.2%** | **96.5%** | **94.4%** |
+| **Mean** | **96.5%** | **92.5%** | **96.2%** | **96.5%** | **94.4%** |
 
 **HTML → DOCX**: the editor's own HTML shown in Chromium with its content stylesheet, against Word's print of the DOCX the library writes from it.
 

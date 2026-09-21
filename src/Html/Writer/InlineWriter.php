@@ -90,7 +90,7 @@ final readonly class InlineWriter
                 }
 
                 match (true) {
-                    $inline instanceof BreakRun => $this->context->element('br', $open['element']),
+                    $inline instanceof BreakRun => $this->inheritLineHeight($this->context->element('br', $open['element']), $parentStyle),
                     $inline instanceof Field => $this->field($inline, $open['element']),
                     default => $open['element']->append($inline instanceof TabRun ? "\t" : $inline->text),
                 };
@@ -267,10 +267,10 @@ final readonly class InlineWriter
 
     /**
      * A stylesheet that sets a line height on every element (SunEditor 3's
-     * does) would give a run its own, and a taller one grows the line: the run
-     * takes its paragraph's instead, as it does in Word.
+     * does) would give a run — or a line break — its own, and a taller one
+     * grows the line: the run takes its paragraph's instead, as it does in Word.
      */
-    private function inheritLineHeight(Element $element, ComputedStyle $paragraph): void
+    public function inheritLineHeight(Element $element, ComputedStyle $paragraph): void
     {
         if (in_array($element->localName, ['sup', 'sub'], true)
             || $this->context->resolver->resolve($element, $paragraph)->lineHeight == $paragraph->lineHeight) {

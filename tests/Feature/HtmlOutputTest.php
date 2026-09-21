@@ -26,7 +26,10 @@ it('spells out every block\'s formatting, even what the editor\'s stylesheet alr
 });
 
 it('keeps an empty paragraph visible and as tall as its paragraph mark', function () {
+    // A no-break space: SunEditor 3 drops an empty line holding only <br> in a cell, and styles on <br>.
     expect(markup(html('<p>a</p><p><br></p>')))
+        ->toBe("<p>a</p>\n<p>&nbsp;</p>")
+        ->and(markup(HtmlDocx::plain(testOptions())->fromHtml('<p>a</p><p><br></p>')->toHtml()))
         ->toBe("<p>a</p>\n<p><br></p>");
 });
 

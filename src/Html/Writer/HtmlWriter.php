@@ -255,7 +255,7 @@ final class HtmlWriter
             }
 
             $this->inlines->write($children, $element, $style);
-            $this->closeParagraph($children, $element);
+            $this->closeParagraph($children, $element, $style);
             $this->standPictureOnLineBottom($children, $properties, $element);
         }
     }
@@ -286,7 +286,7 @@ final class HtmlWriter
      *
      * @param  list<Inline>  $children
      */
-    private function closeParagraph(array $children, Element $element): void
+    private function closeParagraph(array $children, Element $element, ComputedStyle $style): void
     {
         $visible = array_values(array_filter($children, static fn(Inline $child): bool => ! self::isMarker($child)));
         $last = $visible === [] ? null : $visible[count($visible) - 1];
@@ -295,8 +295,13 @@ final class HtmlWriter
             $last = $last->children === [] ? null : $last->children[count($last->children) - 1];
         }
 
-        if ($visible === [] || $last instanceof BreakRun) {
-            $this->context->element('br', $element);
+        // SunEditor 3 drops an empty line with only a <br> in a table cell, and the
+        // style of a <br> anywhere, so its empty line holds a no-break space instead
+        // (which the reader reads as empty, as editors write it).
+        if ($visible === [] && $this->context->editor === Editor::SunEditor) {
+            $element->append("\u{00A0}");
+        } elseif ($visible === [] || $last instanceof BreakRun) {
+            $this->inlines->inheritLineHeight($this->context->element('br', $element), $style);
         }
     }
 
