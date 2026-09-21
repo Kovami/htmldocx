@@ -140,7 +140,7 @@ it('reads text an editor leaves unformatted in the typography that editor shows'
         ->and($paragraph->properties->lineSpacing)->toBe($lineSpacing);
 })->with([
     // Each editor's own content stylesheet: what a user of it sees.
-    'CKEditor: Helvetica, medium, 1.5' => [Editor::CKEditor, 'Helvetica', 24, 306],
+    'CKEditor: Helvetica, medium, 1.5' => [Editor::CKEditor, 'Helvetica', 24, 300],
     'TinyMCE: the system font, medium, 1.4' => [Editor::TinyMce, 'Segoe UI', 24, 253],
     'SunEditor: Helvetica Neue 13px, 1.5' => [Editor::SunEditor, 'Helvetica Neue', 20, 302],
     'plain HTML: the options\' own base' => [null, 'Calibri', 22, null],

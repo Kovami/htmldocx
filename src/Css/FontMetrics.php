@@ -31,7 +31,7 @@ final class FontMetrics
         'century gothic' => 1.2261, 'century' => 1.2021, 'palatino linotype' => 1.3491,
         'franklin gothic book' => 1.1338, 'franklin gothic medium' => 1.1338, 'gill sans mt' => 1.1597,
         'lucida console' => 1.0, 'lucida sans unicode' => 1.5366, 'comic sans ms' => 1.3936, 'impact' => 1.2197,
-        'helvetica' => 1.1753, 'helvetica neue' => 1.193, 'roboto' => 1.2002, 'pt sans' => 1.295, 'pt serif' => 1.294,
+        'helvetica' => 1.2, 'helvetica neue' => 1.193, 'roboto' => 1.2002, 'pt sans' => 1.295, 'pt serif' => 1.294,
         'microsoft sans serif' => 1.1318, 'rockwell' => 1.1743, 'tw cen mt' => 1.0889, 'perpetua' => 1.146,
     ];
 
