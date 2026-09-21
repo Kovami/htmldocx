@@ -28,6 +28,12 @@ function styleProperties(string $html): array
     return $properties;
 }
 
+$picture = '<w:p><w:r><w:drawing><wp:inline><wp:extent cx="952500" cy="952500"/><wp:docPr id="1" name="Picture"/>'
+    . '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic>'
+    . '<pic:nvPicPr><pic:cNvPr id="1" name="Picture"/><pic:cNvPicPr/></pic:nvPicPr>'
+    . '<pic:blipFill><a:blip r:embed="rIdImage"/></pic:blipFill><pic:spPr/></pic:pic>'
+    . '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+
 it('keeps a font name with a line break inside its CSS string', function (string $break) {
     $html = HtmlDocx::for(Editor::SunEditor)->fromDocx(DocxBuilder::make()->body(
         '<w:p><w:r><w:rPr><w:rFonts w:ascii="Evil' . $break . '; background: url(https://attacker.test/x)" w:hAnsi="Evil' . $break . '; background: url(https://attacker.test/x)"/></w:rPr><w:t>text</w:t></w:r></w:p>',
@@ -57,4 +63,23 @@ it('escapes every character that could end a CSS string', function () {
 
 it('refuses a declaration value that carries a raw line break', function () {
     expect(fn() => CssFormatter::declarations(['color' => "red\n; background: blue"]))->toThrow(LogicException::class);
+});
+
+it('skips an SVG picture instead of passing its bytes on', function () use ($picture) {
+    $warnings = [];
+    $conversion = HtmlDocx::for(Editor::SunEditor)
+        ->withWarningHandler(static function (string $message) use (&$warnings): void {
+            $warnings[] = $message;
+        })
+        ->fromDocx(DocxBuilder::make()
+            ->part('media/image1.svg', '<html><script>alert(document.domain)</script></html>', 'image/svg+xml')
+            ->relationship('rIdImage', 'image', 'media/image1.svg')
+            ->body($picture)
+            ->toBytes());
+
+    $html = $conversion->toHtml();
+
+    expect($html)->not->toContain('<img')
+        ->and($html)->not->toContain('script')
+        ->and(implode("\n", $warnings))->toContain('SVG');
 });

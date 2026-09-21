@@ -129,7 +129,7 @@ final readonly class DrawingReader
             return null;
         }
 
-        $data = $this->imageData((string) $blip->getAttributeNS(Namespaces::R, 'embed'), $width, $height);
+        $data = $this->imageData((string) $blip->getAttributeNS(Namespaces::R, 'embed'));
 
         return $data === null ? null : new ImageRun($data, $width, $height, $description, $properties, $float);
     }
@@ -158,7 +158,7 @@ final readonly class DrawingReader
                 $id = $imageData->getAttributeNS(Namespaces::R, 'id') ?: $imageData->getAttributeNS(Namespaces::O, 'relid');
                 $width = self::emu($style['width'] ?? null);
                 $height = self::emu($style['height'] ?? null);
-                $data = $id === null || $id === '' ? null : $this->imageData($id, $width, $height);
+                $data = $id === null || $id === '' ? null : $this->imageData($id);
 
                 if ($data !== null) {
                     $width ??= (int) round($data->widthPx * 9525);
@@ -184,7 +184,7 @@ final readonly class DrawingReader
         }
     }
 
-    private function imageData(string $relationshipId, ?int $width, ?int $height): ?ImageData
+    private function imageData(string $relationshipId): ?ImageData
     {
         $relationship = $this->context->package->relationship($this->part, $relationshipId);
 
@@ -216,8 +216,11 @@ final readonly class DrawingReader
             return null;
         }
 
-        if ($extension === 'svg' || $contentType === 'image/svg+xml') {
-            return new ImageData($bytes, 'svg', 'image/svg+xml', (int) round(($width ?? 0) / 9525), (int) round(($height ?? 0) / 9525));
+        if ($extension === 'svg' || str_contains($contentType, 'svg')) {
+            // An SVG can carry scripts; served from the application's own origin it is stored XSS.
+            $this->context->warn('An SVG picture was skipped: SVG can carry scripts, so it is never passed on');
+
+            return null;
         }
 
         $this->context->warn("A picture of type {$contentType} was skipped: its format is not recognised");
