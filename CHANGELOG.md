@@ -69,12 +69,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Word's: a browser gives each run its own half-leading, and Courier New's in
   Calibri reaches 0.075em lower, while Word's line grows only for a font with
   a taller single line. Such a run gets `line-height: 0`.
+- A picture alone on its line at a multiple line spacing: Word's line ends
+  the multiple's extra below the picture (0.5 of the single line at 1.5),
+  on top of the spacing after. The HTML writer stands the picture on the
+  line's bottom and holds the extra in `padding-bottom`, which does not
+  collapse with the next margin, as SunEditor's image component too; the
+  reader takes it back out of the spacing after. SunEditor 3 shows a
+  component's picture as a block, and the profile's stylesheet says so.
 
 Bench: plain-text 43.4% → 96.3%, plain-images 76.3% → 95.7%, plain-tables
 98.7% → 99.5%, suneditor-tables 77.1% → 97.3%, suneditor-lists 92.6% →
-94.4%, ckeditor-lists 95.2% → 96.9% (HTML → DOCX);
-notes 35.1% → 60.8% of the whole page, formatting-ru 89.6% → 93.9%
-(SunEditor 81.6% → 85.9%) of the body (DOCX → HTML).
+94.4%, ckeditor-lists 95.2% → 96.9%,
+suneditor-images 93.6% → 97.3%, ckeditor-images 94.5% → 98.0% (HTML → DOCX);
+notes 35.1% → 60.8% of the whole page; of the body, formatting-ru 89.6% →
+93.9% (SunEditor 81.6% → 92.4%), images 97.9% → 100% (DOCX → HTML).
 
 ## [2.1.0] - 2026-09-21
 

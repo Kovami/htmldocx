@@ -530,10 +530,17 @@ final class DocumentBuilder
             // A browser grows a line that holds a superscript or subscript, Word does not: the paragraph takes the room in its spacing.
             [$above, $below] = $this->scriptGrowth[$properties] ?? [0, 0];
 
-            // Word's line ends at a picture alone on it; a browser's goes on below the baseline.
-            // ponytail: single spacing only; Word also multiplies a picture's line, not measured yet.
-            if (self::pictureOnly($block->children) && ($properties->lineSpacing ?? 240) === 240) {
-                $below += $this->pictureGap[$properties] ?? 0;
+            // Word's line ends a multiple's extra below a picture alone on it; a browser's goes on
+            // below the baseline, or ends at the picture when it is a block of its own.
+            if (self::pictureOnly($block->children) && ($properties->lineRule ?? 'auto') === 'auto') {
+                $gap = $this->pictureGap[$properties] ?? 0;
+
+                // Word's extra below is room the padding under the picture gave the browser (HtmlWriter::pictureLineExtra()).
+                if ($gap < 0) {
+                    $properties->spacingAfter = max(0, ($properties->spacingAfter ?? 0) + $gap);
+                } else {
+                    $below += $gap;
+                }
             }
 
             if ($lower !== 0 || $lowered !== 0 || $above !== 0 || $grownBelow !== 0) {
@@ -745,6 +752,15 @@ final class DocumentBuilder
         }
     }
 
+    /** What a multiple line spacing adds below the paragraph's line in Word, in points; see HtmlWriter::multipleExtra(). */
+    private function multipleExtra(ParagraphProperties $properties, ComputedStyle $style): float
+    {
+        $single = FontMetrics::singleLine($style->fontFamily);
+        $line = $properties->lineSpacing ?? 240;
+
+        return $single === null || ($properties->lineRule ?? 'auto') !== 'auto' || $line <= 240 ? 0.0 : ($line / 240 - 1) * $single * $style->fontSizePt;
+    }
+
     private function flushParagraph(InlineFlow $flow, BlockSink $sink): void
     {
         $buffer = $flow->buffer;
@@ -754,7 +770,7 @@ final class DocumentBuilder
         if ($inlines !== null) {
             $paragraph = $this->createParagraph($flow, $inlines);
             $this->scriptGrowth[$paragraph->properties] = array_map(Length::pointsToTwips(...), $buffer->scriptGrowth);
-            $this->pictureGap[$paragraph->properties] = Length::pointsToTwips($buffer->pictureGap);
+            $this->pictureGap[$paragraph->properties] = Length::pointsToTwips($buffer->pictureGap - $this->multipleExtra($paragraph->properties, $flow->style));
 
             if ($buffer->alignment !== null) {
                 $paragraph->properties->alignment = $buffer->alignment;

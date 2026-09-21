@@ -69,7 +69,7 @@ it('gives pictures their size as attributes too, which every editor keeps', func
     $png = Kovami\HtmlDocx\Tests\Support\TestImage::pngDataUri(4, 4);
 
     expect(profileHtml(Editor::CKEditor, "<p><img src=\"{$png}\" style=\"width: 20px; height: 10px\"></p>"))
-        ->toContain('style="width: 20px; height: 10px;" width="20" height="10"');
+        ->toContain('style="width: 20px; height: 10px; vertical-align: bottom;" width="20" height="10"');
 });
 
 it('finds a note list an editor stripped of its section by the ids of its items', function () {

@@ -231,6 +231,7 @@ final class HtmlWriter
 
             $top = $index === 0 ? ($properties->spacingBefore ?? 0) : 0;
             $bottom = $index === $last ? ($properties->spacingAfter ?? 0) : 0;
+
             $pageBreak = $index === 0 ? $properties->pageBreakBefore : true;
             $preserve = self::preservesWhitespace($children);
             // An empty paragraph is as tall as its paragraph mark, the only
@@ -243,7 +244,8 @@ final class HtmlWriter
                 fn(ComputedStyle $editor): array => $this->paragraphCss($properties, $editor, $top, $bottom, $pageBreak, $preserve, $indentBase, $item !== null, $mark)
                     // A line holding only a picture starts at the picture's top in both.
                     + $this->raise($element, self::imageOnly($children) === null ? $this->leadingAbove($properties, $mark) : 0.0)
-                    + ($index === 0 && $item !== null ? $this->bulletLine($properties) : []),
+                    + ($index === 0 && $item !== null ? $this->bulletLine($properties) : [])
+                    + $this->pictureLineExtra($children, $properties),
             );
 
             // A bookmark at the start of a paragraph is the paragraph's id: editors drop empty anchors.
@@ -261,23 +263,32 @@ final class HtmlWriter
     }
 
     /**
-     * Word's line ends at a picture alone on it; a browser's goes on below the
-     * baseline the picture stands on. At the line's bottom it leaves no gap
-     * (DocumentBuilder adds that gap to a picture that does stand on the baseline).
+     * Word's line ends at a picture alone on it, less a multiple's extra below
+     * it; a browser's goes on below the baseline the picture stands on. At the
+     * line's bottom it leaves no gap, and the paragraph's margin takes the extra
+     * (DocumentBuilder works out the gap of a picture that does stand on the baseline).
      *
      * @param  list<Inline>  $children
      */
     private function standPictureOnLineBottom(array $children, ParagraphProperties $properties, Element $element): void
     {
-        $image = self::imageOnly($children);
-
-        if ($image === null || $image->float !== null || ($properties->lineSpacing ?? 240) !== 240) {
+        if (! self::standsOnLineBottom($children, $properties)) {
             return;
         }
 
         foreach ($element->getElementsByTagName('img') as $img) {
             $img->setAttribute('style', trim($img->getAttribute('style') . ' vertical-align: bottom;'));
         }
+    }
+
+    /**
+     * @param  list<Inline>  $children
+     */
+    private static function standsOnLineBottom(array $children, ParagraphProperties $properties): bool
+    {
+        $image = self::imageOnly($children);
+
+        return $image !== null && $image->float === null && ($properties->lineRule ?? 'auto') === 'auto';
     }
 
     /**
@@ -577,6 +588,38 @@ final class HtmlWriter
     }
 
     /**
+     * Word's line holding only a picture goes on a multiple's extra below it,
+     * on top of the spacing after, which collapses with the next paragraph's
+     * before: padding, which does not collapse, holds the extra.
+     *
+     * @param  list<Inline>  $children
+     * @return array<string, string>
+     */
+    private function pictureLineExtra(array $children, ParagraphProperties $properties): array
+    {
+        // TipTap drops a picture's style: it stays on the baseline, where the gap below is about the extra already.
+        $extra = self::standsOnLineBottom($children, $properties) && $this->context->editor !== Editor::TipTap ? $this->multipleExtra($properties) : 0.0;
+
+        return $extra > 0 ? ['padding-bottom' => $this->context->css->points($extra)] : [];
+    }
+
+    /** What a multiple line spacing adds below the paragraph's line in Word, in points. */
+    private function multipleExtra(ParagraphProperties $properties): float
+    {
+        $single = FontMetrics::singleLine($this->blockFamily($properties));
+        $line = $properties->lineSpacing ?? 240;
+
+        if ($single === null || ($properties->lineRule ?? 'auto') !== 'auto' || $line <= 240) {
+            return 0.0;
+        }
+
+        $size = $this->blockRun($properties)->size ?? $this->context->document->defaultRunProperties->size;
+        $points = $size === null ? $this->context->options->baseFontSizePt() : $size / 2;
+
+        return ($line / 240 - 1) * $single * $points;
+    }
+
+    /**
      * A paragraph holding nothing but a picture becomes SunEditor's image
      * component, the shape its toolbar can select, resize and align again.
      *
@@ -600,8 +643,9 @@ final class HtmlWriter
         $container->setAttribute('class', "se-component se-image-container __se__float-{$float}");
         $container->setAttribute('contenteditable', 'false');
 
-        $this->context->style($container, $parentStyle, function (ComputedStyle $editor) use ($properties): array {
-            $css = [];
+        $this->context->style($container, $parentStyle, function (ComputedStyle $editor) use ($properties, $children): array {
+            // The component ends at the picture; Word's line goes on a multiple's extra below it.
+            $css = $this->pictureLineExtra($children, $properties);
             $margins = ['margin-top' => $properties->spacingBefore ?? 0, 'margin-bottom' => $properties->spacingAfter ?? 0];
 
             foreach ($margins as $property => $twips) {

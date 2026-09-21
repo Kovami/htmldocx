@@ -136,7 +136,8 @@ it('writes a picture-only paragraph as an image component', function () {
     $html = html('<div class="se-component se-image-container __se__float-right"><figure><img src="' . TestImage::pngDataUri(40, 20) . '" alt="chart" style="width: 40px; height: 20px"></figure></div>');
 
     expect($html)
-        ->toContain('<div class="se-component se-image-container __se__float-right" contenteditable="false">')
+        // The component's 10px below: Word's picture line keeps 1.5's extra under the picture, the rest is spacing.
+        ->toContain('<div class="se-component se-image-container __se__float-right" contenteditable="false" style="padding-bottom: 4.1px; margin-bottom: 5.87px;">')
         ->toContain('<figure style="margin: 0 0 0 auto; width: 40px;">')
         ->toContain('data-se-size="40px,20px"')
         ->toContain('alt="chart"');
