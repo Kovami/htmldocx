@@ -265,9 +265,11 @@ final readonly class FormatParser
 
         foreach (['hAnsi', 'ascii'] as $slot) {
             $font = $this->theme->font(Xml::attr($rFonts, $slot . 'Theme')) ?? Xml::attr($rFonts, $slot);
+            // No real font is named with these; a document that uses them is trying to break out of CSS.
+            $font = trim(preg_replace('/[\x00-\x1F\x7F;{}()<>]/', '', (string) $font));
 
-            if ($font !== null && trim($font) !== '') {
-                return trim($font);
+            if ($font !== '') {
+                return $font;
             }
         }
 

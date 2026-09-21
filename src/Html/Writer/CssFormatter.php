@@ -8,6 +8,7 @@ use Kovami\HtmlDocx\Css\ComputedStyle;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Model\Border;
 use Kovami\HtmlDocx\Model\BorderSet;
+use LogicException;
 
 /** Serializes model values as CSS in the unit the output is configured for. */
 final readonly class CssFormatter
@@ -129,7 +130,7 @@ final readonly class CssFormatter
     {
         return preg_match('/^[A-Za-z][A-Za-z0-9-]*$/', $family) === 1 && ! in_array(strtolower($family), ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'inherit', 'initial'], true)
             ? $family
-            : '"' . str_replace(['\\', '"'], ['\\\\', '\"'], $family) . '"';
+            : self::string($family);
     }
 
     /** A font and what may stand in for it where it is not installed. */
@@ -143,10 +144,22 @@ final readonly class CssFormatter
         return implode(', ', [self::fontFamily($family), ...$fallbacks]);
     }
 
-    /** A CSS string, e.g. for `list-style-type: "1.2. "`. */
+    /**
+     * A CSS string, e.g. for `list-style-type: "1.2. "`. A raw line break (LF, CR
+     * or FF) would end the string and let the rest of the value become
+     * declarations of its own, so every control character is written as a hex escape.
+     */
     public static function string(string $value): string
     {
-        return '"' . str_replace(['\\', '"', "\n"], ['\\\\', '\"', '\A '], $value) . '"';
+        return '"' . preg_replace_callback(
+            '/[\x00-\x1F\x7F"\\\\]/',
+            static fn(array $match): string => match ($match[0]) {
+                '"' => '\"',
+                '\\' => '\\\\',
+                default => '\\' . strtoupper(dechex(ord($match[0]))) . ' ',
+            },
+            $value,
+        ) . '"';
     }
 
     public static function number(float $value): string
@@ -162,7 +175,9 @@ final readonly class CssFormatter
     public static function declarations(array $declarations): string
     {
         return implode(' ', array_map(
-            static fn(string $property, string $value): string => "{$property}: {$value};",
+            static fn(string $property, string $value): string => preg_match('/[\n\r\f]/', $value) === 1
+                ? throw new LogicException("A raw line break in the value of {$property} would end it early; escape it first")
+                : "{$property}: {$value};",
             array_keys($declarations),
             $declarations,
         ));
