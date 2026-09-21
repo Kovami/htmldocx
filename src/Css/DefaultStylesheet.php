@@ -170,7 +170,7 @@ final class DefaultStylesheet
         table { border: 1px double #b3b3b3; border-collapse: collapse; }
         td, th { border: 1px solid #bfbfbf; padding: 0.4em; vertical-align: middle; }
         th { background-color: #f2f2f2; }
-        blockquote { margin-left: 0; margin-right: 0; padding-left: 1.5em; padding-right: 1.5em; font-style: italic; border-left: 5px solid #cccccc; }
+        blockquote { margin-left: 0; margin-right: 0; padding-left: 1.5em; padding-right: 1.5em; font-style: italic; border-left: 5px solid #cccccc; overflow: hidden; }
         .image { display: table; clear: both; text-align: center; margin: 0.9em auto; }
         .image img { display: block; margin: 0 auto; max-width: 100%; }
         .image_resized { max-width: 100%; display: block; }

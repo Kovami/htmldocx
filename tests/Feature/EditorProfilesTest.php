@@ -153,3 +153,11 @@ it('lets the options replace an editor\'s typography, for an application whose C
     expect($run->properties->fontFamily)->toBe('Times New Roman')
         ->and($run->properties->size)->toBe(24);
 });
+
+it('keeps the margins of a CKEditor quotation apart from its paragraph\'s, as its stylesheet does', function () {
+    // ckeditor5-content.css gives blockquote overflow: hidden, so the margins inside it do not collapse through it.
+    $paragraph = HtmlDocx::for(Editor::CKEditor, testOptions())->fromHtml('<blockquote><p>quoted</p></blockquote>')->document()->blocks[0];
+
+    expect($paragraph->properties->spacingBefore)->toBe(440)
+        ->and($paragraph->properties->spacingAfter)->toBe(440);
+});
