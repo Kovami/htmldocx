@@ -161,6 +161,7 @@ final class Numbering
                     start: $this->start((string) $numId, $i),
                     indentLeft: $level->paragraph->indentLeft ?? 0,
                     hanging: max(0, -($level->paragraph->firstLine ?? 0)),
+                    suffix: $level->suffix,
                 );
             }
 
@@ -259,6 +260,7 @@ final class Numbering
             restartAfter: Xml::int(Xml::val($lvl, 'lvlRestart')),
             legal: Xml::onOff($lvl, 'isLgl') ?? false,
             paragraphStyleId: Xml::val($lvl, 'pStyle'),
+            suffix: Xml::val($lvl, 'suff') ?? 'tab',
             paragraph: $this->parser->paragraph(Xml::child($lvl, 'pPr')),
             run: $run,
         );

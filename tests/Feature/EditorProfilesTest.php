@@ -35,7 +35,8 @@ it('reads a formula back from every shape an editor keeps', function (string $ht
     'TipTap block math' => ['<span data-type="block-math" data-latex="y_2"></span>', 'y_2', true],
     'MathML' => ['<math><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>', 'z', false],
     'MathML, display' => ['<math display="block"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>', 'z', true],
-    'SunEditor KaTeX' => ['<span class="__se__katex katex" data-exp="k">k</span>', 'k', false],
+    'SunEditor 2 KaTeX' => ['<span class="__se__katex katex" data-exp="k">k</span>', 'k', false],
+    'SunEditor 3 math' => ['<span class="se-component se-inline-component se-math katex" data-se-value="k^2"><span class="katex-mathml">k2</span></span>', 'k^2', false],
 ]);
 
 it('keeps a formula on a line of its own on the way through HTML', function (?Editor $editor, string $shape) {
@@ -142,7 +143,7 @@ it('reads text an editor leaves unformatted in the typography that editor shows'
     // Each editor's own content stylesheet: what a user of it sees.
     'CKEditor: Helvetica, medium, 1.5' => [Editor::CKEditor, 'Helvetica', 24, 300],
     'TinyMCE: the system font, medium, 1.4' => [Editor::TinyMce, 'Segoe UI', 24, 253],
-    'SunEditor: Helvetica Neue 13px, 1.5' => [Editor::SunEditor, 'Helvetica Neue', 20, 294],
+    'SunEditor: Helvetica Neue 16px, 1.5' => [Editor::SunEditor, 'Helvetica Neue', 24, 302],
     'plain HTML: the options\' own base' => [null, 'Calibri', 22, null],
 ]);
 

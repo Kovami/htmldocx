@@ -642,10 +642,10 @@ final class HtmlWriter
 
         $element->setAttribute('data-proportion', 'true');
         $element->setAttribute('data-align', $float);
-        $element->setAttribute('data-size', "{$width}px,{$height}px");
+        $element->setAttribute('data-se-size', "{$width}px,{$height}px");
 
         if ($image->description !== '') {
-            $element->setAttribute('data-file-name', $image->description);
+            $element->setAttribute('data-se-file-name', $image->description);
         }
     }
 
@@ -736,11 +736,18 @@ final class HtmlWriter
             $list->setAttribute('start', (string) $start);
         }
 
-        $style = $this->context->style($list, $hostStyle, function (ComputedStyle $editor) use ($marker, $padding): array {
+        // Word hangs the marker in the indent unless a space follows it, which sets it inside the first line.
+        $inside = ($this->context->document->list($numId)->levels[$level] ?? null)?->suffix === 'space';
+
+        $style = $this->context->style($list, $hostStyle, function (ComputedStyle $editor) use ($marker, $padding, $inside): array {
             $css = [];
 
             if ($marker !== null) {
                 $css['list-style-type'] = $marker;
+            }
+
+            if (($editor->value('list-style-position') === 'inside') !== $inside) {
+                $css['list-style-position'] = $inside ? 'inside' : 'outside';
             }
 
             // The items carry Word's spacing themselves; the list box adds none.
@@ -779,7 +786,8 @@ final class HtmlWriter
                 $list->setAttribute('class', "se-{$type}s");
             }
 
-            $style = $this->context->style($list, $parentStyle, fn(): array => ['list-style-type' => $marker]
+            $style = $this->context->style($list, $parentStyle, fn(ComputedStyle $editor): array => ['list-style-type' => $marker]
+                + ($editor->value('list-style-position') === 'inside' ? ['list-style-position' => 'outside'] : [])
                 + ['margin' => '0', 'padding' => '0 0 0 ' . $this->context->css->twips(360)]);
             $expected = 1;
 

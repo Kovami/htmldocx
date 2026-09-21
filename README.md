@@ -159,7 +159,7 @@ Whatever profile writes the HTML, **the reader understands all of them**: HTML f
 
 ¹ The notes are written, but TipTap's schema keeps only their text: the section and the links back do not survive a round trip through it.
 
-**Base typography.** Each editor shows text it has no formatting for in its own content stylesheet, and a profile assumes exactly that, so a document made in the editor reads in Word the way it looked: CKEditor's Helvetica at the browser's medium size with 1.5 line spacing, TinyMCE's system font stack with 1.4, SunEditor's Helvetica Neue 13px in #333. Plain HTML assumes Calibri 11pt. TinyMCE's stack starts with "whatever this system calls its own font", which a DOCX cannot ask for: Word gets Segoe UI, which is what Windows shows, while macOS shows San Francisco with other metrics, so text runs longer or shorter there. If your application styles its editor differently — most do — or its users are on a Mac, say so:
+**Base typography.** Each editor shows text it has no formatting for in its own content stylesheet, and a profile assumes exactly that, so a document made in the editor reads in Word the way it looked: CKEditor's Helvetica at the browser's medium size with 1.5 line spacing, TinyMCE's system font stack with 1.4, SunEditor 3's Helvetica Neue 16px in #333 with 1.5 line spacing. Plain HTML assumes Calibri 11pt. TinyMCE's stack starts with "whatever this system calls its own font", which a DOCX cannot ask for: Word gets Segoe UI, which is what Windows shows, while macOS shows San Francisco with other metrics, so text runs longer or shorter there. If your application styles its editor differently — most do — or its users are on a Mac, say so:
 
 ```php
 new Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, textColor: '222222');
@@ -173,7 +173,7 @@ new Options(extraStylesheet: 'body { font-family: Georgia; } p { margin: 0 0 12p
 | CKEditor 5 | The `GeneralHtmlSupport` plugin, allowing every element with its styles, classes and attributes: `htmlSupport: { allow: [{ name: /.*/, styles: true, classes: true, attributes: true }] }`, next to the table, list, image, link, block-quote and code-block plugins |
 | TinyMCE | The `lists`, `advlist`, `table`, `link` and `image` plugins; it keeps the rest of the markup as it is |
 | TipTap | `StarterKit` with `TableKit`, `TextStyleKit`, `TextAlign`, `Image` (`inline: true`, `allowBase64: true`), `Subscript`, `Superscript`, `Highlight`, `Mathematics` — and an extension that keeps `style` and `id` on blocks (`addGlobalAttributes`), which TipTap drops unless a node declares them |
-| SunEditor | All of its plugins with KaTeX, plus `attributesWhitelist: { all: 'style|id|role|start|value|data-.+' }` and `addTagsWhitelist: 'section|colgroup|col'` |
+| SunEditor 3 | All of its plugins, KaTeX as `externalLibs: { katex: { src: katex } }`, `elementWhitelist: 'section\|colgroup\|col'`, `attributeWhitelist: { '*': 'style\|id\|role\|start\|value\|data-[^\\s]+' }`, and `strictMode` with `attrFilter: false` and `styleFilter: false` (its other filters stay on) |
 
 ## How close it looks
 
@@ -191,25 +191,25 @@ Share of the ink in place within 1.33 pt, higher is better.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | — | 80.5% | 87.4% | 89.5% | 88.5% |
-| Fonts and typography | — | 98.2% | 98.2% | 98.2% | 82.4% |
-| Lists | — | 96.2% | 96.2% | 96.2% | 96.3% |
-| Tables | — | 92.4% | 92.4% | 92.4% | 92.4% |
-| Pictures | 97.9% | 44.3% | 97.9% | 97.9% | 97.9% |
-| A six-page report | — | 97.7% | 97.7% | 97.7% | 97.6% |
-| Footnotes and endnotes | — | 99.7% | 99.7% | 99.7% | 99.7% |
-| Headers, footers, comments | — | 83.5% | 100.0% | 100.0% | 100.0% |
-| **Mean** | — | **86.6%** | **96.2%** | **96.5%** | **94.4%** |
+| Text and character formatting | 89.6% | 81.6% | 87.4% | 89.5% | 88.5% |
+| Fonts and typography | 98.2% | 98.1% | 98.2% | 98.2% | 82.4% |
+| Lists | 96.2% | 96.2% | 96.2% | 96.2% | 96.3% |
+| Tables | 92.4% | 83.1% | 92.4% | 92.4% | 92.4% |
+| Pictures | 97.9% | 93.4% | 97.9% | 97.9% | 97.9% |
+| A six-page report | 97.7% | 97.7% | 97.7% | 97.7% | 97.6% |
+| Footnotes and endnotes | 99.7% | 99.7% | 99.7% | 99.7% | 99.7% |
+| Headers, footers, comments | 100.0% | 80.9% | 100.0% | 100.0% | 100.0% |
+| **Mean** | **96.5%** | **91.4%** | **96.2%** | **96.5%** | **94.4%** |
 
 **HTML → DOCX**: the editor's own HTML shown in Chromium with its content stylesheet, against Word's print of the DOCX the library writes from it.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | 96.3% | 90.8% | 96.2% | 19.3% | 96.3% |
-| Lists | 94.0% | 88.9% | 95.2% | 31.2% | 94.1% |
-| Tables | 98.7% | 98.7% | 88.8% | 59.0% | 97.5% |
-| Pictures | 95.7% | 89.1% | 94.5% | 69.1% | 27.2% |
-| **Mean** | **96.2%** | **91.9%** | **93.7%** | **44.7%** | **78.8%** |
+| Text and character formatting | 96.3% | 92.4% | 96.2% | 19.3% | 96.3% |
+| Lists | 94.0% | 92.6% | 95.2% | 31.2% | 94.1% |
+| Tables | 98.7% | 77.0% | 88.8% | 59.0% | 97.5% |
+| Pictures | 95.7% | 93.6% | 94.5% | 69.1% | 27.2% |
+| **Mean** | **96.2%** | **88.9%** | **93.7%** | **44.7%** | **78.8%** |
 <!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.

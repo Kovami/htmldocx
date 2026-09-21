@@ -45,10 +45,19 @@ final class DefaultStylesheet
 
         CSS;
 
+    /**
+     * SunEditor 3's content stylesheet (suneditor-contents.css with its
+     * design variables at their defaults): what a SunEditor document looks
+     * like wherever it is shown, and so what the SunEditor profile writes against.
+     */
     public const string CSS = self::DISPLAY . "\n" . <<<'CSS'
-        body { font-family: "Helvetica Neue"; font-size: 13px; color: #333333; line-height: 1.5; }
+        body { font-family: "Helvetica Neue"; font-size: 16px; color: #333333; line-height: 1.5; }
+        /* SunEditor 3 gives every element line-height: 1.5em, which comes to the
+           same as 1.5 on each: a child does not inherit its parent's line height. */
+        * { line-height: 1.5; }
 
         p { margin: 0 0 10px 0; }
+        div { margin: 0; padding: 0; }
         h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; }
         h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
         h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; }
@@ -67,7 +76,7 @@ final class DefaultStylesheet
         big { font-size: larger; }
         mark { background-color: yellow; }
         code, kbd, samp, tt { font-family: monospace; }
-        a { color: #004cff; text-decoration: underline; }
+        a { color: #0056b3; text-decoration: none; }
         center { text-align: center; }
 
         pre {
@@ -75,11 +84,11 @@ final class DefaultStylesheet
             margin: 0 0 10px; padding: 8px; background-color: #f9f9f9; border: 1px solid #e1e1e1;
         }
         blockquote {
-            color: #999; margin: 0 0 10px; padding: 0 5px 0 20px;
+            color: #999; margin: 1em 0; padding: 0 5px 0 20px;
             border-left: 5px solid #b1b1b1;
         }
 
-        ul, ol { margin: 1em 0; padding-left: 40px; }
+        ul, ol { margin: 1em 0; padding-left: 40px; list-style-position: inside; }
         ol ol, ol ul, ul ol, ul ul { margin: 0; }
         li { margin-bottom: 5px; }
         ul { list-style-type: disc; }
@@ -87,17 +96,17 @@ final class DefaultStylesheet
         ol ol, ul ol { list-style-type: lower-alpha; }
         ol ol ol, ul ol ol, ul ul ol { list-style-type: upper-roman; }
         ul ul, ol ul { list-style-type: circle; }
-        ul ul ul, ul ol ul, ol ul ul, ol ol ul { list-style-type: square; }
+        ul ul ul, ol ul ul, ol ol ul { list-style-type: square; }
         dl { margin: 0 0 10px; }
         dt { font-weight: bold; }
         dd { margin-left: 40px; }
 
-        hr { border: 0; border-top: 1px solid #000; margin: 10px 0; }
+        hr { border: 0; border-top: 1px solid #333; height: 20px; margin: 20px 0 0 0; }
         hr.__se__dotted { border-top-style: dotted; }
         hr.__se__dashed { border-top-style: dashed; }
 
-        table { width: 100%; margin: 0 0 10px; }
-        td, th { border: 1px solid #e1e1e1; padding: 0.4em; vertical-align: middle; }
+        table { width: 100%; margin: 0; border: 1px solid #cecece; border-collapse: collapse; }
+        td, th { border: 1px solid #cecece; padding: 0.4em; vertical-align: middle; }
         th { font-weight: bold; text-align: center; background-color: #f3f3f3; }
         caption { text-align: center; }
 
@@ -112,7 +121,7 @@ final class DefaultStylesheet
         .__se__p-bordered { border-top: 1px solid #b1b1b1; border-bottom: 1px solid #b1b1b1; padding: 4px 0; }
         .__se__p-neon {
             font-weight: 200; font-style: italic; color: #fff; background-color: #000;
-            border: 1px solid #fff; padding: 6px 4px;
+            border: 2px solid #fff; padding: 6px 4px; text-transform: uppercase;
         }
         .__se__t-shadow { text-shadow: -0.2rem -0.2rem 1rem #fff, 0.2rem 0.2rem 1rem #fff, 0 0 0.2rem #999; }
         .__se__t-code { font-family: monospace; color: #666; background-color: rgba(27, 31, 35, 0.05); }

@@ -37,8 +37,13 @@ final class NumberingPart
 
                 $xml->open('w:lvl', ['w:ilvl' => $level->level])
                     ->leaf('w:start', ['w:val' => $level->start])
-                    ->leaf('w:numFmt', ['w:val' => $level->format])
-                    ->leaf('w:lvlText', ['w:val' => $text])
+                    ->leaf('w:numFmt', ['w:val' => $level->format]);
+
+                if ($level->suffix !== 'tab') {
+                    $xml->leaf('w:suff', ['w:val' => $level->suffix]);
+                }
+
+                $xml->leaf('w:lvlText', ['w:val' => $text])
                     ->leaf('w:lvlJc', ['w:val' => 'left'])
                     ->open('w:pPr')
                     ->leaf('w:ind', ['w:left' => $level->indentLeft, 'w:hanging' => $level->hanging])

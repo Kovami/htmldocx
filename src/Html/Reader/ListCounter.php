@@ -27,10 +27,14 @@ final class ListCounter
         private readonly int $step,
         private int $next,
         private readonly int $indentLeft,
-        private readonly int $hanging,
+        public readonly int $hanging,
+        private readonly string $suffix = 'tab',
     ) {}
 
-    public static function for(Element $list, NumberingRegistry $numbering, int $level, int $indentLeft, int $hanging): self
+    /**
+     * @param  string  $suffix  what follows the marker (ListLevel::$suffix): a space when the list sets its markers inside the first line
+     */
+    public static function for(Element $list, NumberingRegistry $numbering, int $level, int $indentLeft, int $hanging, string $suffix = 'tab'): self
     {
         $ordered = $list->localName === 'ol';
         $reversed = $ordered && $list->hasAttribute('reversed');
@@ -43,7 +47,7 @@ final class ListCounter
             ));
         }
 
-        return new self($numbering, $level, $ordered, $reversed ? -1 : 1, $start ?? 1, $indentLeft, $hanging);
+        return new self($numbering, $level, $ordered, $reversed ? -1 : 1, $start ?? 1, $indentLeft, $hanging, $suffix);
     }
 
     public function markerFor(Element $item, ComputedStyle $style): ListMarker
@@ -53,7 +57,7 @@ final class ListCounter
 
         if ($this->numId === null || $value !== $this->next || $type !== $this->numberedStyleType
             || $this->step < 0 || NumberingRegistry::isLiteral($type)) {
-            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $this->hanging);
+            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $this->hanging, $this->suffix);
             $this->numberedStyleType = $type;
         }
 

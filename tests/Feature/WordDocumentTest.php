@@ -33,9 +33,9 @@ it('paints a table styled from Word\'s gallery', function () {
         // The first body row is banded, the one after it is not.
         ->toContain('background-color: #dae3f3;')
         // The first column is bold, the last row has the style's double rule.
-        ->toContain('<strong>Выручка</strong>')
+        ->toMatch('~<strong[^>]*>Выручка</strong>~')
         ->toContain('border-top: 0.67px double #4472c4;')
-        ->toContain('<strong>600</strong>');
+        ->toMatch('~<strong[^>]*>600</strong>~');
 });
 
 it('keeps Word\'s footnotes and endnotes with their marks and text', function () {
@@ -53,12 +53,12 @@ it('keeps Word\'s footnotes and endnotes with their marks and text', function ()
 
 it('turns an Office Math equation into a KaTeX span', function () {
     expect(wordHtml())
-        ->toContain('class="__se__katex katex"')
-        ->toContain('data-exp="a^{2}+b^{2}=c^{2}"');
+        ->toContain('se-math katex"')
+        ->toContain('data-se-value="a^{2}+b^{2}=c^{2}"');
 });
 
 it('reads the text of a text box, whichever vocabulary Word used', function () {
-    expect(wordHtml())->toContain('<strong>Текст в надписи</strong>');
+    expect(wordHtml())->toMatch('~<strong[^>]*>Текст в надписи</strong>~');
 });
 
 it('writes a package Word can open back', function () {

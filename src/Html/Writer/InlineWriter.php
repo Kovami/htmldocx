@@ -266,6 +266,21 @@ final readonly class InlineWriter
     }
 
     /**
+     * A stylesheet that sets a line height on every element (SunEditor 3's
+     * does) would give a run its own, and a taller one grows the line: the run
+     * takes its paragraph's instead, as it does in Word.
+     */
+    private function inheritLineHeight(Element $element, ComputedStyle $paragraph): void
+    {
+        if (in_array($element->localName, ['sup', 'sub'], true)
+            || $this->context->resolver->resolve($element, $paragraph)->lineHeight == $paragraph->lineHeight) {
+            return;
+        }
+
+        $element->setAttribute('style', trim($element->getAttribute('style') . ' line-height: inherit;'));
+    }
+
+    /**
      * @param  array{tags: list<string>, css: array<string, string>}  $spec
      */
     private function wrappers(array $spec, Element $parent, ComputedStyle $parentStyle): Element
@@ -280,10 +295,12 @@ final readonly class InlineWriter
             $span = $this->context->element('span', $current);
             $span->setAttribute('style', CssFormatter::declarations($css));
             $current = $span;
+            $this->inheritLineHeight($current, $parentStyle);
         }
 
         foreach ($spec['tags'] as $tag) {
             $current = $this->context->element($tag, $current);
+            $this->inheritLineHeight($current, $parentStyle);
 
             // Word draws them at about two thirds of the size, without
             // making the line taller; a browser's are larger and push it.
@@ -368,11 +385,11 @@ final readonly class InlineWriter
             return;
         }
 
+        // SunEditor 3's math component; its KaTeX draws the formula when the editor loads it.
         $span = $this->context->element('span', $parent);
-        $span->setAttribute('class', '__se__katex katex');
+        $span->setAttribute('class', 'se-component se-inline-component se-disable-pointer se-math katex');
         $span->setAttribute('contenteditable', 'false');
-        $span->setAttribute('data-exp', $formula->latex);
-        $span->setAttribute('data-font-size', '1em');
+        $span->setAttribute('data-se-value', $formula->latex);
         $span->append($formula->latex);
     }
 

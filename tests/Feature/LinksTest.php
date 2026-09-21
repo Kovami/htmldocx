@@ -17,8 +17,8 @@ it('creates external hyperlinks', function () {
 
     expect(hyperlinkTarget($docx, $hyperlink))->toBe('https://example.com/path?q=1&x=2')
         ->and($docx->text($hyperlink))->toBe('our site')
-        ->and($docx->val('w:rPr/w:color', $docx->run('our site')))->toBe('004CFF')
-        ->and($docx->val('w:rPr/w:u', $docx->run('our site')))->toBe('single')
+        ->and($docx->val('w:rPr/w:color', $docx->run('our site')))->toBe('0056B3')
+        ->and($docx->val('w:rPr/w:u', $docx->run('our site')))->toBeNull()
         ->and($docx->paragraphTexts())->toBe(['Visit our site.']);
 });
 

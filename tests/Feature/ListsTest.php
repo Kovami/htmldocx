@@ -111,10 +111,22 @@ it('keeps inline formatting and line breaks inside list items', function () {
 });
 
 it('gives the marker a hanging indent', function () {
-    $ind = docx('<ul><li>item</li></ul>')->first('//w:p/w:pPr/w:ind');
+    $ind = docx('<ul><li>item</li></ul>', Kovami\HtmlDocx\HtmlDocx::plain(testOptions()))->first('//w:p/w:pPr/w:ind');
 
     expect(Docx::attr($ind, 'left'))->toBe('600')
         ->and(Docx::attr($ind, 'hanging'))->toBe('360');
+});
+
+it('sets a marker inside the first line as SunEditor 3 does: no hanging indent, a space after it', function () {
+    $docx = docx('<ul><li>item</li></ul>');
+    $ind = $docx->first('//w:p/w:pPr/w:ind');
+    $html = Kovami\HtmlDocx\HtmlDocx::for(Kovami\HtmlDocx\Editor::SunEditor, testOptions())->fromDocx($docx->bytes)->toHtml();
+
+    expect(Docx::attr($ind, 'left'))->toBe('600')
+        ->and(Docx::attr($ind, 'hanging'))->toBeNull()
+        ->and($docx->first('//w:abstractNum/w:lvl[@w:ilvl="0"]/w:suff', null, 'word/numbering.xml')?->getAttribute('w:val'))->toBe('space')
+        // Back in SunEditor it is its own kind of list again, with nothing to spell out.
+        ->and($html)->not->toContain('list-style-position');
 });
 
 it('formats the marker like the item text', function () {

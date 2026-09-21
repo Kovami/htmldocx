@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The SunEditor profile targets SunEditor 3** (3.3), the current release:
+  its content stylesheet (Helvetica Neue 16px, links without underline,
+  markers inside the first line, a line height on every element, tables
+  without margins), its math component (`span.se-math` with
+  `data-se-value`), its image attributes (`data-se-size`,
+  `data-se-file-name`) and the figure it scrolls tables in. SunEditor 2's
+  markup is still read (`__se__katex` with `data-exp`, `data-size`), but
+  HTML written for the SunEditor profile is now what SunEditor 3 loads; an
+  application still on SunEditor 2 should pass its own stylesheet
+  (`Options::$extraStylesheet`) or stay on 2.1.
+- The README's recommended SunEditor configuration is SunEditor 3's:
+  `externalLibs: { katex: { src: katex } }`, `elementWhitelist`,
+  `attributeWhitelist` and `strictMode` without its attribute and style
+  filters.
+
+### Added
+
+- Lists whose markers sit inside the first line (`list-style-position:
+  inside`) become Word lists with no hanging indent and a space after the
+  marker (`w:suff`), and such Word lists are written back that way.
+
 ### Fixed
 
 - A browser grows a line to hold a superscript or subscript, Word does not,

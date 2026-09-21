@@ -48,6 +48,11 @@ final readonly class TableWriter
             $figure = $this->context->element('figure', $parent);
             $figure->setAttribute('class', 'table');
             $parent = $figure;
+        } elseif ($this->context->editor === Editor::SunEditor) {
+            // SunEditor 3 scrolls a table in a figure of its own; written here, loading adds nothing.
+            $figure = $this->context->element('figure', $parent);
+            $figure->setAttribute('class', 'se-flex-component se-input-component se-scroll-figure-x');
+            $parent = $figure;
         }
 
         $element = $this->context->element('table', $parent);

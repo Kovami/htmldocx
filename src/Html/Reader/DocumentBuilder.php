@@ -406,7 +406,10 @@ final class DocumentBuilder
             $this->emitPendingMarker($flow, $sink);
 
             $context = $context->with([
-                'list' => ListCounter::for($element, $this->numbering, min(8, $parent->listDepth), $context->indentLeft, min(360, $context->indentLeft)),
+                // A marker inside the first line is Word's marker with no hanging indent, followed by a space.
+                'list' => $style->value('list-style-position') === 'inside'
+                    ? ListCounter::for($element, $this->numbering, min(8, $parent->listDepth), $context->indentLeft, 0, 'space')
+                    : ListCounter::for($element, $this->numbering, min(8, $parent->listDepth), $context->indentLeft, min(360, $context->indentLeft)),
                 'listDepth' => $parent->listDepth + 1,
                 'marker' => null,
             ]);
@@ -721,7 +724,7 @@ final class DocumentBuilder
         }
 
         $run = $this->mapper->run($style);
-        $linkRun = new RunProperties(...[...get_object_vars($run), 'color' => '004CFF', 'underline' => 'single']);
+        $linkRun = new RunProperties(...[...get_object_vars($run), 'color' => '0056B3', 'underline' => 'single']);
 
         $flow->buffer()->appendText($source, $linkRun, $style, $target);
     }
@@ -824,7 +827,8 @@ final class DocumentBuilder
             if ($context->marker !== null && ! $context->marker->consumed) {
                 $context->marker->consumed = true;
                 $properties->numbering = $context->marker->reference;
-                $properties->firstLine = -min(360, $context->indentLeft);
+                // A marker inside the first line hangs nowhere.
+                $properties->firstLine = $context->list?->hanging === 0 ? 0 : -min(360, $context->indentLeft);
             }
         }
 
@@ -850,6 +854,8 @@ final class DocumentBuilder
         $type = (string) $element->getAttribute('data-type');
 
         $latex = match (true) {
+            // SunEditor 3 keeps it in data-se-value, SunEditor 2 in data-exp.
+            $element->hasAttribute('data-se-value') && str_contains($class, ' se-math ') => $element->getAttribute('data-se-value'),
             $element->hasAttribute('data-exp') && str_contains($class, 'katex') => $element->getAttribute('data-exp'),
             $element->localName === 'math' => $element->querySelector('annotation[encoding="application/x-tex"]')?->textContent,
             $type === 'inline-math' || $type === 'block-math' => $element->getAttribute('data-latex'),
@@ -921,7 +927,8 @@ final class DocumentBuilder
      */
     private static function unwrapTableFigures(HtmlDocument $html): void
     {
-        foreach ($html->body()->querySelectorAll('figure.table') as $figure) {
+        // CKEditor's figure.table, and the figure SunEditor 3 scrolls a table in.
+        foreach ($html->body()->querySelectorAll('figure.table, figure.se-flex-component') as $figure) {
             $table = $figure->firstElementChild;
 
             if ($table?->localName !== 'table' || $table->nextElementSibling !== null) {

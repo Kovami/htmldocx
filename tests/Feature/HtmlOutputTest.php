@@ -87,8 +87,8 @@ it('writes formulas as the KaTeX spans the editor renders', function () {
     $source = '<p>f: <span class="__se__katex katex" contenteditable="false" data-exp="\sum_{i=1}^n i" data-font-size="1em">∑</span></p>';
 
     expect(html($source))
-        ->toContain('class="__se__katex katex"')
-        ->toContain('data-exp="\sum_{i=1}^n i"');
+        ->toContain('se-math katex"')
+        ->toContain('data-se-value="\sum_{i=1}^n i"');
 });
 
 it('keeps a formula through Word as an equation, not as its source text', function () {
@@ -99,8 +99,8 @@ it('keeps a formula through Word as an equation, not as its source text', functi
     expect(docx($source)->count('//m:oMath'))->toBe(2)
         ->and(docx($source)->paragraphTexts())->toBe(['f: '])
         ->and(roundTrip($source))
-        ->toContain('data-exp="\frac{a+b}{2}"')
-        ->toContain('data-exp="\sqrt[3]{x}"');
+        ->toContain('data-se-value="\frac{a+b}{2}"')
+        ->toContain('data-se-value="\sqrt[3]{x}"');
 });
 
 it('keeps a second paragraph of a list item inside the item', function () {
@@ -135,7 +135,7 @@ it('writes a picture-only paragraph as an image component', function () {
     expect($html)
         ->toContain('<div class="se-component se-image-container __se__float-right" contenteditable="false">')
         ->toContain('<figure style="margin: 0 0 0 auto; width: 40px;">')
-        ->toContain('data-size="40px,20px"')
+        ->toContain('data-se-size="40px,20px"')
         ->toContain('alt="chart"');
 });
 

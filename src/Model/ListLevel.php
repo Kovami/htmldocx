@@ -11,6 +11,7 @@ final readonly class ListLevel
      * @param  string  $text  level text, e.g. "%1." or "•"
      * @param  int  $indentLeft  twips
      * @param  int  $hanging  twips
+     * @param  string  $suffix  ST_LevelSuffix: what follows the marker — tab (to the text's indent), space or nothing
      */
     public function __construct(
         public int $level,
@@ -19,5 +20,6 @@ final readonly class ListLevel
         public int $start,
         public int $indentLeft,
         public int $hanging,
+        public string $suffix = 'tab',
     ) {}
 }
