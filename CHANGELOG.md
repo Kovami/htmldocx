@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-09-22
+
+A patch release. It undoes a 2.2.0 regression in the SunEditor profile
+(empty lines written as `&nbsp;`) and reads CKEditor's and TipTap's
+markup closer to how those editors show it. The API is unchanged.
+
+### Fixed
+
+- The SunEditor profile writes an empty paragraph, heading or list item as
+  `<br>` again, as 2.1 did and as SunEditor does (#12); 2.2.0 wrote `&nbsp;`,
+  so a document of empty lines had text. Only a table cell holding a single
+  empty line keeps the no-break space, which SunEditor 3 needs to keep it.
+
 ### Changed
 
 - The TipTap configuration the README recommends keeps `style` on pictures
@@ -19,13 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shows it: its figure's 0.9em above and below, centred when narrower than
   the page, and no margin above a cell's first paragraph or below its last.
   CKEditor tables, HTML -> DOCX: 89.3% -> 98.6% of ink in place (#10).
-
-### Fixed
-
-- The SunEditor profile writes an empty paragraph, heading or list item as
-  `<br>` again, as 2.1 did and as SunEditor does (#12); 2.2.0 wrote `&nbsp;`,
-  so a document of empty lines had text. Only a table cell holding a single
-  empty line keeps the no-break space, which SunEditor 3 needs to keep it.
 
 ## [2.2.0] - 2026-09-22
 
@@ -369,7 +375,8 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/kovami/htmldocx/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/kovami/htmldocx/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/kovami/htmldocx/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/kovami/htmldocx/compare/v2.0.0...v2.0.1
