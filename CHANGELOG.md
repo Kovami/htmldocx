@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The TipTap configuration the README recommends keeps `style` on pictures
+  too (`image` among the types of its `addGlobalAttributes` extension), and
+  the TipTap profile writes for it: a picture alone on a line spaced by a
+  multiple gets Word's room below it, as in the other profiles. Pictures
+  through TipTap, HTML -> DOCX: 26.4% -> 95.7% of ink in place (#9).
+
 ### Fixed
 
 - The SunEditor profile writes an empty paragraph, heading or list item as

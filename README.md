@@ -166,13 +166,13 @@ new Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, textColor: '222222'
 new Options(extraStylesheet: 'body { font-family: Georgia; } p { margin: 0 0 12px; }');
 ```
 
-**Editor configuration.** Editors drop what their schema does not know: out of the box CKEditor, TipTap and SunEditor keep a quarter to a half of the formatting this library writes (TinyMCE nearly all of it). With the plugins and allow-lists below they keep 97.7–99.7%, and what they hand back prints at 95.6–97.3% of the ink Word puts on the page (see the bench below). The exact configurations the bench uses live in [`bench/fidelity/editors`](bench/fidelity/editors).
+**Editor configuration.** Editors drop what their schema does not know: out of the box CKEditor, TipTap and SunEditor keep a quarter to a half of the formatting this library writes (TinyMCE nearly all of it). With the plugins and allow-lists below they keep 97.9–99.7%, and what they hand back prints at 95.9–97.3% of the ink Word puts on the page (see the bench below). The exact configurations the bench uses live in [`bench/fidelity/editors`](bench/fidelity/editors).
 
 | Editor | What it needs |
 | --- | --- |
 | CKEditor 5 | The `GeneralHtmlSupport` plugin, allowing every element with its styles, classes and attributes: `htmlSupport: { allow: [{ name: /.*/, styles: true, classes: true, attributes: true }] }`, next to the table, list, image, link, block-quote and code-block plugins |
 | TinyMCE | The `lists`, `advlist`, `table`, `link` and `image` plugins; it keeps the rest of the markup as it is |
-| TipTap | `StarterKit` with `TableKit`, `TextStyleKit`, `TextAlign`, `Image` (`inline: true`, `allowBase64: true`), `Subscript`, `Superscript`, `Highlight`, `Mathematics` — and an extension that keeps `style` and `id` on blocks (`addGlobalAttributes`), which TipTap drops unless a node declares them |
+| TipTap | `StarterKit` with `TableKit`, `TextStyleKit`, `TextAlign`, `Image` (`inline: true`, `allowBase64: true`), `Subscript`, `Superscript`, `Highlight`, `Mathematics` — and an extension that keeps `style` and `id` on blocks and pictures (`addGlobalAttributes`, `image` among its types), which TipTap drops unless a node declares them |
 | SunEditor 3 | All of its plugins, KaTeX as `externalLibs: { katex: { src: katex } }`, `elementWhitelist: 'section\|colgroup\|col'`, `attributeWhitelist: { '*': 'style\|id\|role\|start\|value\|data-[^\\s]+' }`, and `strictMode` with `attrFilter: false` and `styleFilter: false` (its other filters stay on) |
 
 ## How close it looks
@@ -195,11 +195,11 @@ Share of the ink in place within 1.33 pt, higher is better.
 | Fonts and typography | 98.1% | 98.1% | 98.2% | 98.1% | 85.5% |
 | Lists | 96.2% | 96.2% | 96.2% | 96.2% | 96.3% |
 | Tables | 92.4% | 92.4% | 92.4% | 92.4% | 92.4% |
-| Pictures | 100.0% | 92.1% | 100.0% | 100.0% | 97.9% |
+| Pictures | 100.0% | 92.1% | 100.0% | 100.0% | 100.0% |
 | A six-page report | 97.7% | 97.7% | 97.7% | 97.7% | 97.6% |
 | Footnotes and endnotes | 99.7% | 99.7% | 99.7% | 99.7% | 99.7% |
 | Headers, footers, comments | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
-| **Mean** | **97.3%** | **96.1%** | **97.0%** | **97.3%** | **95.6%** |
+| **Mean** | **97.3%** | **96.1%** | **97.0%** | **97.3%** | **95.9%** |
 
 **HTML → DOCX**: the editor's own HTML shown in Chromium with its content stylesheet, against Word's print of the DOCX the library writes from it.
 
@@ -208,8 +208,8 @@ Share of the ink in place within 1.33 pt, higher is better.
 | Text and character formatting | 96.3% | 92.4% | 97.0% | 19.3% | 96.3% |
 | Lists | 92.6% | 94.4% | 96.9% | 31.3% | 94.0% |
 | Tables | 99.4% | 97.4% | 89.3% | 59.0% | 98.2% |
-| Pictures | 95.7% | 97.3% | 98.0% | 69.1% | 26.4% |
-| **Mean** | **96.0%** | **95.4%** | **95.3%** | **44.7%** | **78.7%** |
+| Pictures | 95.7% | 97.3% | 98.0% | 69.1% | 95.7% |
+| **Mean** | **96.0%** | **95.4%** | **95.3%** | **44.7%** | **96.0%** |
 <!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.
@@ -406,7 +406,7 @@ A few differences are the two engines disagreeing, not the conversion losing any
 
 - a browser draws a border thinner than a pixel as a whole one, which makes every table row a fraction of a point taller than Word's;
 - CSS puts a list marker next to its text, Word at the hanging indent;
-- an editor that drops formatting it does not model drops it before the library sees it — TipTap keeps no `style` on pictures (percent widths, floats) and no letter spacing, TinyMCE no tabs inside code blocks.
+- an editor that drops formatting it does not model drops it before the library sees it — TipTap keeps no letter spacing (and no `style` on pictures without the extension above), TinyMCE no tabs inside code blocks.
 
 ## Round trips
 

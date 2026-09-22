@@ -13,12 +13,12 @@ import TextAlign from '@tiptap/extension-text-align';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import StarterKit from '@tiptap/starter-kit';
 
-/** Keeps the inline style and id of blocks, which TipTap drops unless a node declares them. */
+/** Keeps the inline style and id of blocks and pictures, which TipTap drops unless a node declares them. */
 const KeepBlockStyles = Extension.create({
     name: 'keepBlockStyles',
     addGlobalAttributes() {
         return [{
-            types: ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'table', 'tableRow', 'tableCell', 'tableHeader', 'blockquote'],
+            types: ['paragraph', 'heading', 'image', 'bulletList', 'orderedList', 'listItem', 'table', 'tableRow', 'tableCell', 'tableHeader', 'blockquote'],
             attributes: Object.fromEntries(['style', 'id'].map((name) => [name, {
                 default: null,
                 parseHTML: (element) => element.getAttribute(name),

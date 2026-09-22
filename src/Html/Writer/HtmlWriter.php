@@ -592,8 +592,7 @@ final class HtmlWriter
      */
     private function pictureLineExtra(array $children, ParagraphProperties $properties): array
     {
-        // TipTap drops a picture's style: it stays on the baseline, where the gap below is about the extra already.
-        $extra = self::standsOnLineBottom($children, $properties) && $this->context->editor !== Editor::TipTap ? $this->multipleExtra($properties) : 0.0;
+        $extra = self::standsOnLineBottom($children, $properties) ? $this->multipleExtra($properties) : 0.0;
 
         return $extra > 0 ? ['padding-bottom' => $this->context->css->points($extra)] : [];
     }
