@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The SunEditor profile writes an empty paragraph, heading or list item as
+  `<br>` again, as 2.1 did and as SunEditor does (#12); 2.2.0 wrote `&nbsp;`,
+  so a document of empty lines had text. Only a table cell holding a single
+  empty line keeps the no-break space, which SunEditor 3 needs to keep it.
+
 ## [2.2.0] - 2026-09-22
 
 A release about SunEditor 3 and fidelity. The API is unchanged. The

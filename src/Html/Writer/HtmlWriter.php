@@ -306,12 +306,7 @@ final class HtmlWriter
             $last = $last->children === [] ? null : $last->children[count($last->children) - 1];
         }
 
-        // SunEditor 3 drops an empty line with only a <br> in a table cell, and the
-        // style of a <br> anywhere, so its empty line holds a no-break space instead
-        // (which the reader reads as empty, as editors write it).
-        if ($visible === [] && $this->context->editor === Editor::SunEditor) {
-            $element->append("\u{00A0}");
-        } elseif ($visible === [] || $last instanceof BreakRun) {
+        if ($visible === [] || $last instanceof BreakRun) {
             $this->inlines->inheritLineHeight($this->context->element('br', $element), $style);
         }
     }

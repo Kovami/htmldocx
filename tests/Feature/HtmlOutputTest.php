@@ -26,11 +26,16 @@ it('spells out every block\'s formatting, even what the editor\'s stylesheet alr
 });
 
 it('keeps an empty paragraph visible and as tall as its paragraph mark', function () {
-    // A no-break space: SunEditor 3 drops an empty line holding only <br> in a cell, and styles on <br>.
     expect(markup(html('<p>a</p><p><br></p>')))
-        ->toBe("<p>a</p>\n<p>&nbsp;</p>")
+        ->toBe("<p>a</p>\n<p><br></p>")
         ->and(markup(HtmlDocx::plain(testOptions())->fromHtml('<p>a</p><p><br></p>')->toHtml()))
         ->toBe("<p>a</p>\n<p><br></p>");
+});
+
+it('holds a SunEditor cell\'s lone empty line with a no-break space', function () {
+    // SunEditor 3 turns <td><div><br></div></td> into <td><br></td>, losing the line's size.
+    expect(markup(html('<table><tr><td><p><br></p></td><td><p>a</p><p><br></p></td></tr></table>')))
+        ->toContain('<td><div>&nbsp;</div></td><td><div>a</div><div><br></div></td>');
 });
 
 it('doubles a trailing line break, which HTML would otherwise drop', function () {

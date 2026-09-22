@@ -200,6 +200,15 @@ final readonly class TableWriter
         // Plain HTML's cell lines are paragraphs, which editors keep; SunEditor's are divs.
         ($this->writeBlocks)($cell->blocks, $element, $style, $this->context->plain ? 'p' : 'div', $contentWidth);
 
+        // SunEditor 3 turns a cell holding one empty line, <div><br></div>, into a bare
+        // <br> with the cell's font and its own line height; it keeps a no-break space,
+        // which the reader reads as an empty line.
+        $line = $element->firstElementChild;
+        if ($this->context->editor === Editor::SunEditor && $element->childElementCount === 1
+            && $line?->childNodes->length === 1 && $line->firstElementChild?->localName === 'br') {
+            $line->replaceChildren("\u{00A0}");
+        }
+
         return $element;
     }
 
