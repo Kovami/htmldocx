@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The TipTap configuration the README recommends keeps `style` on pictures
-  too (`image` among the types of its `addGlobalAttributes` extension), and
-  the TipTap profile writes for it: a picture alone on a line spaced by a
-  multiple gets Word's room below it, as in the other profiles. Pictures
-  through TipTap, HTML -> DOCX: 26.4% -> 95.7% of ink in place (#9).
+  and on super- and subscripts, and letter spacing on `textStyle`, and the
+  TipTap profile writes for it: a picture alone on a line spaced by a
+  multiple gets Word's room below it, as in the other profiles. Through
+  TipTap, pictures HTML -> DOCX 26.4% -> 95.7% of ink in place, typography
+  DOCX -> HTML 85.5% -> 98.2% (#9).
 
 ### Fixed
 

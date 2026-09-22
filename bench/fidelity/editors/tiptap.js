@@ -13,17 +13,26 @@ import TextAlign from '@tiptap/extension-text-align';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import StarterKit from '@tiptap/starter-kit';
 
-/** Keeps the inline style and id of blocks and pictures, which TipTap drops unless a node declares them. */
+/** Keeps the inline style and id of blocks, pictures and scripts, and letter spacing, which TipTap drops unless a node or mark declares them. */
 const KeepBlockStyles = Extension.create({
     name: 'keepBlockStyles',
     addGlobalAttributes() {
         return [{
-            types: ['paragraph', 'heading', 'image', 'bulletList', 'orderedList', 'listItem', 'table', 'tableRow', 'tableCell', 'tableHeader', 'blockquote'],
+            types: ['paragraph', 'heading', 'image', 'bulletList', 'orderedList', 'listItem', 'table', 'tableRow', 'tableCell', 'tableHeader', 'blockquote', 'superscript', 'subscript'],
             attributes: Object.fromEntries(['style', 'id'].map((name) => [name, {
                 default: null,
                 parseHTML: (element) => element.getAttribute(name),
                 renderHTML: (attributes) => (attributes[name] ? { [name]: attributes[name] } : {}),
             }])),
+        }, {
+            types: ['textStyle'],
+            attributes: {
+                letterSpacing: {
+                    default: null,
+                    parseHTML: (element) => element.style.letterSpacing || null,
+                    renderHTML: (attributes) => (attributes.letterSpacing ? { style: `letter-spacing: ${attributes.letterSpacing}` } : {}),
+                },
+            },
         }];
     },
 });
