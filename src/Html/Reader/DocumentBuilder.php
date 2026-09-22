@@ -967,6 +967,11 @@ final class DocumentBuilder
                 $table->setAttribute('style', rtrim("width: {$width}; " . ltrim($style, '; '), '; ') . ';');
             }
 
+            // CKEditor's stylesheet sets the figure's margins by its class, which the table takes over.
+            if (str_contains(' ' . $figure->getAttribute('class') . ' ', ' table ')) {
+                $table->setAttribute('class', trim($table->getAttribute('class') . ' ' . $figure->getAttribute('class')));
+            }
+
             $figure->replaceWith($table);
         }
     }

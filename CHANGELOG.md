@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   multiple gets Word's room below it, as in the other profiles. Through
   TipTap, pictures HTML -> DOCX 26.4% -> 95.7% of ink in place, typography
   DOCX -> HTML 85.5% -> 98.2% (#9).
+- The CKEditor profile reads a table the way CKEditor's content stylesheet
+  shows it: its figure's 0.9em above and below, centred when narrower than
+  the page, and no margin above a cell's first paragraph or below its last.
+  CKEditor tables, HTML -> DOCX: 89.3% -> 98.6% of ink in place (#10).
 
 ### Fixed
 

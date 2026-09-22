@@ -88,7 +88,7 @@ it('reads an editor\'s empty paragraph as empty', function () {
     expect($blocks[1]->children)->toBe([]);
 });
 
-it('reads a CKEditor table figure as the table, with the figure\'s width', function () {
+it('reads a CKEditor table figure as the table, with the figure\'s width and margins', function () {
     $document = HtmlDocx::for(Editor::CKEditor, testOptions())->fromHtml(
         '<p>Before</p><figure class="table" style="width: 50%;"><table><tbody><tr><td>cell</td></tr></tbody></table></figure>',
     )->document();
@@ -96,7 +96,9 @@ it('reads a CKEditor table figure as the table, with the figure\'s width', funct
 
     expect($table)->toBeInstanceOf(Kovami\HtmlDocx\Model\Table::class)
         ->and($table->properties->width)->toBe(intdiv($document->pageLayout->contentWidthTwips(), 2))
-        ->and($table->marginTop)->toBe(0);
+        // CKEditor's figure.table: 0.9em above and below, centred; the space collapses with the paragraph's 1em.
+        ->and($table->properties->alignment)->toBe('center')
+        ->and($table->marginTop)->toBeGreaterThan(0);
 });
 
 it('reads CKEditor\'s cells with the borders its content stylesheet draws', function () {

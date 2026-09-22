@@ -182,6 +182,10 @@ final class DefaultStylesheet
         table { border: 1px double #b3b3b3; border-collapse: collapse; }
         td, th { border: 1px solid #bfbfbf; padding: 0.4em; vertical-align: middle; }
         th { background-color: #f2f2f2; }
+        /* figure.table, whose class the table takes over when the reader unwraps it */
+        table.table:not(.layout-table) { margin: 0.9em auto; }
+        table.table:not(.layout-table) > * > tr > * > p:first-of-type { margin-top: 0; }
+        table.table:not(.layout-table) > * > tr > * > p:last-of-type { margin-bottom: 0; }
         blockquote { margin-left: 0; margin-right: 0; padding-left: 1.5em; padding-right: 1.5em; font-style: italic; border-left: 5px solid #cccccc; overflow: hidden; }
         .image { display: table; clear: both; text-align: center; margin: 0.9em auto; }
         .image img { display: block; margin: 0 auto; max-width: 100%; }
