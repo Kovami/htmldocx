@@ -163,6 +163,7 @@ final class Numbering
                     hanging: max(0, -($level->paragraph->firstLine ?? 0)),
                     suffix: $level->suffix,
                     symbolBullet: strtolower((string) $level->font) === 'symbol',
+                    markerTab: $level->markerTab,
                 );
             }
 
@@ -263,9 +264,22 @@ final class Numbering
             paragraphStyleId: Xml::val($lvl, 'pStyle'),
             font: $symbolFont,
             suffix: Xml::val($lvl, 'suff') ?? 'tab',
+            markerTab: self::markerTab(Xml::child(Xml::child($lvl, 'pPr'), 'tabs')),
             paragraph: $this->parser->paragraph(Xml::child($lvl, 'pPr')),
             run: $run,
         );
+    }
+
+    /** The level's own tab stop for the text after its marker (`w:tab w:val="num"`). */
+    private static function markerTab(?Element $tabs): ?int
+    {
+        foreach (Xml::children($tabs, 'tab') as $tab) {
+            if (Xml::attr($tab, 'val') === 'num') {
+                return Xml::int(Xml::attr($tab, 'pos'));
+            }
+        }
+
+        return null;
     }
 
     /** Bullets drawn from symbol fonts are private-use or Latin-1 code points; map them to real characters. */

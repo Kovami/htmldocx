@@ -26,5 +26,6 @@ final readonly class NumberingLevel
         public RunFormat $run = new RunFormat(),
         public string $suffix = 'tab',
         public ?string $font = null,
+        public ?int $markerTab = null,
     ) {}
 }

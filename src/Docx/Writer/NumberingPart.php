@@ -46,8 +46,13 @@ final class NumberingPart
 
                 $xml->leaf('w:lvlText', ['w:val' => $text])
                     ->leaf('w:lvlJc', ['w:val' => 'left'])
-                    ->open('w:pPr')
-                    ->leaf('w:ind', ['w:left' => $level->indentLeft, 'w:hanging' => $level->hanging])
+                    ->open('w:pPr');
+
+                if ($level->markerTab !== null) {
+                    $xml->open('w:tabs')->leaf('w:tab', ['w:val' => 'num', 'w:pos' => $level->markerTab])->close();
+                }
+
+                $xml->leaf('w:ind', ['w:left' => $level->indentLeft, 'w:hanging' => $level->hanging])
                     ->close();
 
                 if ($font !== null) {

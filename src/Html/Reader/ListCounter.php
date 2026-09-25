@@ -6,6 +6,7 @@ namespace Kovami\HtmlDocx\Html\Reader;
 
 use Dom\Element;
 use Kovami\HtmlDocx\Css\ComputedStyle;
+use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Model\NumberingReference;
 
 /**
@@ -21,6 +22,8 @@ final class ListCounter
     private ?string $numberedStyleType = null;
 
     private bool $symbol = false;
+
+    private ?int $markerTab = null;
 
     /** The value the current definition numbers next. */
     private ?int $continues = null;
@@ -61,7 +64,7 @@ final class ListCounter
         $type = $style->listStyleType;
         $this->next = $value + $this->step;
 
-        return new ListMarker(fn(bool $symbol): NumberingReference => $this->reference($value, $type, $symbol));
+        return new ListMarker(fn(bool $symbol): NumberingReference => $this->reference($value, $type, $symbol, $style->fontSizePt));
     }
 
     /**
@@ -69,15 +72,22 @@ final class ListCounter
      *
      * @param  bool  $symbol  whether the paragraph carries HtmlWriter's padding for Word's Symbol bullet
      */
-    private function reference(int $value, string $type, bool $symbol): NumberingReference
+    private function reference(int $value, string $type, bool $symbol, float $fontSizePt): NumberingReference
     {
         $symbol = $symbol && $type === 'disc';
+        // A browser draws a disc, circle or square inside the line as a shape and starts the text
+        // 1.3125em + 0.64pt after it (measured in Chromium, whatever the font); Word's space after
+        // its bullet is far narrower, so a tab of the level's own stands in for it.
+        $markerTab = $this->suffix === 'space' && in_array($type, ['disc', 'circle', 'square'], true)
+            ? $this->indentLeft + Length::pointsToTwips(1.3125 * $fontSizePt + 0.64)
+            : null;
 
         if ($this->numId === null || $value !== $this->continues || $type !== $this->numberedStyleType || $symbol !== $this->symbol
-            || $this->step < 0 || NumberingRegistry::isLiteral($type)) {
-            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $this->hanging, $this->suffix, $symbol);
+            || $markerTab !== $this->markerTab || $this->step < 0 || NumberingRegistry::isLiteral($type)) {
+            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $this->hanging, $markerTab === null ? $this->suffix : 'tab', $symbol, $markerTab);
             $this->numberedStyleType = $type;
             $this->symbol = $symbol;
+            $this->markerTab = $markerTab;
         }
 
         $this->continues = $value + $this->step;

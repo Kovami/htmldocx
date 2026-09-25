@@ -118,15 +118,27 @@ it('gives the marker a hanging indent', function () {
         ->and(Docx::attr($ind, 'hanging'))->toBe('360');
 });
 
-it('sets a marker inside the first line as SunEditor 3 does: no hanging indent, a space after it', function () {
-    $docx = docx('<ul><li>item</li></ul>');
+it('sets a number inside the first line as SunEditor 3 does: no hanging indent, a space after it', function () {
+    $docx = docx('<ol><li>item</li></ol>');
     $ind = $docx->first('//w:p/w:pPr/w:ind');
     $html = Kovami\HtmlDocx\HtmlDocx::for(Kovami\HtmlDocx\Editor::SunEditor, testOptions())->fromDocx($docx->bytes)->toHtml();
 
     expect(Docx::attr($ind, 'left'))->toBe('600')
         ->and(Docx::attr($ind, 'hanging'))->toBeNull()
-        ->and($docx->first('//w:abstractNum/w:lvl[@w:ilvl="0"]/w:suff', null, 'word/numbering.xml')?->getAttribute('w:val'))->toBe('space')
+        ->and($docx->val('//w:abstractNum/w:lvl[@w:ilvl="0"]/w:suff', null, 'word/numbering.xml'))->toBe('space')
         // Back in SunEditor it is its own kind of list again, with nothing to spell out.
+        ->and($html)->not->toContain('list-style-position');
+});
+
+it('starts the text after a bullet inside the first line where a browser does', function () {
+    // Chromium draws the disc as a shape and starts the text 1.3125em + 0.64pt on: 15.08pt at 11pt.
+    $docx = docx('<ul><li>item</li></ul>');
+    $level = $docx->first('//w:abstractNum/w:lvl[@w:ilvl="0"]', null, 'word/numbering.xml');
+    $html = Kovami\HtmlDocx\HtmlDocx::for(Kovami\HtmlDocx\Editor::SunEditor, testOptions())->fromDocx($docx->bytes)->toHtml();
+
+    expect($docx->first('w:suff', $level, 'word/numbering.xml'))->toBeNull()
+        ->and(Docx::attr($docx->first('w:pPr/w:tabs/w:tab', $level, 'word/numbering.xml'), 'pos'))->toBe('902')
+        ->and(Docx::attr($docx->first('w:pPr/w:ind', $level, 'word/numbering.xml'), 'hanging'))->toBe('0')
         ->and($html)->not->toContain('list-style-position');
 });
 

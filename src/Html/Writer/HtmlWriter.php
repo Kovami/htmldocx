@@ -784,8 +784,10 @@ final class HtmlWriter
             $list->setAttribute('start', (string) $start);
         }
 
-        // Word hangs the marker in the indent unless a space follows it, which sets it inside the first line.
-        $inside = ($this->context->document->list($numId)->levels[$level] ?? null)?->suffix === 'space';
+        // Word hangs the marker in the indent unless a space follows it, or a tab to a stop of the
+        // level's own with nothing hanging (what a browser's drawn bullet inside the line becomes).
+        $definition = $this->context->document->list($numId)->levels[$level] ?? null;
+        $inside = $definition?->suffix === 'space' || ($definition?->markerTab !== null && $definition->hanging === 0);
 
         $style = $this->context->style($list, $hostStyle, function (ComputedStyle $editor) use ($marker, $padding, $inside): array {
             $css = [];
