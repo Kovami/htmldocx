@@ -740,8 +740,9 @@ final class DocumentBuilder
             spacingBefore: Length::pointsToTwips(max(0, $style->lengthPt('margin-top', $percentBase) ?? 0)),
             // The rule's own height (SunEditor gives it 20px) is empty room under its line.
             spacingAfter: Length::pointsToTwips(max(0, $style->lengthPt('margin-bottom', $percentBase) ?? 0) + max(0, $style->lengthPt('height') ?? 0)),
-            lineSpacing: 240,
-            lineRule: 'auto',
+            // No line of its own: the rule is only its border, as in a browser.
+            lineSpacing: 1,
+            lineRule: 'exact',
             borders: new BorderSet(bottom: $border),
             markRunProperties: new RunProperties(size: 2),
         )));

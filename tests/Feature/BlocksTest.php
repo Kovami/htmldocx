@@ -142,7 +142,12 @@ it('keeps the room a horizontal rule\'s height leaves under its line', function 
     // SunEditor's hr is 20px tall with no margin below: 15pt under the line.
     $docx = docx('<p>above</p><hr><p>below</p>');
 
-    expect(Docx::attr($docx->first('//w:pBdr/w:bottom/../../w:spacing'), 'after'))->toBe('300');
+    $spacing = $docx->first('//w:pBdr/w:bottom/../../w:spacing');
+
+    // The rule is its border alone, as in a browser: its line is one twip, exactly.
+    expect(Docx::attr($spacing, 'after'))->toBe('300')
+        ->and(Docx::attr($spacing, 'line'))->toBe('1')
+        ->and(Docx::attr($spacing, 'lineRule'))->toBe('exact');
 });
 
 it('spaces a generic monospace block by the font a browser draws for it, not the one Word gets', function () {
