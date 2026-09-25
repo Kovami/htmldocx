@@ -166,6 +166,8 @@ new Options(fontFamily: 'Times New Roman', fontSizePt: 12.0, textColor: '222222'
 new Options(extraStylesheet: 'body { font-family: Georgia; } p { margin: 0 0 12px; }');
 ```
 
+A generic family — `monospace`, `sans-serif`, `serif` — reaches Word as Courier New, Arial or Times New Roman, and its lines are spaced as Chromium on macOS draws it, in Courier, Helvetica or Times.
+
 **Editor configuration.** Editors drop what their schema does not know: out of the box CKEditor, TipTap and SunEditor keep a quarter to a half of the formatting this library writes (TinyMCE nearly all of it). With the plugins and allow-lists below they keep 97.9–99.7%, and what they hand back prints at 96.1–97.3% of the ink Word puts on the page (see the bench below). The exact configurations the bench uses live in [`bench/fidelity/editors`](bench/fidelity/editors).
 
 | Editor | What it needs |
@@ -205,11 +207,11 @@ Share of the ink in place within 1.33 pt, higher is better.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | 96.5% | 94.2% | 97.0% | 19.4% | 96.5% |
-| Lists | 93.5% | 99.9% | 96.9% | 31.3% | 94.9% |
-| Tables | 99.4% | 97.7% | 98.6% | 59.1% | 98.2% |
-| Pictures | 99.6% | 97.3% | 98.0% | 69.1% | 99.5% |
-| **Mean** | **97.2%** | **97.3%** | **97.6%** | **44.7%** | **97.3%** |
+| Text and character formatting | 96.8% | 96.7% | 97.0% | 19.5% | 96.8% |
+| Lists | 93.5% | 100.0% | 96.9% | 31.3% | 94.9% |
+| Tables | 99.4% | 98.5% | 98.7% | 59.1% | 98.2% |
+| Pictures | 99.6% | 97.3% | 98.2% | 69.1% | 99.5% |
+| **Mean** | **97.3%** | **98.1%** | **97.7%** | **44.7%** | **97.4%** |
 <!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.

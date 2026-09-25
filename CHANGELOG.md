@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.3] - 2026-09-25
+
+A patch release about line spacing in HTML -> DOCX: where a paragraph's
+text sits in Word against where the browser shows it. The API is unchanged;
+`ComputedStyle` gains `$browserFamily`.
+
+### Fixed
+
+- Helvetica Neue's bold face is spaced by its own metrics: Word's single
+  line is 1.221em in it against 1.193em in the regular face. It is
+  SunEditor's font, and its headings and header cells are bold.
+- Text in a table cell is lowered to where a browser shows it, out of the
+  cell's bottom margin, so the row keeps its height; the cell a vertical
+  merge continues into gives up as much, since Word sizes the row by it too.
+  Before, the lowering had nothing to come back from and was undone.
+- A generic family (`monospace`, `sans-serif`, `serif`) is spaced as
+  Chromium on macOS draws it, in Courier, Helvetica or Times, while Word
+  still gets Courier New, Arial or Times New Roman; the baseline is worked
+  out with each side's own font. A plain `<pre>` came into Word 0.3pt
+  higher on every line.
+- A horizontal rule is its border alone in Word, as in a browser, without
+  the 1-2pt line of its paragraph mark.
+
+HTML -> DOCX, SunEditor: text 94.2% -> 96.7%, lists 99.9% -> 100.0%, tables
+97.7% -> 98.5% of ink in place; plain and TipTap text 96.5% -> 96.8%. Means:
+plain 97.2% -> 97.3%, SunEditor 97.3% -> 98.1%, CKEditor 97.6% -> 97.7%,
+TipTap 97.3% -> 97.4%. DOCX -> HTML does not change.
+
 ## [2.2.2] - 2026-09-25
 
 A patch release about text and character formatting, and about SunEditor,
@@ -416,7 +444,8 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.2...HEAD
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.3...HEAD
+[2.2.3]: https://github.com/kovami/htmldocx/compare/v2.2.2...v2.2.3
 [2.2.2]: https://github.com/kovami/htmldocx/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/kovami/htmldocx/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/kovami/htmldocx/compare/v2.1.0...v2.2.0
