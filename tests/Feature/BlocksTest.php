@@ -137,6 +137,13 @@ it('renders horizontal rules as a bottom-bordered paragraph', function (string $
         ->and(Docx::attr($docx->first('//w:pBdr/w:bottom'), 'val'))->toBe($style);
 })->with([['__se__solid', 'single'], ['__se__dotted', 'dotted'], ['__se__dashed', 'dashed']]);
 
+it('keeps the room a horizontal rule\'s height leaves under its line', function () {
+    // SunEditor's hr is 20px tall with no margin below: 15pt under the line.
+    $docx = docx('<p>above</p><hr><p>below</p>');
+
+    expect(Docx::attr($docx->first('//w:pBdr/w:bottom/../../w:spacing'), 'after'))->toBe('300');
+});
+
 it('honours page breaks', function () {
     $docx = docx('<p>one</p><p style="page-break-before: always">two</p><p style="break-after: page">three</p><p>four</p>');
 

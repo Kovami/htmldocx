@@ -673,7 +673,8 @@ final class DocumentBuilder
             indentLeft: $flow->context->indentLeft,
             indentRight: $flow->context->indentRight,
             spacingBefore: Length::pointsToTwips(max(0, $style->lengthPt('margin-top', $percentBase) ?? 0)),
-            spacingAfter: Length::pointsToTwips(max(0, $style->lengthPt('margin-bottom', $percentBase) ?? 0)),
+            // The rule's own height (SunEditor gives it 20px) is empty room under its line.
+            spacingAfter: Length::pointsToTwips(max(0, $style->lengthPt('margin-bottom', $percentBase) ?? 0) + max(0, $style->lengthPt('height') ?? 0)),
             lineSpacing: 240,
             lineRule: 'auto',
             borders: new BorderSet(bottom: $border),
