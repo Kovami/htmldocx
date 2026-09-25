@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Kovami\HtmlDocx\Config\PageLayout;
+use Kovami\HtmlDocx\HtmlDocx;
 use Kovami\HtmlDocx\Tests\Support\Docx;
 
 it('maps headings to Word heading styles with outline levels', function (int $level) {
@@ -142,6 +143,15 @@ it('keeps the room a horizontal rule\'s height leaves under its line', function 
     $docx = docx('<p>above</p><hr><p>below</p>');
 
     expect(Docx::attr($docx->first('//w:pBdr/w:bottom/../../w:spacing'), 'after'))->toBe('300');
+});
+
+it('spaces a generic monospace block by the font a browser draws for it, not the one Word gets', function () {
+    // Chromium on macOS draws monospace in Courier, whose normal line is 1.15em; Word gets Courier New, 1.1328em.
+    $docx = docx('<p style="font-family: monospace">code</p>', HtmlDocx::plain(testOptions()));
+    $spacing = $docx->first('w:pPr/w:spacing', $docx->paragraph('code'));
+
+    expect(Docx::attr($docx->first('w:rPr/w:rFonts', $docx->run('code')), 'ascii'))->toBe('Courier New')
+        ->and(Docx::attr($spacing, 'line'))->toBe('244');
 });
 
 it('honours page breaks', function () {

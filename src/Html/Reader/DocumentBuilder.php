@@ -12,6 +12,7 @@ use Kovami\HtmlDocx\Config\PageLayout;
 use Kovami\HtmlDocx\Css\ComputedStyle;
 use Kovami\HtmlDocx\Css\FontMetrics;
 use Kovami\HtmlDocx\Css\Length;
+use Kovami\HtmlDocx\Css\LineHeight;
 use Kovami\HtmlDocx\Css\StyleResolver;
 use Kovami\HtmlDocx\Html\Writer\InlineWriter;
 use Kovami\HtmlDocx\Model\Block;
@@ -613,6 +614,17 @@ final class DocumentBuilder
     }
 
     /**
+     * The line height to give Word: `normal` in a generic family is the
+     * browser's font's normal line, which Word's font for it does not have.
+     */
+    private static function lineHeight(ComputedStyle $style): ?LineHeight
+    {
+        $normal = $style->lineHeight === null ? FontMetrics::browserNormal($style) : null;
+
+        return $normal === null ? $style->lineHeight : LineHeight::multiple($normal);
+    }
+
+    /**
      * @param  list<Inline>  $children
      */
     private static function pictureOnly(array $children): bool
@@ -646,7 +658,7 @@ final class DocumentBuilder
     private function bulletLine(ComputedStyle $style): float
     {
         $ascent = FontMetrics::ascent($style->fontFamily);
-        [$spacing, $rule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
+        [$spacing, $rule] = $this->mapper->lineSpacing(self::lineHeight($style), FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
 
         // Only a bullet drawn in Symbol grows the line, and the writer marks one by padding it (see ListCounter).
         if ($style->listStyleType !== 'disc' || $ascent === null || ($rule ?? 'auto') !== 'auto' || ($style->lengthPt('padding-top') ?? 0.0) <= 0) {
@@ -752,7 +764,7 @@ final class DocumentBuilder
             if ($float === null && ! $style->isBlockLevel() && in_array($style->value('vertical-align'), [null, 'baseline'], true)) {
                 $block = $flow->style;
                 $lineHeight = $block->lineHeight === null ? null : ($block->lineHeight->multiple !== null ? $block->lineHeight->multiple * $block->fontSizePt : $block->lineHeight->points);
-                $flow->buffer()->pictureGap = max($flow->buffer()->pictureGap, FontMetrics::belowBaseline($block->fontFamily, $block->fontSizePt, $lineHeight, $block->bold) ?? 0.0);
+                $flow->buffer()->pictureGap = max($flow->buffer()->pictureGap, FontMetrics::belowBaseline($block->fontFamily, $block->fontSizePt, $lineHeight, $block->bold, $block->browserFamily) ?? 0.0);
             }
 
             // A picture in a figure set apart by auto margins, or set apart
@@ -866,7 +878,7 @@ final class DocumentBuilder
 
         if ($properties === null) {
             // A multiple of the font size is Word's multiple of the font's own single line; see HtmlWriter.
-            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
+            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing(self::lineHeight($style), FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
 
             $properties = new ParagraphProperties(
                 styleId: $context->styleId,
@@ -887,7 +899,7 @@ final class DocumentBuilder
             // Where the browser shows the text relative to Word, less what the
             // HTML itself raises it by (HtmlWriter::raise() writes that).
             $shift = $lineRule === null || $lineRule === 'auto'
-                ? FontMetrics::baselineShift($style->fontFamily, $style->fontSizePt, $style->lineHeight === null ? null : ($style->lineHeight->multiple !== null ? $style->lineHeight->multiple * $style->fontSizePt : $style->lineHeight->points), $style->bold)
+                ? FontMetrics::baselineShift($style->fontFamily, $style->fontSizePt, $style->lineHeight === null ? null : ($style->lineHeight->multiple !== null ? $style->lineHeight->multiple * $style->fontSizePt : $style->lineHeight->points), $style->bold, $style->browserFamily)
                 : null;
             $lower = Length::pointsToTwips(($shift ?? 0.0) + $style->relativeTopPt);
 

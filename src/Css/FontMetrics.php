@@ -53,7 +53,7 @@ final class FontMetrics
         'palatino linotype' => [1.05, 0.299, 1.349], 'franklin gothic book' => [0.917, 0.217, 1.134],
         'franklin gothic medium' => [0.917, 0.217, 1.134], 'gill sans mt' => [0.929, 0.23, 1.159], 'lucida console' => [0.789, 0.211, 1.0],
         'lucida sans unicode' => [1.097, 0.44, 1.537], 'comic sans ms' => [1.102, 0.292, 1.394], 'impact' => [1.009, 0.211, 1.22],
-        'helvetica' => [0.92, 0.23, 1.15], 'helvetica neue' => [0.952, 0.213, 1.193], 'helvetica neue bold' => [0.975, 0.217, 1.221], 'pt sans' => [0.9, 0.276, 1.295],
+        'helvetica' => [0.92, 0.23, 1.15], 'courier' => [0.904, 0.246, 1.15], 'times' => [0.9, 0.25, 1.15], 'helvetica neue' => [0.952, 0.213, 1.193], 'helvetica neue bold' => [0.975, 0.217, 1.221], 'pt sans' => [0.9, 0.276, 1.295],
         'pt serif' => [1.018, 0.276, 1.294], 'microsoft sans serif' => [0.922, 0.21, 1.132], 'rockwell' => [0.946, 0.229, 1.175],
         'tw cen mt' => [0.856, 0.233, 1.089], 'perpetua' => [0.82, 0.326, 1.146],
     ];
@@ -87,11 +87,10 @@ final class FontMetrics
      * line, so its baseline sits at the single line less the descent.
      * Null for a font not measured.
      */
-    public static function baselineShift(string $family, float $sizePt, ?float $lineHeightPt, bool $bold = false): ?float
+    public static function baselineShift(string $family, float $sizePt, ?float $lineHeightPt, bool $bold = false, ?string $browserFamily = null): ?float
     {
-        $key = self::face($family, $bold);
-        $single = self::SINGLE_LINE[$key] ?? null;
-        [$ascent, $descent, $normal] = self::CSS_LINE[$key] ?? [null, null, null];
+        $single = self::SINGLE_LINE[self::face($family, $bold)] ?? null;
+        [$ascent, $descent, $normal] = self::CSS_LINE[self::face($browserFamily ?? $family, $bold)] ?? [null, null, null];
 
         if ($single === null || $ascent === null) {
             return null;
@@ -131,9 +130,9 @@ final class FontMetrics
      * baseline alone in its line leaves that much under it, where Word's line
      * ends at the picture. Null for a font not measured.
      */
-    public static function belowBaseline(string $family, float $sizePt, ?float $lineHeightPt, bool $bold = false): ?float
+    public static function belowBaseline(string $family, float $sizePt, ?float $lineHeightPt, bool $bold = false, ?string $browserFamily = null): ?float
     {
-        [$ascent, $descent, $normal] = self::CSS_LINE[self::face($family, $bold)] ?? [null, null, null];
+        [$ascent, $descent, $normal] = self::CSS_LINE[self::face($browserFamily ?? $family, $bold)] ?? [null, null, null];
 
         if ($ascent === null) {
             return null;
@@ -152,7 +151,7 @@ final class FontMetrics
     public static function outgrowsLine(ComputedStyle $run, ComputedStyle $paragraph): bool
     {
         $box = static function (ComputedStyle $style) use ($paragraph): ?array {
-            [$ascent, $descent, $normal] = self::CSS_LINE[self::face($style->fontFamily, $style->bold)] ?? [null, null, null];
+            [$ascent, $descent, $normal] = self::CSS_LINE[self::face($style->browserFamily ?? $style->fontFamily, $style->bold)] ?? [null, null, null];
             $single = self::singleLine($style->fontFamily, $style->bold);
 
             if ($ascent === null || $single === null) {
@@ -170,6 +169,16 @@ final class FontMetrics
 
         return $run !== null && $paragraph !== null && $run[2] <= $paragraph[2]
             && ($run[0] > $paragraph[0] + 0.01 || $run[1] > $paragraph[1] + 0.01);
+    }
+
+    /**
+     * The line height a browser gives `line-height: normal` where it draws
+     * another font than Word gets, as a multiple of the size; null where both
+     * draw the same font, whose single line Word keeps.
+     */
+    public static function browserNormal(ComputedStyle $style): ?float
+    {
+        return $style->browserFamily === null ? null : self::CSS_LINE[self::face($style->browserFamily, $style->bold)][2] ?? null;
     }
 
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */

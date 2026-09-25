@@ -48,6 +48,8 @@ final readonly class ComputedStyle
         public array $declarations,
         public float $relativeTopPt = 0.0,
         public bool $kerning = true,
+        /** The font a browser (Chromium on macOS) draws where the style names a generic family that Word gets another font for. */
+        public ?string $browserFamily = null,
     ) {}
 
     public static function root(string $fontFamily, float $fontSizePt, string $color): self

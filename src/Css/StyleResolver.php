@@ -25,6 +25,9 @@ final class StyleResolver
         'ui-monospace' => 'Courier New', 'ui-sans-serif' => 'Arial', 'ui-serif' => 'Times New Roman',
     ];
 
+    /** What Chromium on macOS draws for the generic families: Word gets GENERIC_FONTS, the line is laid out in these. */
+    private const array BROWSER_GENERIC_FONTS = ['serif' => 'Times', 'sans-serif' => 'Helvetica', 'monospace' => 'Courier'];
+
     /** Not fonts but the platform's choice, which a DOCX cannot ask for. */
     private const array SYSTEM_FONTS = ['-apple-system', 'blinkmacsystemfont', '-webkit-system-font', 'ui-rounded'];
 
@@ -113,6 +116,7 @@ final class StyleResolver
                 'lowercase' => 'lowercase', 'capitalize' => 'capitalize']) ?? $parent->textTransform,
             smallCaps: $this->keyword($d['font-variant-caps'] ?? $d['font-variant'] ?? null, ['small-caps' => true,
                 'all-small-caps' => true, 'normal' => false]) ?? $parent->smallCaps,
+            browserFamily: $this->fontFamily($d['font-family'] ?? null) === null ? $parent->browserFamily : $this->browserFamily($d['font-family']),
             kerning: $this->keyword($d['font-kerning'] ?? null, ['none' => false, 'normal' => true, 'auto' => true]) ?? $parent->kerning,
             letterSpacingPt: $this->letterSpacing($d['letter-spacing'] ?? null, $fontSize, $parent),
             shadow: isset($d['text-shadow']) && strtolower(trim($d['text-shadow'])) !== 'inherit'
@@ -214,6 +218,20 @@ final class StyleResolver
 
             if ($family !== '') {
                 return self::GENERIC_FONTS[$lower] ?? $family;
+            }
+        }
+
+        return null;
+    }
+
+    /** The browser's font for the family fontFamily() takes, when that is a generic one; see BROWSER_GENERIC_FONTS. */
+    private function browserFamily(string $value): ?string
+    {
+        foreach (Tokens::splitTopLevel($value, ',') as $family) {
+            $lower = strtolower(Tokens::unquote($family));
+
+            if ($lower !== '' && ! in_array($lower, self::SYSTEM_FONTS, true)) {
+                return self::BROWSER_GENERIC_FONTS[$lower] ?? null;
             }
         }
 
