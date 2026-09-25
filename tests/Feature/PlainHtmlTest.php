@@ -40,6 +40,12 @@ it('kerns only the text Word kerns: from the size w:kern gives up', function () 
         ->toContain('<span style="font-kerning: normal;">kerned </span>small</p>');
 });
 
+it('draws Word\'s text shadow: silver, 1/24 of the size down and right', function () {
+    $html = plainHtml(DocxBuilder::make()->body('<w:p><w:r><w:rPr><w:shadow/></w:rPr><w:t>shade</w:t></w:r></w:p>'));
+
+    expect($html)->toContain('<span style="text-shadow: 0.042em 0.042em #c0c0c0;">shade</span>');
+});
+
 it('scales Word\'s line spacing by the font\'s own single line', function (string $font, string $spacing, string $lineHeight) {
     $html = plainHtml(DocxBuilder::make()->body(
         "<w:p><w:pPr>{$spacing}<w:rPr><w:rFonts w:ascii=\"{$font}\"/></w:rPr></w:pPr><w:r><w:t>x</w:t></w:r></w:p>",

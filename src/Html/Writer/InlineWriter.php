@@ -256,6 +256,11 @@ final readonly class InlineWriter
             $css['font-variant'] = ($run->smallCaps ?? false) ? 'small-caps' : 'normal';
         }
 
+        // Word's shadow: silver, unblurred, 1/24 of the font size down and right.
+        if (($run->shadow ?? false) !== $parent->shadow) {
+            $css['text-shadow'] = ($run->shadow ?? false) ? '0.042em 0.042em #c0c0c0' : 'none';
+        }
+
         if (($run->kerning ?? false) !== $parent->kerning) {
             $css['font-kerning'] = ($run->kerning ?? false) ? 'normal' : 'none';
         }
