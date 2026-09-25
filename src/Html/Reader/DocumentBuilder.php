@@ -35,6 +35,10 @@ use Kovami\HtmlDocx\Model\Paragraph;
 use Kovami\HtmlDocx\Model\ParagraphProperties;
 use Kovami\HtmlDocx\Model\RunProperties;
 use Kovami\HtmlDocx\Model\Table;
+use Kovami\HtmlDocx\Model\TableCell;
+use Kovami\HtmlDocx\Model\TableRow;
+use Kovami\HtmlDocx\Model\CellMargins;
+use Kovami\HtmlDocx\Model\CellProperties;
 use Kovami\HtmlDocx\Model\TextRun;
 use Kovami\HtmlDocx\Options;
 use Throwable;
@@ -497,28 +501,30 @@ final class DocumentBuilder
      * so the gap between two paragraphs is the larger of after and before:
      * the new gap goes into before, and after may not exceed it.
      *
+     * In a table cell the room under the last paragraph is the cell's
+     * bottom margin: the text is lowered from it, and the row keeps its height.
+     *
      * @param  list<Block>  $blocks
+     * @param  int  $room  twips under the blocks that the last paragraph may give its lowering back from
+     * @return int the twips of $room taken
      */
-    private function lowerText(array $blocks): void
+    private function lowerText(array &$blocks, int $room = 0): int
     {
         $previous = null;
         $lowered = 0;
         $grownBelow = 0;
+        $none = 0;
 
-        foreach ($blocks as $block) {
+        foreach ($blocks as $index => $block) {
             if ($block instanceof Table) {
-                foreach ($block->rows as $row) {
-                    foreach ($row->cells as $cell) {
-                        $this->lowerText($cell->blocks);
-                    }
-                }
+                $blocks[$index] = $block = $this->lowerTable($block);
             }
 
             $properties = $block instanceof Paragraph ? $block->properties : null;
 
             // A style's own spacing is not known here; leave such a paragraph as it is.
             if ($properties === null || ($properties->styleId !== null && ($properties->spacingBefore === null || $properties->spacingAfter === null))) {
-                $this->giveBack($previous, $lowered, $grownBelow);
+                $this->giveBack($previous, $lowered, $grownBelow, $none);
                 [$previous, $lowered, $grownBelow] = [null, 0, 0];
 
                 continue;
@@ -560,7 +566,50 @@ final class DocumentBuilder
             [$previous, $lowered, $grownBelow] = [$properties, $lower, $below];
         }
 
-        $this->giveBack($previous, $lowered, $grownBelow);
+        $left = $room;
+        $this->giveBack($previous, $lowered, $grownBelow, $left);
+
+        return $room - $left;
+    }
+
+    /**
+     * A table whose cells' text is lowered as lowerText() lowers a paragraph's,
+     * from each cell's bottom margin. Word sizes a row by the margins of the
+     * cells a vertical merge continues into too, so they give up as much.
+     */
+    private function lowerTable(Table $table): Table
+    {
+        $rows = [];
+        /** @var array<int, int> $merged twips taken by the cell a vertical merge in each grid column started with */
+        $merged = [];
+
+        foreach ($table->rows as $row) {
+            $cells = [];
+            $column = 0;
+
+            foreach ($row->cells as $cell) {
+                $blocks = $cell->blocks;
+                $margins = $cell->properties->margins;
+                $taken = $cell->properties->verticalMerge === CellProperties::MERGE_CONTINUE
+                    ? min($merged[$column] ?? 0, $margins->bottom ?? 0)
+                    : $this->lowerText($blocks, $margins->bottom ?? 0);
+
+                if ($cell->properties->verticalMerge === CellProperties::MERGE_RESTART) {
+                    $merged[$column] = $taken;
+                }
+
+                $column += $cell->properties->gridSpan;
+                $properties = $taken === 0 || $margins === null ? $cell->properties : new CellProperties(...[
+                    ...get_object_vars($cell->properties),
+                    'margins' => new CellMargins($margins->top, $margins->left, $margins->bottom - $taken, $margins->right),
+                ]);
+                $cells[] = new TableCell($properties, $blocks);
+            }
+
+            $rows[] = new TableRow(...[...get_object_vars($row), 'cells' => $cells]);
+        }
+
+        return new Table(...[...get_object_vars($table), 'rows' => $rows]);
     }
 
     /**
@@ -574,13 +623,17 @@ final class DocumentBuilder
     }
 
     /** The last paragraph of a run takes what it was lowered by off its own spacing after. */
-    private function giveBack(?ParagraphProperties $properties, int $lowered, int $grownBelow = 0): void
+    /** @param  int  $room  twips under the paragraph it may give back from instead; what it takes is subtracted */
+    private function giveBack(?ParagraphProperties $properties, int $lowered, int $grownBelow, int &$room): void
     {
         if ($properties === null || ($lowered === 0 && $grownBelow === 0)) {
             return;
         }
 
         $after = ($properties->spacingAfter ?? 0) - $lowered + $grownBelow;
+        $taken = min(max(0, -$after), $room);
+        $room -= $taken;
+        $after += $taken;
         $properties->spacingAfter = max(0, $after);
 
         // Too little space after to give back: lower it less, or what follows moves down.
@@ -593,7 +646,7 @@ final class DocumentBuilder
     private function bulletLine(ComputedStyle $style): float
     {
         $ascent = FontMetrics::ascent($style->fontFamily);
-        [$spacing, $rule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0, $style->fontSizePt);
+        [$spacing, $rule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
 
         // Only a bullet drawn in Symbol grows the line, and the writer marks one by padding it (see ListCounter).
         if ($style->listStyleType !== 'disc' || $ascent === null || ($rule ?? 'auto') !== 'auto' || ($style->lengthPt('padding-top') ?? 0.0) <= 0) {
@@ -699,7 +752,7 @@ final class DocumentBuilder
             if ($float === null && ! $style->isBlockLevel() && in_array($style->value('vertical-align'), [null, 'baseline'], true)) {
                 $block = $flow->style;
                 $lineHeight = $block->lineHeight === null ? null : ($block->lineHeight->multiple !== null ? $block->lineHeight->multiple * $block->fontSizePt : $block->lineHeight->points);
-                $flow->buffer()->pictureGap = max($flow->buffer()->pictureGap, FontMetrics::belowBaseline($block->fontFamily, $block->fontSizePt, $lineHeight) ?? 0.0);
+                $flow->buffer()->pictureGap = max($flow->buffer()->pictureGap, FontMetrics::belowBaseline($block->fontFamily, $block->fontSizePt, $lineHeight, $block->bold) ?? 0.0);
             }
 
             // A picture in a figure set apart by auto margins, or set apart
@@ -756,7 +809,7 @@ final class DocumentBuilder
     /** What a multiple line spacing adds below the paragraph's line in Word, in points; see HtmlWriter::multipleExtra(). */
     private function multipleExtra(ParagraphProperties $properties, ComputedStyle $style): float
     {
-        $single = FontMetrics::singleLine($style->fontFamily);
+        $single = FontMetrics::singleLine($style->fontFamily, $style->bold);
         $line = $properties->lineSpacing ?? 240;
 
         return $single === null || ($properties->lineRule ?? 'auto') !== 'auto' || $line <= 240 ? 0.0 : ($line / 240 - 1) * $single * $style->fontSizePt;
@@ -813,7 +866,7 @@ final class DocumentBuilder
 
         if ($properties === null) {
             // A multiple of the font size is Word's multiple of the font's own single line; see HtmlWriter.
-            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily) ?? 1.0, $style->fontSizePt);
+            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing($style->lineHeight, FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
 
             $properties = new ParagraphProperties(
                 styleId: $context->styleId,
@@ -834,7 +887,7 @@ final class DocumentBuilder
             // Where the browser shows the text relative to Word, less what the
             // HTML itself raises it by (HtmlWriter::raise() writes that).
             $shift = $lineRule === null || $lineRule === 'auto'
-                ? FontMetrics::baselineShift($style->fontFamily, $style->fontSizePt, $style->lineHeight === null ? null : ($style->lineHeight->multiple !== null ? $style->lineHeight->multiple * $style->fontSizePt : $style->lineHeight->points))
+                ? FontMetrics::baselineShift($style->fontFamily, $style->fontSizePt, $style->lineHeight === null ? null : ($style->lineHeight->multiple !== null ? $style->lineHeight->multiple * $style->fontSizePt : $style->lineHeight->points), $style->bold)
                 : null;
             $lower = Length::pointsToTwips(($shift ?? 0.0) + $style->relativeTopPt);
 

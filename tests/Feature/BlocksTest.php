@@ -215,3 +215,11 @@ it('leaves the padding under a border to the border, which takes that room in Wo
         ->and((int) Docx::attr($padded->first('//w:p/w:pPr/w:spacing'), 'before'))->toBeGreaterThanOrEqual(120)
         ->and($html)->toContain('padding-top: 8px;');
 });
+
+it('spaces bold Helvetica Neue by its own single line, taller than the regular face\'s', function () {
+    // SunEditor's h1 is 24pt bold at line-height 1.5, 36pt: Word's single line is 1.221em in the bold face, 1.193em in the regular.
+    $docx = docx('<h1>Bold</h1><p>Regular</p>', converter(['fontFamily' => 'Helvetica Neue', 'fontSizePt' => 12.0]));
+
+    expect(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('Bold')), 'line'))->toBe('295')
+        ->and(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('Regular')), 'line'))->toBe('302');
+});

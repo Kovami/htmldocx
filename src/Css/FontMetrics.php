@@ -31,7 +31,7 @@ final class FontMetrics
         'century gothic' => 1.2261, 'century' => 1.2021, 'palatino linotype' => 1.3491,
         'franklin gothic book' => 1.1338, 'franklin gothic medium' => 1.1338, 'gill sans mt' => 1.1597,
         'lucida console' => 1.0, 'lucida sans unicode' => 1.5366, 'comic sans ms' => 1.3936, 'impact' => 1.2197,
-        'helvetica' => 1.2, 'helvetica neue' => 1.193, 'roboto' => 1.2002, 'pt sans' => 1.295, 'pt serif' => 1.294,
+        'helvetica' => 1.2, 'helvetica neue' => 1.193, 'helvetica neue bold' => 1.221, 'roboto' => 1.2002, 'pt sans' => 1.295, 'pt serif' => 1.294,
         'microsoft sans serif' => 1.1318, 'rockwell' => 1.1743, 'tw cen mt' => 1.0889, 'perpetua' => 1.146,
     ];
 
@@ -53,7 +53,7 @@ final class FontMetrics
         'palatino linotype' => [1.05, 0.299, 1.349], 'franklin gothic book' => [0.917, 0.217, 1.134],
         'franklin gothic medium' => [0.917, 0.217, 1.134], 'gill sans mt' => [0.929, 0.23, 1.159], 'lucida console' => [0.789, 0.211, 1.0],
         'lucida sans unicode' => [1.097, 0.44, 1.537], 'comic sans ms' => [1.102, 0.292, 1.394], 'impact' => [1.009, 0.211, 1.22],
-        'helvetica' => [0.92, 0.23, 1.15], 'helvetica neue' => [0.952, 0.213, 1.193], 'pt sans' => [0.9, 0.276, 1.295],
+        'helvetica' => [0.92, 0.23, 1.15], 'helvetica neue' => [0.952, 0.213, 1.193], 'helvetica neue bold' => [0.975, 0.217, 1.221], 'pt sans' => [0.9, 0.276, 1.295],
         'pt serif' => [1.018, 0.276, 1.294], 'microsoft sans serif' => [0.922, 0.21, 1.132], 'rockwell' => [0.946, 0.229, 1.175],
         'tw cen mt' => [0.856, 0.233, 1.089], 'perpetua' => [0.82, 0.326, 1.146],
     ];
@@ -87,9 +87,9 @@ final class FontMetrics
      * line, so its baseline sits at the single line less the descent.
      * Null for a font not measured.
      */
-    public static function baselineShift(string $family, float $sizePt, ?float $lineHeightPt): ?float
+    public static function baselineShift(string $family, float $sizePt, ?float $lineHeightPt, bool $bold = false): ?float
     {
-        $key = strtolower(trim($family));
+        $key = self::face($family, $bold);
         $single = self::SINGLE_LINE[$key] ?? null;
         [$ascent, $descent, $normal] = self::CSS_LINE[$key] ?? [null, null, null];
 
@@ -131,9 +131,9 @@ final class FontMetrics
      * baseline alone in its line leaves that much under it, where Word's line
      * ends at the picture. Null for a font not measured.
      */
-    public static function belowBaseline(string $family, float $sizePt, ?float $lineHeightPt): ?float
+    public static function belowBaseline(string $family, float $sizePt, ?float $lineHeightPt, bool $bold = false): ?float
     {
-        [$ascent, $descent, $normal] = self::CSS_LINE[strtolower(trim($family))] ?? [null, null, null];
+        [$ascent, $descent, $normal] = self::CSS_LINE[self::face($family, $bold)] ?? [null, null, null];
 
         if ($ascent === null) {
             return null;
@@ -152,8 +152,8 @@ final class FontMetrics
     public static function outgrowsLine(ComputedStyle $run, ComputedStyle $paragraph): bool
     {
         $box = static function (ComputedStyle $style) use ($paragraph): ?array {
-            [$ascent, $descent, $normal] = self::CSS_LINE[strtolower(trim($style->fontFamily))] ?? [null, null, null];
-            $single = self::singleLine($style->fontFamily);
+            [$ascent, $descent, $normal] = self::CSS_LINE[self::face($style->fontFamily, $style->bold)] ?? [null, null, null];
+            $single = self::singleLine($style->fontFamily, $style->bold);
 
             if ($ascent === null || $single === null) {
                 return null;
@@ -173,8 +173,19 @@ final class FontMetrics
     }
 
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */
-    public static function singleLine(string $family): ?float
+    public static function singleLine(string $family, bool $bold = false): ?float
     {
-        return self::SINGLE_LINE[strtolower(trim($family))] ?? null;
+        return self::SINGLE_LINE[self::face($family, $bold)] ?? null;
+    }
+
+    /**
+     * The table key of a font's face: its bold face has a key of its own
+     * where that face's file has other metrics (Helvetica Neue's does).
+     */
+    private static function face(string $family, bool $bold): string
+    {
+        $key = strtolower(trim($family));
+
+        return $bold && isset(self::SINGLE_LINE["{$key} bold"]) ? "{$key} bold" : $key;
     }
 }

@@ -254,3 +254,16 @@ it('centres cells vertically as a browser does, unless a cell says otherwise', f
     expect($table->rows[0]->cells[0]->properties->verticalAlign)->toBe('center')
         ->and($table->rows[0]->cells[1]->properties->verticalAlign)->toBe('top');
 });
+
+it('lowers a cell\'s text as a browser shows it from the cell\'s bottom margin, so the row keeps its height', function () {
+    $docx = docx('<table><tr><td rowspan="2">merged</td><td>top</td></tr><tr><td>bottom</td></tr></table>', converter(['fontFamily' => 'Helvetica Neue', 'fontSizePt' => 12.0]));
+    $cell = static fn(string $text): DOMElement => $docx->first('ancestor::w:tc', $docx->paragraph($text));
+    $bottom = static fn(DOMElement $tc): string => (string) Docx::attr($docx->first('w:tcPr/w:tcMar/w:bottom', $tc), 'w');
+
+    // SunEditor's cells are padded 0.4em, 96 twips; the text goes 33 twips lower in a browser.
+    expect(Docx::attr($docx->first('w:pPr/w:spacing', $docx->paragraph('top')), 'before'))->toBe('33')
+        ->and($bottom($cell('top')))->toBe('63')
+        ->and($bottom($cell('merged')))->toBe('63')
+        // Word sizes the second row by the margins of the cell the merge continues into.
+        ->and($bottom($docx->first('//w:tc[w:tcPr/w:vMerge[@w:val="continue"]]')))->toBe('63');
+});

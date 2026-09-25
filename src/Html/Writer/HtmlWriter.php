@@ -401,7 +401,7 @@ final class HtmlWriter
             }
         }
 
-        $css['line-height'] = $this->lineHeight($properties->lineSpacing ?? 240, $properties->lineRule ?? 'auto', $this->blockFamily($properties));
+        $css['line-height'] = $this->lineHeight($properties->lineSpacing ?? 240, $properties->lineRule ?? 'auto', $this->blockFamily($properties), $this->blockBold($properties));
 
         $background = $editor->backgroundColor();
 
@@ -491,6 +491,12 @@ final class HtmlWriter
         return $properties->markRunProperties ?? $this->context->document->style($properties->styleId)?->run;
     }
 
+    /** Whether a block's text is bold: its paragraph mark's, as for its font. */
+    private function blockBold(ParagraphProperties $properties): bool
+    {
+        return $this->blockRun($properties)->bold ?? $this->context->document->defaultRunProperties->bold ?? false;
+    }
+
     private function blockFamily(ParagraphProperties $properties): string
     {
         return $this->blockRun($properties)->fontFamily
@@ -505,13 +511,13 @@ final class HtmlWriter
      *
      * @param  string  $rule  ST_LineSpacingRule: auto, atLeast or exact
      */
-    private function lineHeight(int $lineSpacing, string $rule, string $family): string
+    private function lineHeight(int $lineSpacing, string $rule, string $family, bool $bold): string
     {
         if ($rule !== 'auto') {
             return $this->context->css->twips($lineSpacing);
         }
 
-        $single = FontMetrics::singleLine($family);
+        $single = FontMetrics::singleLine($family, $bold);
 
         if ($single === null) {
             return $lineSpacing === 240 ? 'normal' : CssFormatter::number($lineSpacing / 240);
@@ -576,7 +582,8 @@ final class HtmlWriter
     private function leadingAbove(ParagraphProperties $properties, ?RunProperties $mark): float
     {
         $family = $this->blockFamily($properties);
-        $single = FontMetrics::singleLine($family);
+        $bold = $this->blockBold($properties);
+        $single = FontMetrics::singleLine($family, $bold);
 
         if ($single === null || ($properties->lineRule ?? 'auto') !== 'auto') {
             return 0;
@@ -586,7 +593,7 @@ final class HtmlWriter
         $size = $mark->size ?? $this->blockRun($properties)->size ?? $this->context->document->defaultRunProperties->size;
         $points = $size === null ? $this->context->options->baseFontSizePt() : $size / 2;
 
-        return FontMetrics::baselineShift($family, $points, ($properties->lineSpacing ?? 240) / 240 * $single * $points) ?? 0.0;
+        return FontMetrics::baselineShift($family, $points, ($properties->lineSpacing ?? 240) / 240 * $single * $points, $bold) ?? 0.0;
     }
 
     /**
@@ -607,7 +614,7 @@ final class HtmlWriter
     /** What a multiple line spacing adds below the paragraph's line in Word, in points. */
     private function multipleExtra(ParagraphProperties $properties): float
     {
-        $single = FontMetrics::singleLine($this->blockFamily($properties));
+        $single = FontMetrics::singleLine($this->blockFamily($properties), $this->blockBold($properties));
         $line = $properties->lineSpacing ?? 240;
 
         if ($single === null || ($properties->lineRule ?? 'auto') !== 'auto' || $line <= 240) {
