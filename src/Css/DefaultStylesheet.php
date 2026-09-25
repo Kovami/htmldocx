@@ -115,6 +115,7 @@ final class DefaultStylesheet
         figure { margin: 0; }
         figcaption { text-align: center; padding: 1em 0.5em; background-color: #f9f9f9; }
         .se-component { margin: 0 0 10px; }
+        .se-inline-component { display: inline-block; margin: 0; padding: 0; }
         /* SunEditor 3 shows every picture as a block: no line, and no gap under it. */
         .se-image-container img { display: block; }
         .__se__float-left { text-align: left; }

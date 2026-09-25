@@ -387,6 +387,13 @@ final readonly class InlineWriter
 
     private function image(ImageRun $image, Element $parent): void
     {
+        // SunEditor 3 moves a bare picture out of its line into a block of its own;
+        // its inline image component stays in the text.
+        if ($this->context->editor === Editor::SunEditor && $image->float === null) {
+            $parent = $this->context->element('span', $parent);
+            $parent->setAttribute('class', 'se-component se-inline-component se-image-container');
+        }
+
         $element = $this->imageElement($image, $parent);
 
         if ($element !== null && $image->float !== null) {

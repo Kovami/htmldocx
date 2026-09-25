@@ -267,3 +267,16 @@ it('gives a picture alone on its line the room a browser leaves under the baseli
         ->and($html)->toContain('vertical-align: bottom;')
         ->and(HtmlDocx::plain(testOptions())->fromHtml($html)->toHtml())->toBe($html);
 });
+
+it('keeps a picture inside its line in SunEditor\'s inline image component', function () {
+    $source = '<p>before <img src="' . TestImage::pngDataUri(20, 10) . '" alt=""> after</p>';
+    $html = html($source);
+
+    expect(markup($html))->toContain('<p>before <span class="se-component se-inline-component se-image-container"><img ')
+        ->and(markup(roundTrip($source)))->toContain('<p>before <span class="se-component se-inline-component se-image-container"><img ');
+
+    $docx = docx($html);
+
+    expect($docx->paragraphTexts())->toBe(['before  after'])
+        ->and($docx->count('//w:p//w:drawing/wp:inline'))->toBe(1);
+});
