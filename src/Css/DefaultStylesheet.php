@@ -108,7 +108,8 @@ final class DefaultStylesheet
         /* The table's own margin is 0, but the figure SunEditor 3 keeps it in has 10px below. */
         table { width: 100%; margin: 0 0 10px; border: 1px solid #cecece; border-collapse: collapse; }
         td, th { border: 1px solid #cecece; padding: 0.4em; vertical-align: middle; }
-        th { font-weight: bold; text-align: center; background-color: #f3f3f3; }
+        /* SunEditor 3 gives th #f3f3f3, then background-color: inherit for th and td, which wins. */
+        th { font-weight: bold; text-align: center; }
         caption { text-align: center; }
 
         figure { margin: 0; }

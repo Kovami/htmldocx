@@ -43,12 +43,13 @@ it('orders thead, tbody and tfoot like the browser and repeats header rows', fun
         ->and($docx->count('//w:tblHeader'))->toBe(1);
 });
 
-it('styles header cells bold, centered and shaded', function () {
+it('styles header cells bold and centered, unshaded as SunEditor 3 shows them', function () {
+    // SunEditor 3 gives th #f3f3f3, then background-color: inherit, which wins.
     $docx = docx('<table><tr><th>Header</th></tr></table>');
 
     expect($docx->first('w:rPr/w:b', $docx->run('Header')))->not->toBeNull()
         ->and($docx->val('w:pPr/w:jc', $docx->paragraph('Header')))->toBe('center')
-        ->and(Docx::attr($docx->first('//w:tc/w:tcPr/w:shd'), 'fill'))->toBe('F3F3F3');
+        ->and($docx->first('//w:tc/w:tcPr/w:shd'))->toBeNull();
 });
 
 it('maps colspan to gridSpan', function () {
