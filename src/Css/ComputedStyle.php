@@ -47,6 +47,7 @@ final readonly class ComputedStyle
         public string $listStyleType,
         public array $declarations,
         public float $relativeTopPt = 0.0,
+        public bool $kerning = true,
     ) {}
 
     public static function root(string $fontFamily, float $fontSizePt, string $color): self

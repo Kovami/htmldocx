@@ -23,6 +23,7 @@ final class StylesPart
             fontFamily: $defaults->fontFamily,
             size: $defaults->size,
             color: $defaults->color,
+            kerning: $defaults->kerning,
         ), $document->metadata->language);
         $xml->close()
             ->open('w:pPrDefault')->open('w:pPr')->leaf('w:spacing', ['w:after' => 0, 'w:line' => 240, 'w:lineRule' => 'auto'])->close()->close()

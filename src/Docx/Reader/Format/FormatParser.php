@@ -55,6 +55,7 @@ final readonly class FormatParser
             shadow: Xml::onOff($rPr, 'shadow'),
             rtl: Xml::onOff($rPr, 'rtl'),
             hidden: Xml::onOff($rPr, 'vanish'),
+            kern: Xml::int(Xml::val($rPr, 'kern')),
         );
     }
 

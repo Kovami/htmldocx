@@ -15,6 +15,7 @@ final readonly class RunProperties
      * @param  string|null  $underline  ST_Underline value; "none" explicitly removes underline
      * @param  string|null  $verticalAlign  baseline, superscript or subscript
      * @param  int|null  $spacing  character spacing in twips
+     * @param  bool|null  $kerning  whether the font's kerning pairs apply; Word leaves text unkerned unless told
      */
     public function __construct(
         public ?string $fontFamily = null,
@@ -31,6 +32,7 @@ final readonly class RunProperties
         public ?int $spacing = null,
         public ?bool $shadow = null,
         public ?bool $rtl = null,
+        public ?bool $kerning = null,
     ) {}
 
     /** Keeps only the properties that differ from $base. */
@@ -53,6 +55,7 @@ final readonly class RunProperties
             $differs($this->spacing, $base->spacing ?? 0),
             $differs($this->shadow, $base->shadow ?? false),
             $differs($this->rtl, $base->rtl ?? false),
+            $differs($this->kerning, $base->kerning ?? false),
         );
     }
 

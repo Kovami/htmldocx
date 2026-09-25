@@ -219,6 +219,10 @@ final readonly class InlineWriter
             $css['font-variant'] = ($run->smallCaps ?? false) ? 'small-caps' : 'normal';
         }
 
+        if (($run->kerning ?? false) !== $parent->kerning) {
+            $css['font-kerning'] = ($run->kerning ?? false) ? 'normal' : 'none';
+        }
+
         if (($run->bold ?? false) !== $parent->bold) {
             ($run->bold ?? false) ? $tags[] = 'strong' : $css['font-weight'] = 'normal';
         }

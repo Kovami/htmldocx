@@ -42,6 +42,7 @@ final class PropertyMapper
             spacing: Length::pointsToTwips($style->letterSpacingPt),
             shadow: $style->shadow,
             rtl: $style->direction === 'rtl',
+            kerning: $style->kerning,
         );
     }
 

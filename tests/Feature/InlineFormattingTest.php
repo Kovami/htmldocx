@@ -109,6 +109,14 @@ it('maps letter spacing, small caps and text shadow', function () {
         ->and($docx->first('w:rPr/w:shadow', $run))->not->toBeNull();
 });
 
+it('kerns text the way a browser does, unless CSS turns kerning off', function () {
+    $docx = docx('<p>kerned <span style="font-kerning: none">flat</span></p>');
+
+    expect($docx->val('//w:docDefaults/w:rPrDefault/w:rPr/w:kern', part: 'word/styles.xml'))->toBe('2')
+        ->and($docx->first('w:rPr/w:kern', $docx->run('kerned')))->toBeNull()
+        ->and($docx->val('w:rPr/w:kern', $docx->run('flat')))->toBe('0');
+});
+
 it('maps legacy <font> attributes', function () {
     $docx = docx('<p><font color="#00ff00" face="Verdana" size="5">legacy</font></p>');
     $run = $docx->run('legacy');

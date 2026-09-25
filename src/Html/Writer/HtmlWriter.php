@@ -469,6 +469,11 @@ final class HtmlWriter
             'color' => CssFormatter::color($mark->color ?? $defaults->color ?? $options->baseTextColor()),
         ];
 
+        // A browser kerns text; Word only when the document asks it to.
+        if (($mark->kerning ?? $defaults->kerning ?? false) !== $editor->kerning) {
+            $css['font-kerning'] = $editor->kerning ? 'none' : 'normal';
+        }
+
         // Headings are bold in a browser, and seldom are in Word. Bold text itself
         // stays in <strong>, which an editor's bold button recognises.
         if ($editor->bold && ! ($mark->bold ?? false)) {

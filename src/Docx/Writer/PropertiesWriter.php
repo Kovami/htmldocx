@@ -46,6 +46,11 @@ final class PropertiesWriter
             $xml->leaf('w:spacing', ['w:val' => $properties->spacing]);
         }
 
+        if ($properties->kerning !== null) {
+            // Kerning from 1pt up, like a browser; 0 turns inherited kerning off.
+            $xml->leaf('w:kern', ['w:val' => $properties->kerning ? 2 : 0]);
+        }
+
         if ($properties->size !== null) {
             $xml->leaf('w:sz', ['w:val' => $properties->size]);
             $xml->leaf('w:szCs', ['w:val' => $properties->size]);

@@ -113,6 +113,7 @@ final class StyleResolver
                 'lowercase' => 'lowercase', 'capitalize' => 'capitalize']) ?? $parent->textTransform,
             smallCaps: $this->keyword($d['font-variant-caps'] ?? $d['font-variant'] ?? null, ['small-caps' => true,
                 'all-small-caps' => true, 'normal' => false]) ?? $parent->smallCaps,
+            kerning: $this->keyword($d['font-kerning'] ?? null, ['none' => false, 'normal' => true, 'auto' => true]) ?? $parent->kerning,
             letterSpacingPt: $this->letterSpacing($d['letter-spacing'] ?? null, $fontSize, $parent),
             shadow: isset($d['text-shadow']) && strtolower(trim($d['text-shadow'])) !== 'inherit'
                 ? strtolower(trim($d['text-shadow'])) !== 'none'

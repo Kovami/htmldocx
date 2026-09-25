@@ -24,9 +24,20 @@ it('spells out the font, colour, margins and line height of every block', functi
     ));
 
     expect($html)->toBe(
-        '<p style="font-family: &quot;Times New Roman&quot;, &quot;Liberation Serif&quot;, Tinos, serif; font-size: 13.33px; color: #000000; margin: 0 0 10.67px 0; line-height: 1.322; position: relative; top: -0.86px;">'
+        '<p style="font-family: &quot;Times New Roman&quot;, &quot;Liberation Serif&quot;, Tinos, serif; font-size: 13.33px; color: #000000; font-kerning: none; margin: 0 0 10.67px 0; line-height: 1.322; position: relative; top: -0.86px;">'
         . '<span style="font-family: Aptos, sans-serif; font-size: 16px;">Body</span></p>',
     );
+});
+
+it('kerns only the text Word kerns: from the size w:kern gives up', function () {
+    $html = plainHtml(DocxBuilder::make()->body(
+        '<w:p><w:r><w:t xml:space="preserve">flat </w:t></w:r>'
+        . '<w:r><w:rPr><w:kern w:val="2"/></w:rPr><w:t xml:space="preserve">kerned </w:t></w:r>'
+        . '<w:r><w:rPr><w:kern w:val="28"/></w:rPr><w:t>small</w:t></w:r></w:p>',
+    ));
+
+    expect($html)->toContain('font-kerning: none;')
+        ->toContain('<span style="font-kerning: normal;">kerned </span>small</p>');
 });
 
 it('scales Word\'s line spacing by the font\'s own single line', function (string $font, string $spacing, string $lineHeight) {

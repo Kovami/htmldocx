@@ -22,6 +22,7 @@ final readonly class RunFormat
      * @param  string|null  $highlight  RRGGBB, or "none" to remove
      * @param  string|null  $shading  RRGGBB, or "auto" for no fill
      * @param  int|null  $spacing  twips
+     * @param  int|null  $kern  half-points: the smallest size kerned, 0 for none
      */
     public function __construct(
         public ?string $fontFamily = null,
@@ -40,6 +41,7 @@ final readonly class RunFormat
         public ?bool $shadow = null,
         public ?bool $rtl = null,
         public ?bool $hidden = null,
+        public ?int $kern = null,
     ) {}
 
     /** This format with the properties $top sets taking precedence. */
@@ -94,6 +96,7 @@ final readonly class RunFormat
             spacing: $this->spacing ?? 0,
             shadow: $this->shadow ?? false,
             rtl: $this->rtl ?? false,
+            kerning: ($this->kern ?? 0) > 0 && ($this->size ?? 20) >= $this->kern,
         );
     }
 
