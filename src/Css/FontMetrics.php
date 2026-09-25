@@ -84,19 +84,22 @@ final class FontMetrics
      * does, in points, for a line box `$lineHeightPt` tall (null: `normal`).
      * Chromium centres the font's content in the line box; Word puts the
      * font's line gap above the text and a multiple's extra space below the
-     * line, so its baseline sits at the single line less the descent.
+     * line, so its baseline sits at the single line less the descent. The
+     * browser's side is in $browserFamily when it draws another font.
      * Null for a font not measured.
      */
     public static function baselineShift(string $family, float $sizePt, ?float $lineHeightPt, bool $bold = false, ?string $browserFamily = null): ?float
     {
         $single = self::SINGLE_LINE[self::face($family, $bold)] ?? null;
+        $wordDescent = self::CSS_LINE[self::face($family, $bold)][1] ?? null;
         [$ascent, $descent, $normal] = self::CSS_LINE[self::face($browserFamily ?? $family, $bold)] ?? [null, null, null];
 
-        if ($single === null || $ascent === null) {
+        if ($single === null || $ascent === null || $wordDescent === null) {
             return null;
         }
 
-        return (($lineHeightPt ?? $normal * $sizePt) + ($ascent + $descent) * $sizePt) / 2 - $single * $sizePt;
+        // The browser's baseline below the line box's top, less Word's.
+        return (($lineHeightPt ?? $normal * $sizePt) - ($ascent + $descent) * $sizePt) / 2 + $ascent * $sizePt - ($single - $wordDescent) * $sizePt;
     }
 
     /**
