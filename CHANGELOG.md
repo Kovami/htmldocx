@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-09-25
+
+A patch release about text and character formatting, and about SunEditor,
+whose profile no longer trails the others. The API is unchanged; the model
+gains two optional properties, `RunProperties::$kerning` and
+`ListLevel::$markerTab`.
+
+### Fixed
+
+- Text is kerned where Word kerns it, both ways. Word kerns only runs whose
+  size reaches `w:kern`, and nothing in a document without it; a browser
+  kerns by default. DOCX -> HTML writes `font-kerning: none` where Word does
+  not kern; HTML -> DOCX kerns the document's defaults as a browser does and
+  writes `w:kern 0` for `font-kerning: none`. Pictures HTML -> DOCX: plain
+  95.7% -> 99.6%, TipTap 95.7% -> 99.5% of ink in place.
+- A picture inside a line of text stays in its line in the SunEditor profile:
+  it goes in SunEditor 3's inline image component, since SunEditor moves a
+  bare `<img>` out of the paragraph into a block of its own. SunEditor
+  pictures, DOCX -> HTML: 92.1% -> 100.0%.
+- A disc, circle or square bullet set inside the first line, as SunEditor 3
+  sets every list, starts its text where a browser does (1.3125em + 0.64pt
+  after the item's edge), through a tab stop of the list level's own, rather
+  than after Word's much narrower bullet and space. SunEditor lists,
+  HTML -> DOCX: 94.4% -> 99.9%.
+- A horizontal rule's `height` is room under its line in Word too: SunEditor
+  gives `hr` 20px, which was lost.
+- A tab in an indented paragraph lands on Word's tab stops, which count from
+  the margin rather than from the text's edge, in the HTML the library
+  writes (not in TipTap, which drops the style, or TinyMCE, which drops the
+  tab).
+- Word's text shadow is drawn in HTML, as Word draws it: silver, unblurred,
+  1/24 of the font size down and right.
+- The SunEditor profile reads header cells as SunEditor 3 shows them,
+  unshaded: a later rule of its stylesheet undoes the `#f3f3f3` it gives
+  `th`. A shaded Word header cell kept no shading in SunEditor's HTML, and a
+  SunEditor header cell came into Word shaded.
+
+Text and character formatting, SunEditor: HTML -> DOCX 92.4% -> 94.2%,
+DOCX -> HTML 92.4% -> 92.8%. Means, SunEditor: DOCX -> HTML 96.1% -> 97.2%,
+HTML -> DOCX 95.4% -> 97.3%.
+
 ## [2.2.1] - 2026-09-22
 
 A patch release. It undoes a 2.2.0 regression in the SunEditor profile
@@ -375,7 +416,8 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.2...HEAD
+[2.2.2]: https://github.com/kovami/htmldocx/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/kovami/htmldocx/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/kovami/htmldocx/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/kovami/htmldocx/compare/v2.0.1...v2.1.0

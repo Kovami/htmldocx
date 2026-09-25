@@ -191,25 +191,25 @@ Share of the ink in place within 1.33 pt, higher is better.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | 93.9% | 92.4% | 91.8% | 93.9% | 92.5% |
+| Text and character formatting | 94.3% | 92.8% | 92.2% | 94.2% | 92.8% |
 | Fonts and typography | 98.1% | 98.1% | 98.2% | 98.1% | 98.2% |
 | Lists | 96.2% | 96.2% | 96.2% | 96.2% | 96.3% |
 | Tables | 92.4% | 92.4% | 92.4% | 92.4% | 92.4% |
-| Pictures | 100.0% | 92.1% | 100.0% | 100.0% | 100.0% |
+| Pictures | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
 | A six-page report | 97.7% | 97.7% | 97.7% | 97.7% | 97.7% |
-| Footnotes and endnotes | 99.7% | 99.7% | 99.7% | 99.7% | 99.7% |
+| Footnotes and endnotes | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
 | Headers, footers, comments | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
-| **Mean** | **97.3%** | **96.1%** | **97.0%** | **97.3%** | **97.1%** |
+| **Mean** | **97.3%** | **97.2%** | **97.1%** | **97.3%** | **97.2%** |
 
 **HTML → DOCX**: the editor's own HTML shown in Chromium with its content stylesheet, against Word's print of the DOCX the library writes from it.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | 96.3% | 92.4% | 97.0% | 19.3% | 96.3% |
-| Lists | 92.6% | 94.4% | 96.9% | 31.3% | 94.0% |
-| Tables | 99.4% | 97.4% | 98.6% | 59.0% | 98.2% |
-| Pictures | 95.7% | 97.3% | 98.0% | 69.1% | 95.7% |
-| **Mean** | **96.0%** | **95.4%** | **97.6%** | **44.7%** | **96.0%** |
+| Text and character formatting | 96.5% | 94.2% | 97.0% | 19.4% | 96.5% |
+| Lists | 93.5% | 99.9% | 96.9% | 31.3% | 94.9% |
+| Tables | 99.4% | 97.7% | 98.6% | 59.1% | 98.2% |
+| Pictures | 99.6% | 97.3% | 98.0% | 69.1% | 99.5% |
+| **Mean** | **97.2%** | **97.3%** | **97.6%** | **44.7%** | **97.3%** |
 <!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.
@@ -339,7 +339,7 @@ Kovami\HtmlDocx\HtmlDocx:
 | --- | --- |
 | Paragraphs, `div`, `section`, `article`, `blockquote`, `pre`, `address`, … | Paragraphs, with margins as spacing, padding and borders as paragraph borders, background as shading |
 | `h1`–`h6` | Real *Heading 1–6* styles, so the navigation pane and a table of contents work |
-| `b`, `strong`, `i`, `em`, `u`, `s`, `del`, `sup`, `sub`, `mark`, `small`, `code`, `q`, … | Character formatting: weight, style, underline (including its style), strike-through, position, colour, highlight, font, size, letter spacing, caps and small caps |
+| `b`, `strong`, `i`, `em`, `u`, `s`, `del`, `sup`, `sub`, `mark`, `small`, `code`, `q`, … | Character formatting: weight, style, underline (including its style), strike-through, position, colour, highlight, font, size, letter spacing, caps and small caps, shadow and kerning |
 | `ul`, `ol`, nested lists | Real Word numbering: bullet shapes per depth, `start`, `value`, `reversed`, and `list-style-type` — including counter styles Word has no format for, which are written out as literal markers |
 | `table` with `thead`/`tbody`/`tfoot`, `caption`, `colgroup` | Tables with a column grid, repeating header rows, `colspan`/`rowspan`, per-cell borders, shading, padding, vertical alignment and widths (fixed or percentage) |
 | `img` | Embedded pictures, scaled to their CSS size |
@@ -366,7 +366,7 @@ Formatting is resolved the way Word resolves it — document defaults, style inh
 | Content | How it arrives in HTML |
 | --- | --- |
 | Paragraphs and their styles | `<p>`, or `<h1>`–`<h6>` when the paragraph has an outline level, with spacing, indentation, alignment, borders, shading and line height as inline styles |
-| Character formatting | `<strong>`, `<em>`, `<u>`, `<del>`, `<sup>`, `<sub>` inside a `<span>` carrying font, size, colour and highlight |
+| Character formatting | `<strong>`, `<em>`, `<u>`, `<del>`, `<sup>`, `<sub>` inside a `<span>` carrying font, size, colour, highlight and shadow; kerning only where Word kerns |
 | Theme fonts and colours | Resolved through `theme1.xml`, including tints and shades |
 | Numbering | Real `<ul>`/`<ol>` nesting, `start` and `value`, CSS counter styles where one fits, and the exact marker text where none does (`1.2.`, `A)`, `α.`) |
 | Tables | `<table>` with a `<colgroup>`, `<thead>`, `rowspan`/`colspan`, and the formatting the table style implies — header rows, banded rows, first/last column, corner cells |
@@ -381,7 +381,7 @@ Formatting is resolved the way Word resolves it — document defaults, style inh
 | Office Math | MathML with the LaTeX kept as an annotation, or the shape the profile's editor reads |
 | Text boxes and shapes | Their text, as paragraphs after the one they hang on |
 | Symbols and dingbats | Mapped to real Unicode characters |
-| Line and page breaks, tabs | `<br>`, `page-break-before`, preserved whitespace |
+| Line and page breaks, tabs | `<br>`, `page-break-before`, preserved whitespace; in an indented paragraph the text after a tab lands on Word's stops, which count from the margin |
 | Section geometry | Page size and margins, as the width the content is laid out against |
 
 Content controls, smart tags and alternative-content wrappers are transparent — what is inside them is read normally.
