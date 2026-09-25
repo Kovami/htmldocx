@@ -45,7 +45,16 @@ it('doubles a trailing line break, which HTML would otherwise drop', function ()
 it('preserves tabs and runs of spaces', function () {
     expect(html("<pre>a\tb  c</pre>"))
         ->toContain('white-space: pre-wrap;')
-        ->toContain("a\tb  c");
+        // The block is indented 6.75pt, and Word's tab stops count from the margin.
+        ->toContain("a<span style=\"position: relative; left: -9px; margin-right: -9px;\">\tb  c</span>");
+});
+
+it('keeps a shifted tab in place when no text follows it', function () {
+    expect(html("<pre>a\t\nb\t</pre>"))->toContain("a\t<br")->toContain("b\t</p>");
+});
+
+it('keeps tabs on the grid of a block that is not indented', function () {
+    expect(html("<p style=\"white-space: pre-wrap\">a\tb</p>"))->toContain("a\tb");
 });
 
 it('does not preserve whitespace around inline content', function () {

@@ -256,7 +256,9 @@ final class HtmlWriter
                 $children = array_slice($children, 1);
             }
 
-            $this->inlines->write($children, $element, $style);
+            // Word's tab stops count from the margin, a browser's from the text's left edge.
+            $tabShift = $item === null ? $properties->indentLeft % self::WORD_TAB_STOP : 0;
+            $this->inlines->write($children, $element, $style, tabShift: $tabShift);
             $this->closeParagraph($children, $element, $style);
             $this->standPictureOnLineBottom($children, $properties, $element);
         }

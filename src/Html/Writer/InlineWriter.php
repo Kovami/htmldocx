@@ -42,13 +42,16 @@ final readonly class InlineWriter
     /**
      * @param  list<Inline>  $inlines
      * @param  string  $enclosingComments  comment ids the element around $parent already marks
+     * @param  int  $tabShift  twips the text's left edge sits right of the grid Word's tab stops keep
      */
-    public function write(array $inlines, Element $parent, ComputedStyle $parentStyle, string $enclosingComments = ''): void
+    public function write(array $inlines, Element $parent, ComputedStyle $parentStyle, string $enclosingComments = '', int $tabShift = 0): void
     {
         /** @var array{key: string, element: Element}|null $open */
         $open = null;
         /** @var array{key: string, element: Element}|null $commented */
         $commented = null;
+        /** @var Element|null $pendingTab where a tab waiting for the text it shifts belongs */
+        $pendingTab = null;
 
         foreach ($inlines as $inline) {
             if ($inline instanceof CommentStart || $inline instanceof CommentEnd) {
@@ -90,6 +93,22 @@ final readonly class InlineWriter
                     $open = ['key' => $specKey, 'element' => $this->wrappers($spec, $target, $parentStyle)];
                 }
 
+                if ($inline instanceof TextRun && $pendingTab !== null) {
+                    $this->pulledBack($inline->text, $open['element'], $tabShift);
+                    $pendingTab = null;
+
+                    continue;
+                }
+
+                $pendingTab?->append("\t");
+                $pendingTab = null;
+
+                if ($inline instanceof TabRun && $tabShift !== 0) {
+                    $pendingTab = $open['element'];
+
+                    continue;
+                }
+
                 match (true) {
                     $inline instanceof BreakRun => $this->inheritLineHeight($this->context->element('br', $open['element']), $parentStyle),
                     $inline instanceof Field => $this->field($inline, $open['element']),
@@ -99,6 +118,8 @@ final readonly class InlineWriter
                 continue;
             }
 
+            $pendingTab?->append("\t");
+            $pendingTab = null;
             $open = null;
 
             match (true) {
@@ -110,6 +131,22 @@ final readonly class InlineWriter
                 default => null,
             };
         }
+
+        $pendingTab?->append("\t");
+    }
+
+    /**
+     * A tab reaches the browser's next stop; pulling it and the text after
+     * it back by the shift lands the text on Word's, exactly so for a tab that
+     * starts a line. The tab shares the text's node: editors turn a text node
+     * of only whitespace into a space.
+     */
+    private function pulledBack(string $text, Element $parent, int $shift): void
+    {
+        $pull = $this->context->css->twips(-$shift);
+        $span = $this->context->element('span', $parent);
+        $span->setAttribute('style', "position: relative; left: {$pull}; margin-right: {$pull};");
+        $span->append("\t" . $text);
     }
 
     /** A comment anchored to no text still needs a place: an empty span. */
