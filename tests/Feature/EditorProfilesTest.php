@@ -146,7 +146,8 @@ it('reads text an editor leaves unformatted in the typography that editor shows'
     'CKEditor: Helvetica, medium, 1.5' => [Editor::CKEditor, 'Helvetica', 24, 300],
     'TinyMCE: the system font, medium, 1.4' => [Editor::TinyMce, 'Segoe UI', 24, 253],
     'SunEditor: Helvetica Neue 16px, 1.5' => [Editor::SunEditor, 'Helvetica Neue', 24, 302],
-    'plain HTML: the options\' own base' => [null, 'Calibri', 22, null],
+    // A browser's normal line of Calibri 11pt is 14 + 4 pixels, 13.5pt: Word's single line is 13.43pt.
+    'plain HTML: the options\' own base' => [null, 'Calibri', 22, 241],
 ]);
 
 it('lets the options replace an editor\'s typography, for an application whose CSS differs', function () {

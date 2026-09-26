@@ -614,8 +614,8 @@ final class DocumentBuilder
     }
 
     /**
-     * The line height to give Word: `normal` in a generic family is the
-     * browser's font's normal line, which Word's font for it does not have.
+     * The line height to give Word: `normal` is the line the browser gives
+     * it (FontMetrics::browserNormal()), which Word's single line is not.
      */
     private static function lineHeight(ComputedStyle $style): ?LineHeight
     {
@@ -879,7 +879,8 @@ final class DocumentBuilder
 
         if ($properties === null) {
             // A multiple of the font size is Word's multiple of the font's own single line; see HtmlWriter.
-            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing(self::lineHeight($style), FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
+            // A line holding only a picture is as tall as the picture in both.
+            [$lineSpacing, $lineRule] = $this->mapper->lineSpacing(self::pictureOnly($children) ? $style->lineHeight : self::lineHeight($style), FontMetrics::singleLine($style->fontFamily, $style->bold) ?? 1.0, $style->fontSizePt);
 
             $properties = new ParagraphProperties(
                 styleId: $context->styleId,
@@ -900,7 +901,7 @@ final class DocumentBuilder
             // Where the browser shows the text relative to Word, less what the
             // HTML itself raises it by (HtmlWriter::raise() writes that).
             $shift = $lineRule === null || $lineRule === 'auto'
-                ? FontMetrics::baselineShift($style->fontFamily, $style->fontSizePt, $style->lineHeight === null ? null : ($style->lineHeight->multiple !== null ? $style->lineHeight->multiple * $style->fontSizePt : $style->lineHeight->points), $style->bold, $style->browserFamily)
+                ? FontMetrics::baselineShift($style->fontFamily, $style->fontSizePt, $style->lineHeight === null ? (FontMetrics::browserNormal($style) ?? 0.0) * $style->fontSizePt ?: null : ($style->lineHeight->multiple !== null ? $style->lineHeight->multiple * $style->fontSizePt : $style->lineHeight->points), $style->bold, $style->browserFamily)
                 : null;
             $lower = Length::pointsToTwips(($shift ?? 0.0) + $style->relativeTopPt);
 

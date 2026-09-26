@@ -151,12 +151,12 @@ it('keeps the room a horizontal rule\'s height leaves under its line', function 
 });
 
 it('spaces a generic monospace block by the font a browser draws for it, not the one Word gets', function () {
-    // Chromium on macOS draws monospace in Courier, whose normal line is 1.15em; Word gets Courier New, 1.1328em.
+    // Chromium on macOS draws monospace in Courier: at 11pt its normal line is 13 + 4 pixels, 12.75pt; Word gets Courier New, 1.1328em.
     $docx = docx('<p style="font-family: monospace">code</p>', HtmlDocx::plain(testOptions()));
     $spacing = $docx->first('w:pPr/w:spacing', $docx->paragraph('code'));
 
     expect(Docx::attr($docx->first('w:rPr/w:rFonts', $docx->run('code')), 'ascii'))->toBe('Courier New')
-        ->and(Docx::attr($spacing, 'line'))->toBe('244');
+        ->and(Docx::attr($spacing, 'line'))->toBe('246');
 });
 
 it('honours page breaks', function () {

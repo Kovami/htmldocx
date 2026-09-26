@@ -82,7 +82,7 @@ it('applies extra and replacement default stylesheets from the options', functio
 
     expect(docx('<p>extra</p>', $extra)->val('//w:r/w:rPr/w:color'))->toBe('0F0F0F')
         ->and(docx('<h1>x</h1>', $replaced)->val("//w:style[@w:styleId='Heading1']/w:rPr/w:sz", null, 'word/styles.xml'))->toBe('60')
-        ->and(docx('<p>no suneditor spacing</p>', $replaced)->first('//w:p/w:pPr/w:spacing'))->toBeNull();
+        ->and(docx('<p>no suneditor spacing</p>', $replaced)->first('//w:p/w:pPr/w:spacing[@w:before != "0" or @w:after != "0"]'))->toBeNull();
 });
 
 it('lets document styles override the extra stylesheet', function () {

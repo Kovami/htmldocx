@@ -175,13 +175,24 @@ final class FontMetrics
     }
 
     /**
-     * The line height a browser gives `line-height: normal` where it draws
-     * another font than Word gets, as a multiple of the size; null where both
-     * draw the same font, whose single line Word keeps.
+     * The line height a browser gives `line-height: normal`, as a multiple of
+     * the size, in the font it draws. Chromium rounds the font's ascent,
+     * descent and line gap to whole pixels each: Calibri at 11pt is 14 + 4
+     * pixels, 13.5pt, where Word's single line is 13.43pt. Null for a font
+     * not measured.
      */
     public static function browserNormal(ComputedStyle $style): ?float
     {
-        return $style->browserFamily === null ? null : self::CSS_LINE[self::face($style->browserFamily, $style->bold)][2] ?? null;
+        [$ascent, $descent, $normal] = self::CSS_LINE[self::face($style->browserFamily ?? $style->fontFamily, $style->bold)] ?? [null, null, null];
+
+        if ($ascent === null) {
+            return null;
+        }
+
+        $px = $style->fontSizePt * 4 / 3;
+        $line = round($ascent * $px) + round($descent * $px) + round(($normal - $ascent - $descent) * $px);
+
+        return $line * 0.75 / $style->fontSizePt;
     }
 
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */
