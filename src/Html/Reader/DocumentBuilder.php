@@ -772,6 +772,11 @@ final class DocumentBuilder
             // itself, sits where they put it: Word aligns its paragraph instead.
             if ($float === null) {
                 $flow->buffer()->alignment ??= self::autoMarginAlignment($flow->style) ?? ($style->isBlockLevel() ? self::autoMarginAlignment($style) : null);
+
+                // A block picture's own left margin moves it right (SunEditor 3 shows every picture as a block).
+                if ($style->isBlockLevel() && ! $style->isAuto('margin-left')) {
+                    $flow->buffer()->pictureIndent = max(0, Length::pointsToTwips($style->lengthPt('margin-left', $flow->context->availableWidth / Length::TWIPS_PER_POINT) ?? 0));
+                }
             }
 
             return;
@@ -841,6 +846,10 @@ final class DocumentBuilder
 
             if ($buffer->alignment !== null) {
                 $paragraph->properties->alignment = $buffer->alignment;
+            }
+
+            if ($buffer->pictureIndent > 0 && self::pictureOnly($paragraph->children)) {
+                $paragraph->properties->indentLeft += $buffer->pictureIndent;
             }
 
             $sink->add($paragraph);

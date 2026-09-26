@@ -280,3 +280,10 @@ it('keeps a picture inside its line in SunEditor\'s inline image component', fun
     expect($docx->paragraphTexts())->toBe(['before  after'])
         ->and($docx->count('//w:p//w:drawing/wp:inline'))->toBe(1);
 });
+
+it('indents a picture shown as a block by its own left margin', function () {
+    // SunEditor 3 shows every picture as a block, so its margin moves it right: 12px is 180 twips.
+    $docx = docx('<div class="se-component se-image-container"><figure><img src="' . TestImage::pngDataUri(20, 10) . '" alt="" style="margin-left: 12px"></figure></div>');
+
+    expect(Docx::attr($docx->first('//w:p[.//w:drawing]/w:pPr/w:ind'), 'left'))->toBe('180');
+});

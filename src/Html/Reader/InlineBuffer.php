@@ -37,6 +37,9 @@ final class InlineBuffer
     /** @var array{0: float, 1: float} how much the browser grows the paragraph's lines to hold its scripts, in points; see FontMetrics::scriptGrowth() */
     public array $scriptGrowth = [0.0, 0.0];
 
+    /** Twips a picture shown as a block moves right by its own left margin; its paragraph takes them as indent. */
+    public int $pictureIndent = 0;
+
     /** Room a browser leaves under a picture standing on the baseline, in points; see FontMetrics::belowBaseline() */
     public float $pictureGap = 0.0;
 
