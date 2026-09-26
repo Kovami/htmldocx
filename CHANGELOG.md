@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-09-26
+
+A minor release: each kind of content can be switched off, and lists,
+line spacing and SunEditor's pictures reach Word where the browser shows
+them. The model gains `ListLevel::$alignment`.
+
 ### Added
 
 - Switches for each kind of content, all on by default: `includeImages`,
@@ -22,6 +28,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `includeHeadersFooters` and `includeComments` work in both directions: HTML
   -> DOCX drops SunEditor's header, footer and comment markup when they are
   off.
+
+### Fixed
+
+- `line-height: normal` reaches Word as the line a browser draws: Chromium
+  rounds a font's ascent, descent and line gap to whole pixels each, so its
+  line of Calibri at 11pt is 13.5pt where Word's single line is 13.43pt, and
+  text drifted up a little every line.
+- A number or letter outside the line is set flush right a space before the
+  text, as a browser sets "1. ", instead of at the left of an 18pt hanging
+  indent. A disc, circle or square outside the line hangs so that the centre
+  of Word's bullet lands on the centre of the browser's (0.4645em + 4.54pt
+  before the text), whatever font the bullet is drawn in.
+- A picture shown as a block, as SunEditor 3 shows every picture, is indented
+  by its own left margin.
+
+HTML -> DOCX: lists 100.0% of ink in place in plain HTML, SunEditor,
+CKEditor and TipTap (from 93.5%, 100.0%, 96.9%, 94.9%); plain and TipTap text
+96.8% -> 97.3%; SunEditor pictures 97.3% -> 99.0%. Means: plain 97.3% ->
+99.1%, SunEditor 98.1% -> 98.5%, CKEditor 97.7% -> 98.5%, TipTap 97.4% ->
+98.7%. DOCX -> HTML does not change.
 
 ## [2.2.3] - 2026-09-25
 
@@ -460,7 +486,8 @@ The first public release.
 - Support for PHP 8.4 and 8.5 with no runtime dependencies beyond bundled
   extensions.
 
-[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.2.3...HEAD
+[Unreleased]: https://github.com/kovami/htmldocx/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/kovami/htmldocx/compare/v2.2.3...v2.3.0
 [2.2.3]: https://github.com/kovami/htmldocx/compare/v2.2.2...v2.2.3
 [2.2.2]: https://github.com/kovami/htmldocx/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/kovami/htmldocx/compare/v2.2.0...v2.2.1

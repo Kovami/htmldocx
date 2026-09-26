@@ -207,11 +207,11 @@ Share of the ink in place within 1.33 pt, higher is better.
 
 | Document | Plain HTML | SunEditor | CKEditor | TinyMCE | TipTap |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Text and character formatting | 96.8% | 96.7% | 97.0% | 19.5% | 96.8% |
-| Lists | 93.5% | 100.0% | 96.9% | 31.3% | 94.9% |
-| Tables | 99.4% | 98.5% | 98.7% | 59.1% | 98.2% |
-| Pictures | 99.6% | 97.3% | 98.2% | 69.1% | 99.5% |
-| **Mean** | **97.3%** | **98.1%** | **97.7%** | **44.7%** | **97.4%** |
+| Text and character formatting | 97.3% | 96.7% | 97.0% | 19.5% | 97.3% |
+| Lists | 100.0% | 100.0% | 100.0% | 31.7% | 100.0% |
+| Tables | 99.6% | 98.5% | 98.8% | 59.1% | 98.2% |
+| Pictures | 99.4% | 99.0% | 98.2% | 69.1% | 99.4% |
+| **Mean** | **99.1%** | **98.5%** | **98.5%** | **44.8%** | **98.7%** |
 <!-- bench:end -->
 
 See it rather than read about it: the [examples](https://kovami.github.io/htmldocx/) are a report Word wrote, the HTML this library makes of it, the DOCX it makes from editor HTML, and page images of each next to Word's own print.
