@@ -238,8 +238,14 @@ Plain HTML и SunEditor настраиваются в первую очеред�
 | `createdAt` | сейчас | HTML → DOCX | Фиксированная метка времени — для побайтово воспроизводимого результата |
 | `cssUnit` | `px` | DOCX → HTML | Единица длин и размеров шрифта: `px` или `pt` |
 | `includeHiddenText` | `false` | DOCX → HTML | Сохранять текст, помеченный в Word как скрытый |
-| `includeHeadersFooters` | `true` | DOCX → HTML | Сохранять колонтитулы |
-| `includeComments` | `true` | DOCX → HTML | Сохранять комментарии рецензентов и текст, к которому они привязаны |
+| `includeHeadersFooters` | `true` | оба | Сохранять колонтитулы |
+| `includeComments` | `true` | оба | Сохранять комментарии рецензентов (текст, к которому они привязаны, остаётся) |
+| `includeImages` | `true` | оба | Сохранять картинки |
+| `includeTables` | `true` | оба | Сохранять таблицы со всем содержимым |
+| `includeLists` | `true` | оба | Сохранять пункты списков вместе с текстом |
+| `includeLinks` | `true` | оба | Сохранять ссылки вместе с текстом |
+| `includeFormulas` | `true` | оба | Сохранять формулы |
+| `includeNotes` | `true` | оба | Сохранять сноски и отметки, которые на них ссылаются |
 | `idPrefix` | `''` | DOCX → HTML | Префикс для генерируемых id (закладки, сноски), чтобы несколько документов уживались на одной странице |
 | `fullHtmlDocument` | `false` | DOCX → HTML | Обернуть фрагмент в `<html><head>…<body>` |
 | `maxDocxEntryBytes` | 128 МБ | DOCX → HTML | Предел распакованного размера одной части пакета |
@@ -249,6 +255,15 @@ Plain HTML и SunEditor настраиваются в первую очеред�
 
 ```php
 $options = (new Options(fontFamily: 'Georgia'))->with(['cssUnit' => 'pt', 'idPrefix' => 'doc1-']);
+```
+
+**Отключение функций.** Каждый флаг `include…` отключает один вид содержимого в обе стороны: он удаляется из прочитанного документа целиком, вместе с текстом, а абзац, в котором больше ничего не было, уходит вместе с ним. Флаги задаются один раз у конвертера и меняются для одного вызова через `with()`, с теми же именами, что в `Options`:
+
+```php
+$converter = HtmlDocx::for(Editor::SunEditor, new Options(includeImages: false, includeTables: false));
+
+$converter->fromDocxFile($path)->toHtml();                            // без картинок и таблиц
+$converter->with(includeImages: true)->fromDocxFile($path)->toHtml(); // с картинками в этом вызове
 ```
 
 Каждый блок HTML, который пишет библиотека, несёт собственное форматирование — каким бы профилем он ни был написан, — поэтому документ выглядит собой и в редакторе, и в письме, и на странице с чужими стилями.

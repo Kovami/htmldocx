@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Switches for each kind of content, all on by default: `includeImages`,
+  `includeTables`, `includeLists`, `includeLinks`, `includeFormulas` and
+  `includeNotes` on `Options`. A feature switched off is dropped whole, text
+  and all, from the document read, in both directions; a paragraph that held
+  only that goes with it.
+- `HtmlDocx::with()` changes options for one call, named as in `Options`:
+  `$converter->with(includeImages: true)->fromDocx($bytes)`.
+
+### Changed
+
+- `includeHeadersFooters` and `includeComments` work in both directions: HTML
+  -> DOCX drops SunEditor's header, footer and comment markup when they are
+  off.
+
 ## [2.2.3] - 2026-09-25
 
 A patch release about line spacing in HTML -> DOCX: where a paragraph's

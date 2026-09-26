@@ -26,12 +26,21 @@ final readonly class Options
      * @param  DateTimeImmutable|null  $createdAt  fixed timestamp for reproducible output; defaults to now
      * @param  string  $cssUnit  DOCX → HTML: "px" (SunEditor's unit) or "pt" for lengths and font sizes
      * @param  bool  $includeHiddenText  DOCX → HTML: keep text formatted as hidden
-     * @param  bool  $includeHeadersFooters  DOCX → HTML: keep page headers and footers
-     * @param  bool  $includeComments  DOCX → HTML: keep reviewers' comments and the text they are anchored to
+     * @param  bool  $includeHeadersFooters  keep page headers and footers
+     * @param  bool  $includeComments  keep reviewers' comments
      * @param  string  $idPrefix  DOCX → HTML: prepended to generated ids (bookmarks, notes) to avoid collisions
      * @param  bool  $fullHtmlDocument  DOCX → HTML: wrap the content in <html><head>…<body> instead of returning a fragment
      * @param  int  $maxDocxEntryBytes  DOCX → HTML: decompressed size limit of one package part
      * @param  int  $maxDocxTotalBytes  DOCX → HTML: decompressed size limit of the whole package
+     * @param  bool  $includeImages  keep pictures
+     * @param  bool  $includeTables  keep tables, with everything in them
+     * @param  bool  $includeLists  keep list items, with their text
+     * @param  bool  $includeLinks  keep hyperlinks, with their text
+     * @param  bool  $includeFormulas  keep formulas
+     * @param  bool  $includeNotes  keep footnotes and endnotes, and the marks that refer to them
+     *
+     * Every include flag works in both directions: what it switches off is
+     * dropped whole, text and all, from the document read.
      */
     public function __construct(
         public ?string $fontFamily = null,
@@ -52,6 +61,12 @@ final readonly class Options
         public int $maxDocxTotalBytes = 512 * 1024 * 1024,
         public bool $includeHeadersFooters = true,
         public bool $includeComments = true,
+        public bool $includeImages = true,
+        public bool $includeTables = true,
+        public bool $includeLists = true,
+        public bool $includeLinks = true,
+        public bool $includeFormulas = true,
+        public bool $includeNotes = true,
     ) {
         if (! in_array($cssUnit, ['px', 'pt'], true)) {
             throw new InvalidArgumentException("Unsupported CSS unit \"{$cssUnit}\"; use \"px\" or \"pt\".");

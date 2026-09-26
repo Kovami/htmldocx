@@ -58,19 +58,19 @@ final readonly class Engine
             $this->options,
         );
 
-        return $builder->build($document, $pageLayout ?? $this->options->page());
+        return FeatureFilter::apply($builder->build($document, $pageLayout ?? $this->options->page()), $this->options);
     }
 
     public function readDocx(string $bytes): Document
     {
-        return (new DocxReader(
+        return FeatureFilter::apply((new DocxReader(
             $this->options->includeHiddenText,
             $this->options->maxDocxEntryBytes,
             $this->options->maxDocxTotalBytes,
             $this->warningHandler,
             $this->options->includeHeadersFooters,
             $this->options->includeComments,
-        ))->read($bytes);
+        ))->read($bytes), $this->options);
     }
 
     public function writeHtml(Document $document): string

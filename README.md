@@ -238,8 +238,14 @@ One `Options` object configures both directions. The first block describes the e
 | `createdAt` | now | HTML → DOCX | Fixed timestamp, for byte-reproducible output |
 | `cssUnit` | `px` | DOCX → HTML | Unit for lengths and font sizes: `px` or `pt` |
 | `includeHiddenText` | `false` | DOCX → HTML | Keep text Word marks as hidden |
-| `includeHeadersFooters` | `true` | DOCX → HTML | Keep page headers and footers |
-| `includeComments` | `true` | DOCX → HTML | Keep reviewers' comments and the text they are anchored to |
+| `includeHeadersFooters` | `true` | both | Keep page headers and footers |
+| `includeComments` | `true` | both | Keep reviewers' comments (the text they are anchored to stays) |
+| `includeImages` | `true` | both | Keep pictures |
+| `includeTables` | `true` | both | Keep tables, with everything in them |
+| `includeLists` | `true` | both | Keep list items, with their text |
+| `includeLinks` | `true` | both | Keep hyperlinks, with their text |
+| `includeFormulas` | `true` | both | Keep formulas |
+| `includeNotes` | `true` | both | Keep footnotes and endnotes, and the marks that refer to them |
 | `idPrefix` | `''` | DOCX → HTML | Prepended to generated ids (bookmarks, notes) so several documents can share one page |
 | `fullHtmlDocument` | `false` | DOCX → HTML | Wrap the fragment in `<html><head>…<body>` |
 | `maxDocxEntryBytes` | 128 MB | DOCX → HTML | Decompressed size limit of one package part |
@@ -249,6 +255,15 @@ One `Options` object configures both directions. The first block describes the e
 
 ```php
 $options = (new Options(fontFamily: 'Georgia'))->with(['cssUnit' => 'pt', 'idPrefix' => 'doc1-']);
+```
+
+**Switching features off.** Each `include…` flag switches one kind of content off in both directions: it is dropped whole, text and all, from the document read, and a paragraph that held only that goes with it. Set the flags once on the converter, and change them for one call with `with()`, named as in `Options`:
+
+```php
+$converter = HtmlDocx::for(Editor::SunEditor, new Options(includeImages: false, includeTables: false));
+
+$converter->fromDocxFile($path)->toHtml();                            // no pictures, no tables
+$converter->with(includeImages: true)->fromDocxFile($path)->toHtml(); // pictures for this call
 ```
 
 Every block of the HTML this library writes carries its own formatting, whatever profile writes it, so the document looks like itself in an editor, in an email, or on a page with a stylesheet of its own.

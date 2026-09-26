@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kovami\HtmlDocx;
 
+use InvalidArgumentException;
 use Closure;
 use Kovami\HtmlDocx\Config\PageLayout;
 use Kovami\HtmlDocx\Image\DataUriImageHandler;
@@ -65,6 +66,21 @@ final readonly class HtmlDocx
     public function withOptions(Options $options): self
     {
         return new self($this->editor, $options, $this->imageResolver, $this->imageHandler, $this->warningHandler);
+    }
+
+    /**
+     * The same converter with some options changed, named as in Options:
+     * `$converter->with(includeImages: true)->fromDocx($bytes)`.
+     */
+    public function with(mixed ...$changes): self
+    {
+        $named = array_filter($changes, static fn(int|string $name): bool => is_string($name), ARRAY_FILTER_USE_KEY);
+
+        if (count($named) !== count($changes)) {
+            throw new InvalidArgumentException('Name the options to change, e.g. with(includeImages: false).');
+        }
+
+        return $this->withOptions($this->options->with($named));
     }
 
     /** Where `<img src>` is read from, converting to DOCX. */
@@ -150,7 +166,7 @@ final readonly class HtmlDocx
     /** Starts from a document model built or changed by hand. */
     public function fromDocument(Document $document): Conversion
     {
-        return new Conversion($document, $this->engine());
+        return new Conversion(FeatureFilter::apply($document, $this->options), $this->engine());
     }
 
     private static function create(?Editor $editor, ?Options $options): self
