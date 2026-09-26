@@ -111,11 +111,18 @@ it('keeps inline formatting and line breaks inside list items', function () {
         ->and($docx->paragraphTexts())->toBe(["plain bold\nnext line"]);
 });
 
-it('gives the marker a hanging indent', function () {
-    $ind = docx('<ul><li>item</li></ul>', Kovami\HtmlDocx\HtmlDocx::plain(testOptions()))->first('//w:p/w:pPr/w:ind');
+it('hangs a marker outside the line where a browser draws it', function () {
+    $bullet = docx('<ul><li>item</li></ul>', Kovami\HtmlDocx\HtmlDocx::plain(testOptions()));
+    $number = docx('<ol><li>item</li></ol>', Kovami\HtmlDocx\HtmlDocx::plain(testOptions()));
+    $level = static fn(Docx $docx): ?DOMElement => $docx->first('//w:abstractNum/w:lvl[@w:ilvl="0"]', null, 'word/numbering.xml');
 
-    expect(Docx::attr($ind, 'left'))->toBe('600')
-        ->and(Docx::attr($ind, 'hanging'))->toBe('360');
+    // A disc's centre 0.4645em + 4.54pt before the text, where Calibri's bullet is centred 0.249em into it: 12.39pt at 11pt.
+    expect(Docx::attr($bullet->first('//w:p/w:pPr/w:ind'), 'left'))->toBe('600')
+        ->and(Docx::attr($bullet->first('//w:p/w:pPr/w:ind'), 'hanging'))->toBe('248')
+        ->and($bullet->val('w:lvlJc', $level($bullet), 'word/numbering.xml'))->toBe('left')
+        // "1. " ends at the text: the number set right, a space of Calibri (2.49pt) before it.
+        ->and(Docx::attr($number->first('//w:p/w:pPr/w:ind'), 'hanging'))->toBe('50')
+        ->and($number->val('w:lvlJc', $level($number), 'word/numbering.xml'))->toBe('right');
 });
 
 it('sets a number inside the first line as SunEditor 3 does: no hanging indent, a space after it', function () {

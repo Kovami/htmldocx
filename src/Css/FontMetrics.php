@@ -73,6 +73,38 @@ final class FontMetrics
 
     public const float SYMBOL_ASCENT = 1.0054;
 
+    /** The centre of '•''s ink from the glyph's start, as a multiple of the font size (the fonts' own files). */
+    private const array BULLET_CENTRE = [
+        'aptos' => 0.235, 'aptos narrow' => 0.213, 'calibri' => 0.249, 'calibri light' => 0.249, 'carlito' => 0.249,
+        'cambria' => 0.221, 'candara' => 0.33, 'consolas' => 0.275, 'constantia' => 0.132, 'corbel' => 0.222,
+        'arial' => 0.177, 'liberation sans' => 0.177, 'arial narrow' => 0.146, 'arial black' => 0.25,
+        'times new roman' => 0.177, 'liberation serif' => 0.177, 'courier new' => 0.3, 'liberation mono' => 0.3,
+        'georgia' => 0.196, 'verdana' => 0.273, 'tahoma' => 0.227, 'trebuchet ms' => 0.265, 'garamond' => 0.177,
+        'book antiqua' => 0.303, 'bookman old style' => 0.23, 'century gothic' => 0.303, 'century' => 0.303,
+        'palatino linotype' => 0.303, 'franklin gothic book' => 0.333, 'franklin gothic medium' => 0.333, 'gill sans mt' => 0.177,
+        'lucida console' => 0.301, 'lucida sans unicode' => 0.316, 'comic sans ms' => 0.187, 'impact' => 0.174,
+        'helvetica' => 0.181, 'helvetica neue' => 0.181, 'roboto' => 0.167, 'pt sans' => 0.226, 'pt serif' => 0.228,
+        'microsoft sans serif' => 0.175, 'rockwell' => 0.178, 'tw cen mt' => 0.175, 'perpetua' => 0.175,
+        'courier' => 0.3, 'times' => 0.172,
+        // What Word draws the other shapes in: 'o' in Courier New, and Wingdings' square.
+        'circle' => 0.3, 'square' => 0.229,
+    ];
+
+    /** The width of a space, as a multiple of the font size (the fonts' own files). */
+    private const array SPACE = [
+        'aptos' => 0.2031, 'aptos narrow' => 0.187, 'calibri' => 0.2261, 'calibri light' => 0.2261, 'carlito' => 0.2261,
+        'cambria' => 0.2202, 'candara' => 0.2168, 'consolas' => 0.5498, 'constantia' => 0.251, 'corbel' => 0.2002,
+        'arial' => 0.2778, 'liberation sans' => 0.2778, 'arial narrow' => 0.228, 'arial black' => 0.3335,
+        'times new roman' => 0.25, 'liberation serif' => 0.25, 'courier new' => 0.6001, 'liberation mono' => 0.6001,
+        'georgia' => 0.2412, 'verdana' => 0.3516, 'tahoma' => 0.3125, 'trebuchet ms' => 0.3013, 'segoe ui' => 0.2744,
+        'garamond' => 0.25, 'book antiqua' => 0.25, 'bookman old style' => 0.3198, 'century gothic' => 0.2769,
+        'century' => 0.2778, 'palatino linotype' => 0.25, 'franklin gothic book' => 0.25, 'franklin gothic medium' => 0.25,
+        'gill sans mt' => 0.2778, 'lucida console' => 0.6025, 'lucida sans unicode' => 0.3164, 'comic sans ms' => 0.2988,
+        'impact' => 0.1763, 'helvetica' => 0.2778, 'helvetica neue' => 0.278, 'roboto' => 0.2476, 'pt sans' => 0.267,
+        'pt serif' => 0.243, 'microsoft sans serif' => 0.2656, 'rockwell' => 0.25, 'tw cen mt' => 0.2759, 'perpetua' => 0.2251,
+        'courier' => 0.6001, 'times' => 0.25,
+    ];
+
     /** Windows ascent as a multiple of the font size; null when it is not below Symbol's or not measured. */
     public static function ascent(string $family): ?float
     {
@@ -193,6 +225,25 @@ final class FontMetrics
         $line = round($ascent * $px) + round($descent * $px) + round(($normal - $ascent - $descent) * $px);
 
         return $line * 0.75 / $style->fontSizePt;
+    }
+
+    /**
+     * Where the ink of Word's bullet is centred, as a multiple of the font size
+     * from where the glyph starts: '•' in the text's font, or the glyph Word
+     * draws a Symbol disc ($symbol), a circle ('o' in Courier New) or a
+     * square (Wingdings) in. Null for a font not measured.
+     *
+     * @param  string  $family  the text's font, or "circle" or "square"
+     */
+    public static function bulletCentre(string $family, bool $symbol = false): ?float
+    {
+        return $symbol ? 0.178 : self::BULLET_CENTRE[strtolower(trim($family))] ?? null;
+    }
+
+    /** A space's width as a multiple of the font size, or null for a font not measured. */
+    public static function spaceWidth(string $family): ?float
+    {
+        return self::SPACE[strtolower(trim($family))] ?? null;
     }
 
     /** Word's single line height as a multiple of the font size, or null for a font not measured. */

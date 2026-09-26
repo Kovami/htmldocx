@@ -6,6 +6,7 @@ namespace Kovami\HtmlDocx\Html\Reader;
 
 use Dom\Element;
 use Kovami\HtmlDocx\Css\ComputedStyle;
+use Kovami\HtmlDocx\Css\FontMetrics;
 use Kovami\HtmlDocx\Css\Length;
 use Kovami\HtmlDocx\Model\NumberingReference;
 
@@ -21,9 +22,14 @@ final class ListCounter
 
     private ?string $numberedStyleType = null;
 
+    /** Markers a browser draws as shapes rather than text. */
+    private const array SHAPES = ['disc', 'circle', 'square'];
+
     private bool $symbol = false;
 
     private ?int $markerTab = null;
+
+    private ?int $itemHanging = null;
 
     /** The value the current definition numbers next. */
     private ?int $continues = null;
@@ -64,7 +70,7 @@ final class ListCounter
         $type = $style->listStyleType;
         $this->next = $value + $this->step;
 
-        return new ListMarker(fn(bool $symbol): NumberingReference => $this->reference($value, $type, $symbol, $style->fontSizePt));
+        return new ListMarker(fn(bool $symbol): NumberingReference => $this->reference($value, $type, $symbol, $style));
     }
 
     /**
@@ -72,9 +78,11 @@ final class ListCounter
      *
      * @param  bool  $symbol  whether the paragraph carries HtmlWriter's padding for Word's Symbol bullet
      */
-    private function reference(int $value, string $type, bool $symbol, float $fontSizePt): NumberingReference
+    private function reference(int $value, string $type, bool $symbol, ComputedStyle $style): NumberingReference
     {
+        $fontSizePt = $style->fontSizePt;
         $symbol = $symbol && $type === 'disc';
+        $hanging = $this->hangingFor($style, $symbol);
         // A browser draws a disc, circle or square inside the line as a shape and starts the text
         // 1.3125em + 0.64pt after it (measured in Chromium, whatever the font); Word's space after
         // its bullet is far narrower, so a tab of the level's own stands in for it.
@@ -83,8 +91,9 @@ final class ListCounter
             : null;
 
         if ($this->numId === null || $value !== $this->continues || $type !== $this->numberedStyleType || $symbol !== $this->symbol
-            || $markerTab !== $this->markerTab || $this->step < 0 || NumberingRegistry::isLiteral($type)) {
-            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $this->hanging, $markerTab === null ? $this->suffix : 'tab', $symbol, $markerTab);
+            || $markerTab !== $this->markerTab || $hanging !== $this->itemHanging || $this->step < 0 || NumberingRegistry::isLiteral($type)) {
+            $this->numId = $this->numbering->register($type, $this->level, $value, $this->indentLeft, $hanging, $markerTab === null ? $this->suffix : 'tab', $symbol, $markerTab, $hanging === $this->hanging || in_array($type, self::SHAPES, true) ? 'left' : 'right');
+            $this->itemHanging = $hanging;
             $this->numberedStyleType = $type;
             $this->symbol = $symbol;
             $this->markerTab = $markerTab;
@@ -93,6 +102,37 @@ final class ListCounter
         $this->continues = $value + $this->step;
 
         return new NumberingReference($this->numId, $this->level);
+    }
+
+    /**
+     * How far an item's marker hangs, in twips, when the list sets it outside
+     * the line; one inside hangs nowhere. A browser sets a number or letter
+     * flush right against the text, a space away (as "1. "), which Word does
+     * with the marker set right at the indent less a space. It draws a disc,
+     * circle or square with its centre 0.4645em + 4.54pt before the text
+     * (measured in Chromium, 15-100px), which Word's bullet glyph reaches
+     * when it hangs that much more than its own centre.
+     *
+     * @param  bool  $symbol  a disc Word draws in Symbol (see NumberingPart)
+     */
+    public function hangingFor(ComputedStyle $style, bool $symbol = false): int
+    {
+        $type = $style->listStyleType;
+        $family = $style->browserFamily ?? $style->fontFamily;
+
+        if ($this->hanging === 0 || $type === 'none') {
+            return $this->hanging;
+        }
+
+        if (in_array($type, self::SHAPES, true)) {
+            $centre = FontMetrics::bulletCentre($type === 'disc' && ! $symbol ? $family : $type, $symbol);
+
+            return $centre === null ? $this->hanging : Length::pointsToTwips(($centre + 0.4645) * $style->fontSizePt + 4.54);
+        }
+
+        $space = FontMetrics::spaceWidth($family);
+
+        return $space === null ? $this->hanging : max(1, Length::pointsToTwips($space * $style->fontSizePt));
     }
 
     private static function integer(?string $value): ?int

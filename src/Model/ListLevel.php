@@ -14,6 +14,7 @@ final readonly class ListLevel
      * @param  string  $suffix  ST_LevelSuffix: what follows the marker — tab (to the text's indent), space or nothing
      * @param  bool  $symbolBullet  a bullet drawn in the Symbol font (Word's own, and what a DOCX written here uses)
      * @param  int|null  $markerTab  twips: where the text after the marker starts, a tab stop of the level's own
+     * @param  string  $alignment  ST_Jc of the marker against its position (the indent less the hanging): left, center or right
      */
     public function __construct(
         public int $level,
@@ -25,5 +26,6 @@ final readonly class ListLevel
         public string $suffix = 'tab',
         public bool $symbolBullet = true,
         public ?int $markerTab = null,
+        public string $alignment = 'left',
     ) {}
 }

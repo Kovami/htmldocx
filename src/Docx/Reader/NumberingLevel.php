@@ -27,5 +27,6 @@ final readonly class NumberingLevel
         public string $suffix = 'tab',
         public ?string $font = null,
         public ?int $markerTab = null,
+        public string $alignment = 'left',
     ) {}
 }

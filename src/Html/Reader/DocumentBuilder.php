@@ -912,9 +912,10 @@ final class DocumentBuilder
             if ($context->marker !== null && ! $context->marker->consumed) {
                 // HtmlWriter pads the first line of an item by what Word's Symbol
                 // bullet adds to it; that padding says the bullet was Symbol's.
-                $properties->numbering = $context->marker->reference(($style->lengthPt('padding-top') ?? 0.0) > 0);
+                $symbol = ($style->lengthPt('padding-top') ?? 0.0) > 0;
+                $properties->numbering = $context->marker->reference($symbol);
                 // A marker inside the first line hangs nowhere.
-                $properties->firstLine = $context->list?->hanging === 0 ? 0 : -min(360, $context->indentLeft);
+                $properties->firstLine = -($context->list?->hangingFor($style, $symbol && $style->listStyleType === 'disc') ?? 0);
             }
         }
 

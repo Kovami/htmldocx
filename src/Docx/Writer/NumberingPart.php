@@ -45,7 +45,7 @@ final class NumberingPart
                 }
 
                 $xml->leaf('w:lvlText', ['w:val' => $text])
-                    ->leaf('w:lvlJc', ['w:val' => 'left'])
+                    ->leaf('w:lvlJc', ['w:val' => $level->alignment])
                     ->open('w:pPr');
 
                 if ($level->markerTab !== null) {

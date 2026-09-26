@@ -164,6 +164,7 @@ final class Numbering
                     suffix: $level->suffix,
                     symbolBullet: strtolower((string) $level->font) === 'symbol',
                     markerTab: $level->markerTab,
+                    alignment: $level->alignment,
                 );
             }
 
@@ -265,6 +266,11 @@ final class Numbering
             font: $symbolFont,
             suffix: Xml::val($lvl, 'suff') ?? 'tab',
             markerTab: self::markerTab(Xml::child(Xml::child($lvl, 'pPr'), 'tabs')),
+            alignment: match (Xml::val($lvl, 'lvlJc')) {
+                'right', 'end' => 'right',
+                'center' => 'center',
+                default => 'left',
+            },
             paragraph: $this->parser->paragraph(Xml::child($lvl, 'pPr')),
             run: $run,
         );
