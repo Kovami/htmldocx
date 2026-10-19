@@ -4,6 +4,7 @@
 [![Latest version](https://img.shields.io/packagist/v/kovami/htmldocx)](https://packagist.org/packages/kovami/htmldocx)
 [![PHP version](https://img.shields.io/packagist/dependency-v/kovami/htmldocx/php)](https://packagist.org/packages/kovami/htmldocx)
 [![License](https://img.shields.io/github/license/kovami/htmldocx)](LICENSE)
+[![Оценка безопасности Holefy](https://holefy.ru/badge/github/kovami/htmldocx)](https://holefy.ru/github/kovami/htmldocx)
 
 **English** · [Русский](README.ru.md)
 
